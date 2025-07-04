@@ -142,44 +142,6 @@ pub trait MachineInteger {
     fn absolute_val(self) -> Self;
 }
 
-#[hax_lib::fstar::replace(
-    r"
-instance impl_MachineInteger_poly (t: inttype): t_MachineInteger (int_t t) =
-  { f_bits = (fun () -> mk_u32 (bits t));
-    f_bits_pre = (fun () -> True);
-    f_bits_post = (fun () r -> r == mk_u32 (bits t));
-    f_SIGNED = signed t;
-    f_ZEROS = MkInt 0;
-    f_ONE = MkInt 1;
-    f_ONES = if unsigned t then MkInt (maxint t) else MkInt (-1);
-    f_MAX = MkInt (maxint t);
-    f_MIN = MkInt (minint t);
-    f_wrapping_add = admit();
-    f_wrapping_add_post = admit();
-    f_wrapping_add_pre = admit();
-    f_saturating_sub = admit();
-    f_saturating_sub_post = admit();
-    f_saturating_sub_pre = admit();
-    f_saturating_add = admit();
-    f_saturating_add_post = admit();
-    f_saturating_add_pre = admit();
-    f_overflowing_mul = admit();
-    f_overflowing_mul_post = admit();
-    f_overflowing_mul_pre = admit();
-    f_wrapping_sub = admit();
-    f_wrapping_sub_post = admit();
-    f_wrapping_sub_pre = admit();
-    f_absolute_val = admit();
-    f_absolute_val_post = admit();
-    f_absolute_val_pre = admit();
-    f_absolute_diff = admit();
-    f_absolute_diff_post = admit();
-    f_absolute_diff_pre = admit();
-    }
-"
-)]
-const _: () = {};
-
 macro_rules! generate_imachine_integer_impls {
     ($($ty:ident),*) => {
         $(
