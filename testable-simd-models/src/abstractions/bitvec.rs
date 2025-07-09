@@ -4,7 +4,6 @@ use super::funarr::*;
 
 use std::fmt::Formatter;
 
-
 // TODO: this module uses `u128/i128` as mathematic integers. We should use `hax_lib::int` or bigint.
 
 /// A fixed-size bit vector type.
@@ -36,13 +35,11 @@ fn bit_slice_to_string(bits: &[Bit]) -> String {
         .into()
 }
 
-
 impl<const N: u64> core::fmt::Debug for BitVec<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", bit_slice_to_string(&self.0.as_vec()))
     }
 }
-
 
 impl<const N: u64> core::ops::Index<u64> for BitVec<N> {
     type Output = Bit;
@@ -120,14 +117,11 @@ impl<const N: u64> BitVec<N> {
     }
 }
 
-
 impl<const N: u64> BitVec<N> {
-
     pub fn chunked_shift<const CHUNK: u64, const SHIFTS: u64>(
         self,
         shl: FunArray<SHIFTS, i128>,
     ) -> BitVec<N> {
-
         fn chunked_shift<const N: u64, const CHUNK: u64, const SHIFTS: u64>(
             bitvec: BitVec<N>,
             shl: FunArray<SHIFTS, i128>,

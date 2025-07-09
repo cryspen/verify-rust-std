@@ -184,7 +184,6 @@ macro_rules! generate_umachine_integer_impls {
 generate_imachine_integer_impls!(i8, i16, i32, i64, i128);
 generate_umachine_integer_impls!(u8, u16, u32, u64, u128);
 
-
 impl Bit {
     fn of_raw_int(x: u128, nth: u32) -> Self {
         if x / 2u128.pow(nth) % 2 == 1 {

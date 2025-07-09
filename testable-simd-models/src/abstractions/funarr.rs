@@ -52,7 +52,6 @@ impl<const N: u64, T> FunArray<N, T> {
     }
 }
 
-
 impl<const N: u64, T: Clone> TryFrom<Vec<T>> for FunArray<N, T> {
     type Error = ();
     fn try_from(v: Vec<T>) -> Result<Self, ()> {
@@ -64,17 +63,15 @@ impl<const N: u64, T: Clone> TryFrom<Vec<T>> for FunArray<N, T> {
     }
 }
 
-
 impl<const N: u64, T: core::fmt::Debug + Clone> core::fmt::Debug for FunArray<N, T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}", self.as_vec())
     }
 }
 
-
 impl<const N: u64, T> core::ops::Index<u64> for FunArray<N, T> {
     type Output = T;
-    
+
     fn index(&self, index: u64) -> &Self::Output {
         self.get(index)
     }
