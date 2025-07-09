@@ -2,7 +2,8 @@ use super::types::*;
 
 use crate::abstractions::{
     bit::Bit,
-    bitvec::{int_vec_interp::*, BitVec},
+    bitvec::BitVec,
+    simd::int_vec_interp::*
 };
 
 pub fn _mm256_set1_epi32(x: i32) -> __m256i {

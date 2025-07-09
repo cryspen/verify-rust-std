@@ -1,9 +1,74 @@
-//! A model of SIMD compiler intrinsics.
+//! Models of SIMD compiler intrinsics.
 //!
 //! Operations are defined on FunArrs.
 
+
+
 use crate::abstractions::{bit::MachineInteger, funarr::FunArray};
 
+pub mod int_vec_interp {
+    use crate::abstractions::bitvec::*;
+
+    #[allow(dead_code)]
+    /// Derives interpretations functions, and type synonyms.
+    macro_rules! interpretations {
+	($n:literal; $($name:ident [$ty:ty; $m:literal]),*) => {
+            $(
+		#[doc = concat!(stringify!($ty), " vectors of size ", stringify!($m))]
+		#[allow(non_camel_case_types)]
+		pub type $name = FunArray<$m, $ty>;
+		pastey::paste! {
+                    const _: ()  = {
+			impl BitVec<$n> {
+                            #[doc = concat!("Conversion from ", stringify!($ty), " vectors of size ", stringify!($m), "to  bit vectors of size ", stringify!($n))]
+                            pub fn [< from_ $name >](iv: $name) -> BitVec<$n> {
+				let vec: Vec<$ty> = iv.as_vec();
+				Self::from_slice(&vec[..], <$ty>::bits() as u64)
+                            }
+                            #[doc = concat!("Conversion from bit vectors of size ", stringify!($n), " to ", stringify!($ty), " vectors of size ", stringify!($m))]
+                            pub fn [< to_ $name >](bv: BitVec<$n>) -> $name {
+				let vec: Vec<$ty> = bv.to_vec();
+				$name::from_fn(|i| vec[i as usize])
+                            }
+
+
+			}
+
+			
+			impl From<BitVec<$n>> for $name {
+                            fn from(bv: BitVec<$n>) -> Self {
+				BitVec::[< to_ $name >](bv)
+                            }
+			}
+
+			impl From<$name> for BitVec<$n> {
+                            fn from(iv: $name) -> Self {
+				BitVec::[< from_ $name >](iv)
+                            }
+			}
+
+			impl $name {
+
+			    pub fn splat(value: $ty) -> Self {
+				FunArray::from_fn(|_| value)
+			    }
+			}
+                    };
+		}
+            )*
+	};
+    }
+
+    interpretations!(256; i32x8 [i32; 8], i64x4 [i64; 4], i16x16 [i16; 16], i128x2 [i128; 2], i8x32 [i8; 32],
+		     u32x8 [u32; 8], u64x4 [u64; 4], u16x16 [u16; 16], u8x32 [u8; 32]);
+    interpretations!(128; i32x4 [i32; 4], i64x2 [i64; 2], i16x8 [i16; 8], i128x1 [i128; 1], i8x16 [i8; 16],
+		     u32x4 [u32; 4], u64x2 [u64; 2], u16x8 [u16; 8], u8x16 [u8; 16]);
+
+    interpretations!(512; u32x16 [u32; 16], u16x32 [u16; 32], i32x16 [i32; 16], i16x32 [i16; 32]);
+    interpretations!(64; i64x1 [i64; 1], i32x2 [i32; 2], i16x4 [i16; 4], i8x8 [i8; 8], u64x1 [u64; 1], u32x2 [u32; 2],u16x4 [u16; 4], u8x8 [u8; 8]);
+    interpretations!(32; i8x4 [i8; 4], u8x4 [u8; 4]);
+
+}
 use std::convert::*;
 use std::ops::*;
 

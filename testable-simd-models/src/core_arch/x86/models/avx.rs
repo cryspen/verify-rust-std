@@ -16,12 +16,12 @@
 use super::types::*;
 use crate::abstractions::{
     bit::Bit,
-    bitvec::{int_vec_interp::*, BitVec},
+    bitvec::BitVec,
     simd::*,
 };
 
 mod c_extern {
-    use crate::abstractions::bitvec::int_vec_interp::*;
+    use crate::abstractions::simd::int_vec_interp::*;
 
     pub fn vperm2f128si256(a: i32x8, b: i32x8, imm8: i8) -> i32x8 {
         let temp = i128x2::from_fn(|i| match (imm8 as u8) >> (i * 4) {

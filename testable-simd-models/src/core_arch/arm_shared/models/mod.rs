@@ -22,7 +22,7 @@
 #![allow(unused)]
 #[allow(non_camel_case_types)]
 mod types {
-    use crate::abstractions::bitvec::int_vec_interp::*;
+    use crate::abstractions::simd::int_vec_interp::*;
     pub type int32x4_t = i32x4;
     pub type int64x1_t = i64x1;
     pub type int64x2_t = i64x2;

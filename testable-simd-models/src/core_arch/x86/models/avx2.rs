@@ -20,12 +20,13 @@
 //! [wiki_avx]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 //! [wiki_fma]: https://en.wikipedia.org/wiki/Fused_multiply-accumulate
 use crate::abstractions::{
-    bitvec::{int_vec_interp::*, BitVec},
+    bitvec::BitVec,
+    simd::int_vec_interp::*,
     funarr::FunArray,
 };
 
 mod c_extern {
-    use crate::abstractions::{bit::MachineInteger, bitvec::int_vec_interp::*, simd::*};
+    use crate::abstractions::{bit::MachineInteger, simd::*, simd::int_vec_interp::*};
     pub fn phaddw(a: i16x16, b: i16x16) -> i16x16 {
         i16x16::from_fn(|i| {
             if i < 4 {

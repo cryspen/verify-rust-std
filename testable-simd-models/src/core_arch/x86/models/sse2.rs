@@ -2,11 +2,12 @@
 use super::types::*;
 use crate::abstractions::{
     bit::Bit,
-    bitvec::{int_vec_interp::*, BitVec},
+    bitvec::BitVec,
     simd::*,
+    simd::int_vec_interp::*;
 };
 mod c_extern {
-    use crate::abstractions::{bit::MachineInteger, bitvec::int_vec_interp::*};
+    use crate::abstractions::{bit::MachineInteger, simd::int_vec_interp::*};
     pub fn packsswb(a: i16x8, b: i16x8) -> i8x16 {
         i8x16::from_fn(|i| {
             if i < 8 {
