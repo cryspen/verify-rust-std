@@ -4,7 +4,6 @@ use super::funarr::*;
 
 use std::fmt::Formatter;
 
-// TODO: this module uses `u128/i128` as mathematic integers. We should use `hax_lib::int` or bigint.
 
 /// A fixed-size bit vector type.
 ///
@@ -19,7 +18,7 @@ use std::fmt::Formatter;
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct BitVec<const N: u64>(FunArray<N, Bit>);
 
-/// Pretty prints a bit slice by group of 8#[hax_lib::exclude]
+/// Pretty prints a bit slice by group of 8
 fn bit_slice_to_string(bits: &[Bit]) -> String {
     bits.iter()
         .map(|bit| match bit {

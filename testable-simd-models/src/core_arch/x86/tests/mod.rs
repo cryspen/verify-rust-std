@@ -53,7 +53,7 @@ pub(crate) mod upstream {
     #[cfg(target_arch = "x86_64")]
     pub use core::arch::x86_64::*;
 }
-#[hax_lib::exclude]
+
 mod conversions {
     use super::upstream::{
         __m128i, __m256, __m256i, _mm256_castps_si256, _mm256_castsi256_ps, _mm256_loadu_si256,
