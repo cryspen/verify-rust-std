@@ -8,6 +8,8 @@ use crate::abstractions::{bit::MachineInteger, funarr::FunArray};
 
 pub mod int_vec_interp {
     use crate::abstractions::bitvec::*;
+    use crate::abstractions::bit::MachineInteger;
+    use crate::abstractions::funarr::*;
 
     #[allow(dead_code)]
     /// Derives interpretations functions, and type synonyms.

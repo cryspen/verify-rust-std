@@ -21,8 +21,7 @@
 //! [wiki_fma]: https://en.wikipedia.org/wiki/Fused_multiply-accumulate
 use crate::abstractions::{
     bitvec::BitVec,
-    simd::int_vec_interp::*,
-    funarr::FunArray,
+    simd::int_vec_interp::*
 };
 
 mod c_extern {
@@ -921,7 +920,7 @@ pub fn _mm256_and_si256(a: __m256i, b: __m256i) -> __m256i {
 }
 
 pub fn _mm256_set1_epi8(val: i8) -> BitVec<256> {
-    BitVec::from_i8x32(FunArray::<32, i8>::from_fn(|_| val))
+    BitVec::from_i8x32(i8x32::from_fn(|_| val))
 }
 
 /// Computes the bitwise NOT of 256 bits (representing integer data)

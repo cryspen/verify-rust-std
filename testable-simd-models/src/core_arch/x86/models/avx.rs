@@ -18,6 +18,7 @@ use crate::abstractions::{
     bit::Bit,
     bitvec::BitVec,
     simd::*,
+    simd::int_vec_interp::*
 };
 
 mod c_extern {

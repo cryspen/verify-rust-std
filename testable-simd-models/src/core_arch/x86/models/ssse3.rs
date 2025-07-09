@@ -2,6 +2,7 @@
 
 use crate::abstractions::{
     bitvec::BitVec,
+    simd::int_vec_interp::*,
     simd::*,
 };
 
