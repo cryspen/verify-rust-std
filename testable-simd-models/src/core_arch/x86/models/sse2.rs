@@ -1,11 +1,6 @@
 //! Streaming SIMD Extensions 2 (SSE2)
 use super::types::*;
-use crate::abstractions::{
-    bit::Bit,
-    bitvec::BitVec,
-    simd::*,
-    simd::int_vec_interp::*
-};
+use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::int_vec_interp::*, simd::*};
 mod c_extern {
     use crate::abstractions::{bit::MachineInteger, simd::int_vec_interp::*};
     pub fn packsswb(a: i16x8, b: i16x8) -> i8x16 {

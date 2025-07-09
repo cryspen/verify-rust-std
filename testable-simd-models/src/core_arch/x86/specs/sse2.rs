@@ -1,9 +1,6 @@
 use super::types::*;
 
-use crate::abstractions::{
-    bitvec::BitVec,
-    simd::int_vec_interp::*
-};
+use crate::abstractions::{bitvec::BitVec, simd::int_vec_interp::*};
 pub fn _mm_set1_epi16(a: i16) -> __m128i {
     i16x8::from_fn(|_| a).into()
 }

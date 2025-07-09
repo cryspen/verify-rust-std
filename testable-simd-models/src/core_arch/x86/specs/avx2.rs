@@ -1,10 +1,6 @@
 use super::types::*;
 
-use crate::abstractions::{
-    bit::Bit,
-    bitvec::BitVec,
-    simd::int_vec_interp::*
-};
+use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::int_vec_interp::*};
 
 pub fn _mm256_mul_epi32(x: __m256i, y: __m256i) -> __m256i {
     let x = BitVec::to_i32x8(x);

@@ -1,10 +1,6 @@
 //! Supplemental Streaming SIMD Extensions 3 (SSSE3)
 
-use crate::abstractions::{
-    bitvec::BitVec,
-    simd::int_vec_interp::*,
-    simd::*,
-};
+use crate::abstractions::{bitvec::BitVec, simd::int_vec_interp::*, simd::*};
 
 use super::types::*;
 

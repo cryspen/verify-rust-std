@@ -14,12 +14,7 @@
 //! [wiki]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 
 use super::types::*;
-use crate::abstractions::{
-    bit::Bit,
-    bitvec::BitVec,
-    simd::*,
-    simd::int_vec_interp::*
-};
+use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::int_vec_interp::*, simd::*};
 
 mod c_extern {
     use crate::abstractions::simd::int_vec_interp::*;

@@ -4,7 +4,6 @@ use super::funarr::*;
 
 use std::fmt::Formatter;
 
-
 /// A fixed-size bit vector type.
 ///
 /// `BitVec<N>` is a specification-friendly, fixed-length bit vector that internally
@@ -154,4 +153,3 @@ impl<const N: u64> BitVec<N> {
         self.0.fold(init, f)
     }
 }
-

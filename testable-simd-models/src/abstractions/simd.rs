@@ -2,13 +2,11 @@
 //!
 //! Operations are defined on FunArrs.
 
-
-
 use crate::abstractions::{bit::MachineInteger, funarr::FunArray};
 
 pub mod int_vec_interp {
-    use crate::abstractions::bitvec::*;
     use crate::abstractions::bit::MachineInteger;
+    use crate::abstractions::bitvec::*;
     use crate::abstractions::funarr::*;
 
     #[allow(dead_code)]
@@ -36,7 +34,7 @@ pub mod int_vec_interp {
 
 			}
 
-			
+
 			impl From<BitVec<$n>> for $name {
                             fn from(bv: BitVec<$n>) -> Self {
 				BitVec::[< to_ $name >](bv)
@@ -69,7 +67,6 @@ pub mod int_vec_interp {
     interpretations!(512; u32x16 [u32; 16], u16x32 [u16; 32], i32x16 [i32; 16], i16x32 [i16; 32]);
     interpretations!(64; i64x1 [i64; 1], i32x2 [i32; 2], i16x4 [i16; 4], i8x8 [i8; 8], u64x1 [u64; 1], u32x2 [u32; 2],u16x4 [u16; 4], u8x8 [u8; 8]);
     interpretations!(32; i8x4 [i8; 4], u8x4 [u8; 4]);
-
 }
 use std::convert::*;
 use std::ops::*;

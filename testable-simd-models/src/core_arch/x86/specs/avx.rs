@@ -1,10 +1,6 @@
 use super::types::*;
 
-use crate::abstractions::{
-    bit::Bit,
-    bitvec::BitVec,
-    simd::int_vec_interp::*
-};
+use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::int_vec_interp::*};
 
 pub fn _mm256_set1_epi32(x: i32) -> __m256i {
     i32x8::from_fn(|_| x).into()
