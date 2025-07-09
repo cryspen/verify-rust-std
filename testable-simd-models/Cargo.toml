@@ -10,7 +10,6 @@ readme = "README.md"
 
 [dependencies]
 rand = "0.9"
-hax-lib = { git = "https://github.com/cryspen/hax/" }
 pastey = "0.1.0"
 
 [lints.rust]

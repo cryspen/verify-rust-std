@@ -4,9 +4,6 @@ use super::funarr::*;
 
 use std::fmt::Formatter;
 
-// This is required due to some hax-lib inconsistencies with versus without `cfg(hax)`.
-#[cfg(hax)]
-use hax_lib::{int, ToInt};
 
 // TODO: this module uses `u128/i128` as mathematic integers. We should use `hax_lib::int` or bigint.
 
@@ -20,12 +17,10 @@ use hax_lib::{int, ToInt};
 /// The [`Debug`] implementation for `BitVec` pretty-prints the bits in groups of eight,
 /// making the bit pattern more human-readable. The type also implements indexing,
 /// allowing for easy access to individual bits.
-#[hax_lib::fstar::before("noeq")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct BitVec<const N: u64>(FunArray<N, Bit>);
 
-/// Pretty prints a bit slice by group of 8
-#[hax_lib::exclude]
+/// Pretty prints a bit slice by group of 8#[hax_lib::exclude]
 fn bit_slice_to_string(bits: &[Bit]) -> String {
     bits.iter()
         .map(|bit| match bit {
@@ -41,24 +36,23 @@ fn bit_slice_to_string(bits: &[Bit]) -> String {
         .into()
 }
 
-#[hax_lib::exclude]
+
 impl<const N: u64> core::fmt::Debug for BitVec<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", bit_slice_to_string(&self.0.as_vec()))
     }
 }
 
-#[hax_lib::attributes]
+
 impl<const N: u64> core::ops::Index<u64> for BitVec<N> {
     type Output = Bit;
-    #[requires(index < N)]
     fn index(&self, index: u64) -> &Self::Output {
         self.0.get(index)
     }
 }
 
 /// Convert a bit slice into an unsigned number.
-#[hax_lib::exclude]
+
 fn u128_int_from_bit_slice(bits: &[Bit]) -> u128 {
     bits.iter()
         .enumerate()
@@ -67,7 +61,6 @@ fn u128_int_from_bit_slice(bits: &[Bit]) -> u128 {
 }
 
 /// Convert a bit slice into a machine integer of type `T`.
-#[hax_lib::exclude]
 fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) -> T {
     debug_assert!(bits.len() <= T::bits() as usize);
     let result = if T::SIGNED {
@@ -87,27 +80,6 @@ fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) ->
     };
     n
 }
-
-macro_rules! impl_pointwise {
-    ($n:literal, $($i:literal)*) => {
-        impl BitVec<$n> {
-            pub fn pointwise(self) -> Self {
-                Self::from_fn(|i| match i {
-                    $($i => self[$i],)*
-                    _ => unreachable!(),
-                })
-            }
-        }
-    };
-}
-
-impl_pointwise!(128, 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127);
-impl_pointwise!(256, 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255);
-
-/// An F* attribute that indiquates a rewritting lemma should be applied
-pub const REWRITE_RULE: () = {};
-
-#[hax_lib::exclude]
 impl<const N: u64> BitVec<N> {
     /// Constructor for BitVec. `BitVec::<N>::from_fn` constructs a bitvector out of a function that takes usizes smaller than `N` and produces bits.
     pub fn from_fn<F: Fn(u64) -> Bit>(f: F) -> Self {
@@ -148,14 +120,14 @@ impl<const N: u64> BitVec<N> {
     }
 }
 
-#[hax_lib::attributes]
+
 impl<const N: u64> BitVec<N> {
-    #[hax_lib::requires(CHUNK > 0 && CHUNK.to_int() * SHIFTS.to_int() == N.to_int())]
+
     pub fn chunked_shift<const CHUNK: u64, const SHIFTS: u64>(
         self,
         shl: FunArray<SHIFTS, i128>,
     ) -> BitVec<N> {
-        #[hax_lib::requires(CHUNK > 0 && CHUNK.to_int() * SHIFTS.to_int() == N.to_int())]
+
         fn chunked_shift<const N: u64, const CHUNK: u64, const SHIFTS: u64>(
             bitvec: BitVec<N>,
             shl: FunArray<SHIFTS, i128>,
@@ -163,11 +135,6 @@ impl<const N: u64> BitVec<N> {
             BitVec::from_fn(|i| {
                 let nth_bit = i % CHUNK;
                 let nth_chunk = i / CHUNK;
-                hax_lib::assert_prop!(nth_chunk.to_int() <= SHIFTS.to_int() - int!(1));
-                hax_lib::assert_prop!(
-                    nth_chunk.to_int() * CHUNK.to_int()
-                        <= (SHIFTS.to_int() - int!(1)) * CHUNK.to_int()
-                );
                 let shift: i128 = if nth_chunk < SHIFTS {
                     shl[nth_chunk]
                 } else {
@@ -176,10 +143,6 @@ impl<const N: u64> BitVec<N> {
                 let local_index = (nth_bit as i128).wrapping_sub(shift);
                 if local_index < CHUNK as i128 && local_index >= 0 {
                     let local_index = local_index as u64;
-                    hax_lib::assert_prop!(
-                        nth_chunk.to_int() * CHUNK.to_int() + local_index.to_int()
-                            < SHIFTS.to_int() * CHUNK.to_int()
-                    );
                     bitvec[nth_chunk * CHUNK + local_index]
                 } else {
                     Bit::Zero
@@ -215,7 +178,6 @@ pub mod int_vec_interp {
                 pub type $name = FunArray<$m, $ty>;
                 pastey::paste! {
                     const _: ()  = {
-                        #[hax_lib::opaque]
                         impl BitVec<$n> {
                             #[doc = concat!("Conversion from ", stringify!($ty), " vectors of size ", stringify!($m), "to  bit vectors of size ", stringify!($n))]
                             pub fn [< from_ $name >](iv: $name) -> BitVec<$n> {
@@ -250,26 +212,6 @@ pub mod int_vec_interp {
 				FunArray::from_fn(|_| value)
 			    }
 			}
-
-
-
-                        #[doc = concat!("Lemma that asserts that applying ", stringify!(BitVec::<$n>::from)," and then ", stringify!($name::from), " is the identity.")]
-                        #[hax_lib::fstar::before("[@@ $SIMPLIFICATION_LEMMA ]")]
-                        #[hax_lib::opaque]
-                        #[hax_lib::lemma]
-                        // #[hax_lib::fstar::smt_pat($name::from(BitVec::<$n>::from(x)))]
-                        pub fn lemma_cancel_iv(x: $name) -> Proof<{
-                            hax_lib::eq(BitVec::[< to_ $name >](BitVec::[<from_ $name>](x)), x)
-                        }> {}
-                        #[doc = concat!("Lemma that asserts that applying ", stringify!($name::from)," and then ", stringify!(BitVec::<$n>::from), " is the identity.")]
-                        #[hax_lib::fstar::before("[@@ $SIMPLIFICATION_LEMMA ]")]
-                        #[hax_lib::opaque]
-                        #[hax_lib::lemma]
-                        // #[hax_lib::fstar::smt_pat(BitVec::<$n>::from($name::from(x)))]
-                        pub fn lemma_cancel_bv(x: BitVec<$n>) -> Proof<{
-                            hax_lib::eq(BitVec::[< from_ $name >](BitVec::[<to_ $name>](x)), x)
-                            // hax_lib::eq(BitVec::<$n>::from($name::from(x)), x)
-                        }> {}
                     };
                 }
             )*

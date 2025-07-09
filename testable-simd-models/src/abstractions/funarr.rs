@@ -3,13 +3,9 @@
 /// `FunArray<N, T>` represents an array of `T` values of length `N`, where `N` is a compile-time constant.
 /// Internally, it uses a fixed-length array of `Option<T>` with a maximum capacity of 512 elements.
 /// Unused elements beyond `N` are filled with `None`.
-///
-/// This type is integrated with F* through various `#[hax_lib::fstar::replace]` attributes to support
-/// formal verification workflows.
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct FunArray<const N: u64, T>([Option<T>; 512]);
 
-#[hax_lib::exclude]
 impl<const N: u64, T> FunArray<N, T> {
     /// Gets a reference to the element at index `i`.
     pub fn get(&self, i: u64) -> &T {
@@ -56,24 +52,7 @@ impl<const N: u64, T> FunArray<N, T> {
     }
 }
 
-macro_rules! impl_pointwise {
-    ($n:literal, $($i:literal)*) => {
-        impl<T: Copy> FunArray<$n, T> {
-            pub fn pointwise(self) -> Self {
-                Self::from_fn(|i| match i {
-                    $($i => self[$i],)*
-                    _ => unreachable!(),
-                })
-            }
-        }
-    };
-}
 
-impl_pointwise!(4, 0 1 2 3);
-impl_pointwise!(8, 0 1 2 3 4 5 6 7);
-impl_pointwise!(16, 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15);
-
-#[hax_lib::exclude]
 impl<const N: u64, T: Clone> TryFrom<Vec<T>> for FunArray<N, T> {
     type Error = ();
     fn try_from(v: Vec<T>) -> Result<Self, ()> {
@@ -85,17 +64,17 @@ impl<const N: u64, T: Clone> TryFrom<Vec<T>> for FunArray<N, T> {
     }
 }
 
-#[hax_lib::exclude]
+
 impl<const N: u64, T: core::fmt::Debug + Clone> core::fmt::Debug for FunArray<N, T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}", self.as_vec())
     }
 }
 
-#[hax_lib::attributes]
+
 impl<const N: u64, T> core::ops::Index<u64> for FunArray<N, T> {
     type Output = T;
-    #[requires(index < N)]
+    
     fn index(&self, index: u64) -> &Self::Output {
         self.get(index)
     }
