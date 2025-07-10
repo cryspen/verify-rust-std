@@ -13,7 +13,7 @@
 //! or with .into().
 //!
 //! Sometimes, an intrinsic in Rust is implemented by directly using the corresponding
-//! LLVM instruction via an `unsafe extern "C"` module. In thosse cases, the corresponding
+//! LLVM instruction via an `unsafe extern "C"` module. In those cases, the corresponding
 //! function is defined in the `c_extern` module in each file, which contain manually
 //! written implementations made by consulting the appropriate Intel documentation.
 //!
