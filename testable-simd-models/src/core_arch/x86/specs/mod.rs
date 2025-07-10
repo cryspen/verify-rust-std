@@ -1,6 +1,6 @@
 //! Specifications for x86 intrinsics.
 //!
-//! Specifications for x86 intrinsics are written manually by consulting the appropriate [Intel documentation][https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html].
+//! Specifications for x86 intrinsics are written manually by consulting the appropriate [Intel documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html).
 //! These specifications are written to match what the intrinsic does, instead of being like
 //! the Rust implementations as in `crate::core_arch::x86::models`. This is for the possibility
 //! the Rust core incorrectly implements an intrinsic. As a rule of thumb, any intrinsic whose
