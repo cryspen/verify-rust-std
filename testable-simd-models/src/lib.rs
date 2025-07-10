@@ -1,6 +1,6 @@
-//! `core-models`: A Rust Model for the `core` Library
+//! `testable-simd-models`: A Rust Model for the `core` Library
 //!
-//! `core-models` is a simplified, self-contained model of Rust’s `core` library. It aims to provide
+//! `testable-simd-models` is a simplified, self-contained model of Rust’s `core` library. It aims to provide
 //! a purely Rust-based specification of `core`'s fundamental operations, making them easier to
 //! understand, analyze, and formally verify. Unlike `core`, which may rely on platform-specific
 //! intrinsics and compiler magic, `core-models` expresses everything in plain Rust, prioritizing
@@ -21,11 +21,11 @@
 //!
 //! ## Intended Use
 //!
-//! `core-models` is designed as a reference model for formal verification and reasoning about Rust programs.
-//! By providing a readable, well-specified version of `core`'s behavior, it serves as a foundation for
+//! `testable-simd-models` is designed as a reference model for formal verification and reasoning about Rust programs.
+//! By providing a readable, testable, well-specified version of `core`'s behavior, it serves as a foundation for
 //! proof assistants and other verification tools.
 
-// This recursion limit is necessary for macro `core-models::core_arch::x86::interpretations::int_vec::tests::mk!`.
+// This recursion limit is necessary for mk! macro sued for tests.
 // We test functions with const generics, the macro generate a test per possible (const generic) control value.
 #![recursion_limit = "4096"]
 pub mod abstractions;

@@ -1,5 +1,6 @@
-/// A fixed-size array wrapper with functional semantics and F* integration.
-///
+//! This module implements a fixed-size array wrapper with functional semantics
+//! which are used in formulating abstractions.
+
 /// `FunArray<N, T>` represents an array of `T` values of length `N`, where `N` is a compile-time constant.
 /// Internally, it uses a fixed-length array of `Option<T>` with a maximum capacity of 512 elements.
 /// Unused elements beyond `N` are filled with `None`.

@@ -1,5 +1,5 @@
 //! This module provides abstractions that are useful for writing
-//! specifications in minicore. Currently it provides two abstractions: bits and
+//! specifications for the intrinsics. Currently it provides two abstractions: bits and
 //! bit vectors.
 //!
 //! # Examples
