@@ -34,8 +34,35 @@ macro_rules! mk {
     }
 }
 mk!(_mm256_blendv_ps(a: __m256, b: __m256, c: __m256));
-// mk!(_mm256_movemask_ps(a: __m256));
-// mk!(_mm256_testz_si256(a: __m256i, b: __m256i));
+
+#[test]
+fn _mm256_movemask_ps() {
+    let n = 1000;
+
+    for _ in 0..n {
+        let a: BitVec<256> = BitVec::random();
+        assert_eq!(
+            super::super::models::avx::_mm256_movemask_ps(a.into()),
+            unsafe { upstream::_mm256_movemask_ps(a.into()) }
+        );
+    }
+}
+
+#[test]
+fn _mm256_testz_si256() {
+    let n = 1000;
+
+    for _ in 0..n {
+        let a: BitVec<256> = BitVec::random();
+	let b: BitVec<256> = BitVec::random();
+        assert_eq!(
+            super::super::models::avx::_mm256_testz_si256(a.into(), b.into()),
+            unsafe { upstream::_mm256_testz_si256(a.into(), b.into()) }
+        );
+    }
+}
+
+
 mk!(_mm256_setzero_ps());
 mk!(_mm256_setzero_si256());
 mk!(_mm256_set_epi8(
