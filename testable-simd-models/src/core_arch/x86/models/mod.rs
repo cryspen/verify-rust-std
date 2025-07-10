@@ -10,7 +10,7 @@
 //! for correct compilation.
 //!
 //! Calls to transmute are replaced with either an explicit call to a `BitVec::from_ function`,
-//! or with .into().
+//! or with `.into()`.
 //!
 //! Sometimes, an intrinsic in Rust is implemented by directly using the corresponding
 //! LLVM instruction via an `unsafe extern "C"` module. In those cases, the corresponding
