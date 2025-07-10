@@ -9,7 +9,7 @@
 //! operations like simd_cast or simd_shuffle might need a little modification
 //! for correct compilation.
 //!
-//! Calls to transmute are replaced with either an explicit call to a BitVec::from_ function,
+//! Calls to transmute are replaced with either an explicit call to a `BitVec::from_ function`,
 //! or with .into().
 //!
 //! Sometimes, an intrinsic in Rust is implemented by directly using the corresponding
