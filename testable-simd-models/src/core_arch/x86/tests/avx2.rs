@@ -2,7 +2,7 @@ use super::upstream;
 use crate::abstractions::bitvec::BitVec;
 use crate::helpers::test::HasRandom;
 
-/// Derives tests for a given intrinsics. Test that a given intrisics and its model compute the same thing over random values (1000 by default).
+/// Derives tests for a given intrinsics. Test that a given intrinsics and its model compute the same thing over random values (1000 by default).
 macro_rules! mk {
     ($([$N:literal])?$name:ident$({$(<$($c:literal),*>),*})?($($x:ident : $ty:ident),*)) => {
         #[test]
