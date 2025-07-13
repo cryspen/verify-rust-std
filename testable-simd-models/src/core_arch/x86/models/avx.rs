@@ -338,6 +338,19 @@ pub fn _mm256_set_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
     BitVec::from_i64x4(i64x4::from_fn(|i| vec[i as usize]))
 }
 
+/// Broadcasts 8-bit integer `a` to all elements of returned vector.
+/// This intrinsic may generate the `vpbroadcastw`.
+///
+/// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_set1_epi16)
+
+//
+
+// This intrinsic has no corresponding instruction.
+
+pub fn _mm256_set1_epi8(val: i8) -> BitVec<256> {
+    BitVec::from_i8x32(i8x32::from_fn(|_| val))
+}
+
 /// Broadcasts 16-bit integer `a` to all elements of returned vector.
 /// This intrinsic may generate the `vpbroadcastw`.
 ///

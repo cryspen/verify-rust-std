@@ -128,5 +128,6 @@ mk!(_mm256_set_epi32(
     e7: i32
 ));
 mk!(_mm256_set_epi64x(a: i64, b: i64, c: i64, d: i64));
+mk!(_mm256_set1_epi8(a: i8));
 mk!(_mm256_set1_epi16(a: i16));
 mk!(_mm256_set1_epi32(a: i32));
