@@ -916,9 +916,7 @@ pub fn _mm256_and_si256(a: __m256i, b: __m256i) -> __m256i {
     simd_and(BitVec::to_i64x4(a), BitVec::to_i64x4(b)).into()
 }
 
-pub fn _mm256_set1_epi8(val: i8) -> BitVec<256> {
-    BitVec::from_i8x32(i8x32::from_fn(|_| val))
-}
+
 
 /// Computes the bitwise NOT of 256 bits (representing integer data)
 /// in `a` and then AND with `b`.
