@@ -18,7 +18,7 @@
 //! written implementations made by consulting the appropriate Intel documentation.
 //!
 //! In general, it is best to gain an idea of how an implementation should be written by looking
-//! at how other functions are implemented. Also see `core::arch::x86` for reference.
+//! at how other functions are implemented. Also see `core::arch::x86` for [reference](https://github.com/rust-lang/stdarch/tree/master/crates/core_arch).
 
 pub mod avx;
 pub mod avx2;
