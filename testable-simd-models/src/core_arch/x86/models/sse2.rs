@@ -1293,7 +1293,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 
 /// Returns vector of type __m128i with indeterminate elements.with indetermination elements.
 /// Despite using the word "undefined" (following Intel's naming scheme), this non-deterministically
-/// picks some valid value and is not equivalent to [`mem::MaybeUninit`].
+/// picks some valid value and is not equivalent to [`core::mem::MaybeUninit`].
 /// In practice, this is typically equivalent to [`mem::zeroed`].
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_undefined_si128)
