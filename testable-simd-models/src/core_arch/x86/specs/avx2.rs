@@ -12,8 +12,9 @@ pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
     let a = BitVec::to_i128x2(a);
     let a = i128x2::from_fn(|i| {
         let tmp = IMM8 % 256;
-        let tmp = tmp % 16;
-        ((a[i] as u128) >> (tmp * 8)) as i128
+        if tmp > 15 {0} else {
+            ((a[i] as u128) >> (tmp * 8)) as i128
+	}
     });
     BitVec::from_i128x2(a)
 }
