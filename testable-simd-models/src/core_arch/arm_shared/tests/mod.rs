@@ -67,7 +67,7 @@ pub mod conversions {
     use super::types;
     use crate::abstractions::bitvec::BitVec;
     use crate::abstractions::funarr::FunArray;
-    use crate::simd::int_vec_interp::*;
+
     macro_rules! convert{
 	($($ty1:ident [$ty2:ty ; $n:literal]),*) => {
 	    $(
