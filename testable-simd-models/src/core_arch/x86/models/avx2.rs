@@ -916,8 +916,6 @@ pub fn _mm256_and_si256(a: __m256i, b: __m256i) -> __m256i {
     simd_and(BitVec::to_i64x4(a), BitVec::to_i64x4(b)).into()
 }
 
-
-
 /// Computes the bitwise NOT of 256 bits (representing integer data)
 /// in `a` and then AND with `b`.
 ///
@@ -2137,8 +2135,6 @@ pub fn _mm256_srli_si256<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_bsrli_epi128)
 
 pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
-
-    
     const fn mask(shift: i32, i: u32) -> u64 {
         let shift = shift as u32 & 0xff;
         if shift > 15 || (15 - (i % 16)) < shift {
@@ -2147,7 +2143,7 @@ pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
             (32 + (i + shift)) as u64
         }
     }
-    
+
     let a = BitVec::to_i8x32(a);
     let r: i8x32 = simd_shuffle(
         i8x32::from_fn(|_| 0),
@@ -2187,7 +2183,7 @@ pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
             mask(IMM8, 31),
         ],
     );
-    
+
     r.into()
 }
 
