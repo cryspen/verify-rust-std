@@ -14,10 +14,10 @@
 //! [wiki]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 
 use super::types::*;
-use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::int_vec_interp::*, simd::*};
+use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::*};
 
 mod c_extern {
-    use crate::abstractions::simd::int_vec_interp::*;
+    use crate::abstractions::simd::*;
 
     pub fn vperm2f128si256(a: i32x8, b: i32x8, imm8: i8) -> i32x8 {
         let temp = i128x2::from_fn(|i| match (imm8 as u8) >> (i * 4) {

@@ -19,10 +19,10 @@
 //! [amd64_ref]: http://support.amd.com/TechDocs/24594.pdf
 //! [wiki_avx]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 //! [wiki_fma]: https://en.wikipedia.org/wiki/Fused_multiply-accumulate
-use crate::abstractions::{bitvec::BitVec, simd::int_vec_interp::*};
+use crate::abstractions::{bitvec::BitVec, simd::*};
 
 mod c_extern {
-    use crate::abstractions::{bit::MachineInteger, simd::int_vec_interp::*, simd::*};
+    use crate::abstractions::{bit::MachineInteger, simd::*};
     pub fn phaddw(a: i16x16, b: i16x16) -> i16x16 {
         i16x16::from_fn(|i| {
             if i < 4 {

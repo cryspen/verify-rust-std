@@ -1,11 +1,11 @@
 //! Supplemental Streaming SIMD Extensions 3 (SSSE3)
 
-use crate::abstractions::{bitvec::BitVec, simd::int_vec_interp::*, simd::*};
+use crate::abstractions::{bitvec::BitVec, simd::*};
 
 use super::types::*;
 
 mod c_extern {
-    use crate::abstractions::simd::int_vec_interp::*;
+    use crate::abstractions::simd::*;
     pub fn pshufb128(a: u8x16, b: u8x16) -> u8x16 {
         u8x16::from_fn(|i| if b[i] > 127 { 0 } else { a[(b[i] % 16) as u64] })
     }
