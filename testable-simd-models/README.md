@@ -23,6 +23,7 @@ tests work by testing the models against the intrinsics in the Rust
 core, trying out random inputs (generally 1000), and comparing their
 outputs.
 
+## Modeling Process
 The process of adding a specific intrinsic's model goes as follows.
 For this example, let us say the intrinsic we are adding is
 `_mm256_bsrli_epi128` from the avx2 feature set.
@@ -106,3 +107,21 @@ pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
 	   mk!([100]_mm256_bsrli_epi128{<0>,<1>,<2>,<3>,...,<255>}(a: BitVec));
    ```
    Here, the `[100]` means we test 100 random inputs for each constant value. This concludes the necessary steps for implementing an intrinsic.
+
+
+## Contributing Models
+
+To contribute new models of intrinsics, we expect the author to follow
+the above steps and provide comprehensive tests.  It is important that
+the model author look carefully at both the Intel/ARM specification
+and the Rust `stdarch` implementation, because the Rust implementation
+may not necessarily be correct.
+
+Indeed, the previous implementation of `_mm256_bsrli_epi128` (and a
+similar intrinsic called `_mm512_bsrli_epi128`) in `stdarch` had a
+bug, which we found during the process of modeling and testing this
+intrinsic. This bug was [reported by
+us](https://github.com/rust-lang/stdarch/issues/1822) using a failing
+test case generated from the testable model and then fixed by [our
+PR](https://github.com/rust-lang/stdarch/pull/1823) in the 2025-06-30
+version of `stdarch`.
