@@ -318,10 +318,10 @@ mod c_extern {
     }
 
     pub fn psllw(a: i16x16, count: i16x8) -> i16x16 {
-        let count4: u64 = (count[0] as u16) as u64;
-        let count3: u64 = ((count[1] as u16) as u64) * 65536;
-        let count2: u64 = ((count[2] as u16) as u64) * 4294967296;
-        let count1: u64 = ((count[3] as u16) as u64) * 281474976710656;
+        let count4 = (count[0] as u16) as  u64;
+        let count3 = ((count[1] as u16) as u64) * 65536;
+        let count2 = ((count[2] as u16) as u64) * 4294967296;
+        let count1 = ((count[3] as u16) as u64) * 281474976710656;
         let count = count1 + count2 + count3 + count4;
         i16x16::from_fn(|i| {
             if count > 15 {
@@ -333,7 +333,7 @@ mod c_extern {
     }
 
     pub fn pslld(a: i32x8, count: i32x4) -> i32x8 {
-        let count: u64 = ((count[1] as u32) as u64) * 4294967296 + ((count[0] as u32) as u64);
+        let count = (count[1] as u64) * 4294967296 + (count[0] as u64);
 
         i32x8::from_fn(|i| {
             if count > 31 {
@@ -344,13 +344,13 @@ mod c_extern {
         })
     }
     pub fn psllq(a: i64x4, count: i64x2) -> i64x4 {
-        let count: u64 = count[0] as u64;
+        let count = count[0] as u32;
 
         i64x4::from_fn(|i| {
             if count > 63 {
                 0
             } else {
-                ((a[i] as u64) << count) as i64
+                ((a[i] as u32) << count) as i64
             }
         })
     }
@@ -379,7 +379,7 @@ mod c_extern {
             if count[i] > 63 || count[i] < 0 {
                 0
             } else {
-                ((a[i] as u64) << count[i]) as i64
+                ((a[i] as u32) << count[i]) as i64
             }
         })
     }
@@ -388,13 +388,13 @@ mod c_extern {
             if count[i] > 63 || count[i] < 0 {
                 0
             } else {
-                ((a[i] as u64) << count[i]) as i64
+                ((a[i] as u32) << count[i]) as i64
             }
         })
     }
 
     pub fn psraw(a: i16x16, count: i16x8) -> i16x16 {
-        let count: u64 = ((count[3] as u16) as u64) * 281474976710656
+        let count = ((count[3] as u16) as u64) * 281474976710656
             + ((count[2] as u16) as u64) * 4294967296
             + ((count[1] as u16) as u64) * 65536
             + ((count[0] as u16) as u64);
@@ -413,7 +413,7 @@ mod c_extern {
     }
 
     pub fn psrad(a: i32x8, count: i32x4) -> i32x8 {
-        let count: u64 = ((count[1] as u32) as u64) * 4294967296 + ((count[0] as u32) as u64);
+        let count = ((count[1] as u32) as u64) * 4294967296 + ((count[0] as u32) as u64);
 
         i32x8::from_fn(|i| {
             if count > 31 {
@@ -458,7 +458,7 @@ mod c_extern {
     }
 
     pub fn psrlw(a: i16x16, count: i16x8) -> i16x16 {
-        let count: u64 = (count[3] as u16 as u64) * 281474976710656
+        let count = (count[3] as u16 as u64) * 281474976710656
             + (count[2] as u16 as u64) * 4294967296
             + (count[1] as u16 as u64) * 65536
             + (count[0] as u16 as u64);
@@ -473,7 +473,7 @@ mod c_extern {
     }
 
     pub fn psrld(a: i32x8, count: i32x4) -> i32x8 {
-        let count: u64 = (count[1] as u32 as u64) * 4294967296 + (count[0] as u32 as u64);
+        let count = (count[1] as u64) * 4294967296 + (count[0] as u64);
 
         i32x8::from_fn(|i| {
             if count > 31 {
@@ -491,7 +491,7 @@ mod c_extern {
             if count > 63 {
                 0
             } else {
-                ((a[i] as u64) >> count) as i64
+                ((a[i] as u32) >> count) as i64
             }
         })
     }
@@ -520,7 +520,7 @@ mod c_extern {
             if count[i] > 63 || count[i] < 0 {
                 0
             } else {
-                ((a[i] as u64) >> count[i]) as i64
+                ((a[i] as u32) >> count[i]) as i64
             }
         })
     }
@@ -529,7 +529,7 @@ mod c_extern {
             if count[i] > 63 || count[i] < 0 {
                 0
             } else {
-                ((a[i] as u64) >> count[i]) as i64
+                ((a[i] as u32) >> count[i]) as i64
             }
         })
     }
@@ -540,14 +540,14 @@ mod c_extern {
                 if b[i] > 127 {
                     0
                 } else {
-                    let index: u64 = (b[i] % 16) as u64;
+                    let index = (b[i] % 16) as u32;
                     a[index]
                 }
             } else {
                 if b[i] > 127 {
                     0
                 } else {
-                    let index: u64 = (b[i] % 16) as u64;
+                    let index = (b[i] % 16) as u32;
                     a[index + 16]
                 }
             }
@@ -557,15 +557,15 @@ mod c_extern {
     pub fn permd(a: u32x8, b: u32x8) -> u32x8 {
         u32x8::from_fn(|i| {
             let id = b[i] % 8;
-            a[id as u64]
+            a[id]
         })
     }
 
     pub fn mpsadbw(a: u8x32, b: u8x32, imm8: i32) -> u16x16 {
         u16x16::from_fn(|i| {
             if i < 8 {
-                let a_offset = (((imm8 & 4) >> 2) * 4) as u32 as u64;
-                let b_offset = ((imm8 & 3) * 4) as u32 as u64;
+                let a_offset = (((imm8 & 4) >> 2) * 4) as u32;
+                let b_offset = ((imm8 & 3) * 4) as u32;
                 let k = a_offset + i;
                 let l = b_offset;
                 ((a[k].absolute_diff(b[l]) as i8) as u8 as u16)
@@ -575,8 +575,8 @@ mod c_extern {
             } else {
                 let i = i - 8;
                 let imm8 = imm8 >> 3;
-                let a_offset = (((imm8 & 4) >> 2) * 4) as u32 as u64;
-                let b_offset = ((imm8 & 3) * 4) as u32 as u64;
+                let a_offset = (((imm8 & 4) >> 2) * 4) as u32;
+                let b_offset = ((imm8 & 3) * 4) as u32;
                 let k = a_offset + i;
                 let l = b_offset;
                 ((a[16 + k].absolute_diff(b[16 + l]) as i8) as u8 as u16)
@@ -589,10 +589,10 @@ mod c_extern {
 
     pub fn vperm2i128(a: i64x4, b: i64x4, imm8: i8) -> i64x4 {
         let a = i128x2::from_fn(|i| {
-            ((a[2 * i] as u64 as u128) + ((a[2 * i + 1] as u64 as u128) << 64)) as i128
+            ((a[2 * i] as u32 as u128) + ((a[2 * i + 1] as u32 as u128) << 64)) as i128
         });
         let b = i128x2::from_fn(|i| {
-            ((b[2 * i] as u64 as u128) + ((b[2 * i + 1] as u64 as u128) << 64)) as i128
+            ((b[2 * i] as u32 as u128) + ((b[2 * i + 1] as u32 as u128) << 64)) as i128
         });
         let imm8 = imm8 as u8 as u32 as i32;
         let r = i128x2::from_fn(|i| {
@@ -646,7 +646,7 @@ use c_extern::*;
 
 use super::avx::*;
 use super::types::*;
-use crate::abstractions::simd::*;
+
 /// Computes the absolute values of packed 32-bit integers in `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_abs_epi32)
@@ -1041,7 +1041,7 @@ pub fn _mm256_blendv_epi8(a: __m256i, b: __m256i, mask: __m256i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastb_epi8)
 pub fn _mm_broadcastb_epi8(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i8x16(a), i8x16::from_fn(|_| 0), [0_u64; 16]);
+    let ret = simd_shuffle(BitVec::to_i8x16(a), i8x16::from_fn(|_| 0), [0_u32; 16]);
     ret.into()
 }
 
@@ -1050,7 +1050,7 @@ pub fn _mm_broadcastb_epi8(a: __m128i) -> __m128i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastb_epi8)
 pub fn _mm256_broadcastb_epi8(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i8x16(a), i8x16::from_fn(|_| 0), [0_u64; 32]);
+    let ret = simd_shuffle(BitVec::to_i8x16(a), i8x16::from_fn(|_| 0), [0_u32; 32]);
     ret.into()
 }
 
@@ -1062,7 +1062,7 @@ pub fn _mm256_broadcastb_epi8(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastd_epi32)
 
 pub fn _mm_broadcastd_epi32(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i32x4(a), i32x4::from_fn(|_| 0), [0_u64; 4]);
+    let ret = simd_shuffle(BitVec::to_i32x4(a), i32x4::from_fn(|_| 0), [0_u32; 4]);
     ret.into()
 }
 
@@ -1074,7 +1074,7 @@ pub fn _mm_broadcastd_epi32(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastd_epi32)
 
 pub fn _mm256_broadcastd_epi32(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i32x4(a), i32x4::from_fn(|_| 0), [0_u64; 8]);
+    let ret = simd_shuffle(BitVec::to_i32x4(a), i32x4::from_fn(|_| 0), [0_u32; 8]);
     ret.into()
 }
 
@@ -1087,7 +1087,7 @@ pub fn _mm256_broadcastd_epi32(a: __m128i) -> __m256i {
 // See https://github.com/rust-lang/stdarch/issues/791
 
 pub fn _mm_broadcastq_epi64(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(a), [0_u64; 2]);
+    let ret = simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(a), [0_u32; 2]);
     ret.into()
 }
 
@@ -1097,7 +1097,7 @@ pub fn _mm_broadcastq_epi64(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastq_epi64)
 
 pub fn _mm256_broadcastq_epi64(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(a), [0_u64; 4]);
+    let ret = simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(a), [0_u32; 4]);
     ret.into()
 }
 
@@ -1129,7 +1129,7 @@ pub fn _mm256_broadcastsi128_si256(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastw_epi16)
 
 pub fn _mm_broadcastw_epi16(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i16x8(a), i16x8::from_fn(|_| 0), [0_u64; 8]);
+    let ret = simd_shuffle(BitVec::to_i16x8(a), i16x8::from_fn(|_| 0), [0_u32; 8]);
     ret.into()
 }
 
@@ -1139,7 +1139,7 @@ pub fn _mm_broadcastw_epi16(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastw_epi16)
 
 pub fn _mm256_broadcastw_epi16(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i16x8(a), i16x8::from_fn(|_| 0), [0_u64; 16]);
+    let ret = simd_shuffle(BitVec::to_i16x8(a), i16x8::from_fn(|_| 0), [0_u32; 16]);
     ret.into()
 }
 
@@ -1720,10 +1720,10 @@ pub fn _mm256_permute4x64_epi64<const IMM8: i32>(a: __m256i) -> __m256i {
         BitVec::to_i64x4(a),
         zero,
         [
-            IMM8 as u64 & 0b11,
-            (IMM8 as u64 >> 2) & 0b11,
-            (IMM8 as u64 >> 4) & 0b11,
-            (IMM8 as u64 >> 6) & 0b11,
+            IMM8 as u32 & 0b11,
+            (IMM8 as u32 >> 2) & 0b11,
+            (IMM8 as u32 >> 4) & 0b11,
+            (IMM8 as u32 >> 6) & 0b11,
         ],
     );
     r.into()
@@ -1790,14 +1790,14 @@ pub fn _mm256_shuffle_epi32<const MASK: i32>(a: __m256i) -> __m256i {
         BitVec::to_i32x8(a),
         BitVec::to_i32x8(a),
         [
-            MASK as u64 & 0b11,
-            (MASK as u64 >> 2) & 0b11,
-            (MASK as u64 >> 4) & 0b11,
-            (MASK as u64 >> 6) & 0b11,
-            (MASK as u64 & 0b11) + 4,
-            ((MASK as u64 >> 2) & 0b11) + 4,
-            ((MASK as u64 >> 4) & 0b11) + 4,
-            ((MASK as u64 >> 6) & 0b11) + 4,
+            MASK as u32 & 0b11,
+            (MASK as u32 >> 2) & 0b11,
+            (MASK as u32 >> 4) & 0b11,
+            (MASK as u32 >> 6) & 0b11,
+            (MASK as u32 & 0b11) + 4,
+            ((MASK as u32 >> 2) & 0b11) + 4,
+            ((MASK as u32 >> 4) & 0b11) + 4,
+            ((MASK as u32 >> 6) & 0b11) + 4,
         ],
     );
     r.into()
@@ -1819,18 +1819,18 @@ pub fn _mm256_shufflehi_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
             1,
             2,
             3,
-            4 + (IMM8 as u64 & 0b11),
-            4 + ((IMM8 as u64 >> 2) & 0b11),
-            4 + ((IMM8 as u64 >> 4) & 0b11),
-            4 + ((IMM8 as u64 >> 6) & 0b11),
+            4 + (IMM8 as u32 & 0b11),
+            4 + ((IMM8 as u32 >> 2) & 0b11),
+            4 + ((IMM8 as u32 >> 4) & 0b11),
+            4 + ((IMM8 as u32 >> 6) & 0b11),
             8,
             9,
             10,
             11,
-            12 + (IMM8 as u64 & 0b11),
-            12 + ((IMM8 as u64 >> 2) & 0b11),
-            12 + ((IMM8 as u64 >> 4) & 0b11),
-            12 + ((IMM8 as u64 >> 6) & 0b11),
+            12 + (IMM8 as u32 & 0b11),
+            12 + ((IMM8 as u32 >> 2) & 0b11),
+            12 + ((IMM8 as u32 >> 4) & 0b11),
+            12 + ((IMM8 as u32 >> 6) & 0b11),
         ],
     );
     r.into()
@@ -1848,18 +1848,18 @@ pub fn _mm256_shufflelo_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
         a,
         a,
         [
-            0 + (IMM8 as u64 & 0b11),
-            0 + ((IMM8 as u64 >> 2) & 0b11),
-            0 + ((IMM8 as u64 >> 4) & 0b11),
-            0 + ((IMM8 as u64 >> 6) & 0b11),
+            0 + (IMM8 as u32 & 0b11),
+            0 + ((IMM8 as u32 >> 2) & 0b11),
+            0 + ((IMM8 as u32 >> 4) & 0b11),
+            0 + ((IMM8 as u32 >> 6) & 0b11),
             4,
             5,
             6,
             7,
-            8 + (IMM8 as u64 & 0b11),
-            8 + ((IMM8 as u64 >> 2) & 0b11),
-            8 + ((IMM8 as u64 >> 4) & 0b11),
-            8 + ((IMM8 as u64 >> 6) & 0b11),
+            8 + (IMM8 as u32 & 0b11),
+            8 + ((IMM8 as u32 >> 2) & 0b11),
+            8 + ((IMM8 as u32 >> 4) & 0b11),
+            8 + ((IMM8 as u32 >> 6) & 0b11),
             12,
             13,
             14,
@@ -1991,38 +1991,38 @@ pub fn _mm256_bslli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
         i8x32::from_fn(|_| 0),
         a,
         [
-            mask(IMM8, 0) as u64,
-            mask(IMM8, 1) as u64,
-            mask(IMM8, 2) as u64,
-            mask(IMM8, 3) as u64,
-            mask(IMM8, 4) as u64,
-            mask(IMM8, 5) as u64,
-            mask(IMM8, 6) as u64,
-            mask(IMM8, 7) as u64,
-            mask(IMM8, 8) as u64,
-            mask(IMM8, 9) as u64,
-            mask(IMM8, 10) as u64,
-            mask(IMM8, 11) as u64,
-            mask(IMM8, 12) as u64,
-            mask(IMM8, 13) as u64,
-            mask(IMM8, 14) as u64,
-            mask(IMM8, 15) as u64,
-            mask(IMM8, 16) as u64,
-            mask(IMM8, 17) as u64,
-            mask(IMM8, 18) as u64,
-            mask(IMM8, 19) as u64,
-            mask(IMM8, 20) as u64,
-            mask(IMM8, 21) as u64,
-            mask(IMM8, 22) as u64,
-            mask(IMM8, 23) as u64,
-            mask(IMM8, 24) as u64,
-            mask(IMM8, 25) as u64,
-            mask(IMM8, 26) as u64,
-            mask(IMM8, 27) as u64,
-            mask(IMM8, 28) as u64,
-            mask(IMM8, 29) as u64,
-            mask(IMM8, 30) as u64,
-            mask(IMM8, 31) as u64,
+            mask(IMM8, 0) as u32,
+            mask(IMM8, 1) as u32,
+            mask(IMM8, 2) as u32,
+            mask(IMM8, 3) as u32,
+            mask(IMM8, 4) as u32,
+            mask(IMM8, 5) as u32,
+            mask(IMM8, 6) as u32,
+            mask(IMM8, 7) as u32,
+            mask(IMM8, 8) as u32,
+            mask(IMM8, 9) as u32,
+            mask(IMM8, 10) as u32,
+            mask(IMM8, 11) as u32,
+            mask(IMM8, 12) as u32,
+            mask(IMM8, 13) as u32,
+            mask(IMM8, 14) as u32,
+            mask(IMM8, 15) as u32,
+            mask(IMM8, 16) as u32,
+            mask(IMM8, 17) as u32,
+            mask(IMM8, 18) as u32,
+            mask(IMM8, 19) as u32,
+            mask(IMM8, 20) as u32,
+            mask(IMM8, 21) as u32,
+            mask(IMM8, 22) as u32,
+            mask(IMM8, 23) as u32,
+            mask(IMM8, 24) as u32,
+            mask(IMM8, 25) as u32,
+            mask(IMM8, 26) as u32,
+            mask(IMM8, 27) as u32,
+            mask(IMM8, 28) as u32,
+            mask(IMM8, 29) as u32,
+            mask(IMM8, 30) as u32,
+            mask(IMM8, 31) as u32,
         ],
     );
     r.into()
@@ -2135,12 +2135,12 @@ pub fn _mm256_srli_si256<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_bsrli_epi128)
 
 pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
-    const fn mask(shift: i32, i: u32) -> u64 {
+    const fn mask(shift: i32, i: u32) -> u32 {
         let shift = shift as u32 & 0xff;
         if shift > 15 || (15 - (i % 16)) < shift {
-            0 as u64
+            0 as u32
         } else {
-            (32 + (i + shift)) as u64
+            (32 + (i + shift)) as u32
         }
     }
 
@@ -2476,7 +2476,7 @@ pub fn _mm256_xor_si256(a: __m256i, b: __m256i) -> __m256i {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_extract_epi8<const INDEX: i32>(a: __m256i) -> i32 {
-    simd_extract(BitVec::to_u8x32(a), INDEX as u64) as u32 as i32
+    simd_extract(BitVec::to_u8x32(a), INDEX as u32) as u32 as i32
 }
 
 /// Extracts a 16-bit integer from `a`, selected with `INDEX`. Returns a 32-bit
@@ -2489,5 +2489,5 @@ pub fn _mm256_extract_epi8<const INDEX: i32>(a: __m256i) -> i32 {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_extract_epi16<const INDEX: i32>(a: __m256i) -> i32 {
-    simd_extract(BitVec::to_u16x16(a), INDEX as u64) as u32 as i32
+    simd_extract(BitVec::to_u16x16(a), INDEX as u32) as u32 as i32
 }

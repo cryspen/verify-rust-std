@@ -20,7 +20,7 @@ macro_rules! interpretations {
                         #[doc = concat!("Conversion from ", stringify!($ty), " vectors of size ", stringify!($m), "to  bit vectors of size ", stringify!($n))]
                         pub fn [< from_ $name >](iv: $name) -> BitVec<$n> {
             let vec: Vec<$ty> = iv.as_vec();
-            Self::from_slice(&vec[..], <$ty>::bits() as u64)
+            Self::from_slice(&vec[..], <$ty>::bits() as u32)
                         }
                         #[doc = concat!("Conversion from bit vectors of size ", stringify!($n), " to ", stringify!($ty), " vectors of size ", stringify!($m))]
                         pub fn [< to_ $name >](bv: BitVec<$n>) -> $name {
@@ -72,7 +72,7 @@ interpretations!(32; i8x4 [i8; 4], u8x4 [u8; 4]);
 ///
 /// `idx` must be in-bounds of the vector, ie. idx < N
 
-pub fn simd_insert<const N: u64, T: Copy>(x: FunArray<N, T>, idx: u64, val: T) -> FunArray<N, T> {
+pub fn simd_insert<const N: u32, T: Copy>(x: FunArray<N, T>, idx: u32, val: T) -> FunArray<N, T> {
     FunArray::from_fn(|i| if i == idx { val } else { x[i] })
 }
 
@@ -81,49 +81,49 @@ pub fn simd_insert<const N: u64, T: Copy>(x: FunArray<N, T>, idx: u64, val: T) -
 /// # Safety
 ///
 /// `idx` must be in-bounds of the vector, ie. idx < N
-pub fn simd_extract<const N: u64, T: Clone>(x: FunArray<N, T>, idx: u64) -> T {
+pub fn simd_extract<const N: u32, T: Clone>(x: FunArray<N, T>, idx: u32) -> T {
     x.get(idx).clone()
 }
 
 /// Adds two vectors elementwise with wrapping on overflow/underflow.
-pub fn simd_add<const N: u64, T: MachineInteger + Copy>(
+pub fn simd_add<const N: u32, T: MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
-    FunArray::from_fn(|i| (x[i].wrapping_add(y[i])))
+    FunArray::from_fn(|i| x[i].wrapping_add(y[i]))
 }
 
 /// Subtracts `rhs` from `lhs` elementwise with wrapping on overflow/underflow.
-pub fn simd_sub<const N: u64, T: MachineInteger + Copy>(
+pub fn simd_sub<const N: u32, T: MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
-    FunArray::from_fn(|i| (x[i].wrapping_sub(y[i])))
+    FunArray::from_fn(|i| x[i].wrapping_sub(y[i]))
 }
 
 /// Multiplies two vectors elementwise with wrapping on overflow/underflow.
-pub fn simd_mul<const N: u64, T: MachineInteger + Copy>(
+pub fn simd_mul<const N: u32, T: MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
-    FunArray::from_fn(|i| (x[i].overflowing_mul(y[i])))
+    FunArray::from_fn(|i| x[i].overflowing_mul(y[i]))
 }
 
 /// Produces the elementwise absolute values.
 /// For vectors of unsigned integers it returns the vector untouched.
 /// If the element is the minimum value of a signed integer, it returns the element as is.
-pub fn simd_abs<const N: u64, T: MachineInteger + Copy>(x: FunArray<N, T>) -> FunArray<N, T> {
+pub fn simd_abs<const N: u32, T: MachineInteger + Copy>(x: FunArray<N, T>) -> FunArray<N, T> {
     FunArray::from_fn(|i| x[i].absolute_val())
 }
 
 /// Produces the elementwise absolute difference of two vectors.
 /// Note: Absolute difference in this case is simply the element with the smaller value subtracted from the element with the larger value, with overflow/underflow.
 /// For example, if the elements are i8, the absolute difference of 255 and -2 is -255.
-pub fn simd_abs_diff<const N: u64, T: MachineInteger + Copy>(
+pub fn simd_abs_diff<const N: u32, T: MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
-    FunArray::from_fn(|i| (x[i].absolute_diff(y[i])))
+    FunArray::from_fn(|i| x[i].absolute_diff(y[i]))
 }
 
 /// Shifts vector left elementwise, with UB on overflow.
@@ -131,11 +131,11 @@ pub fn simd_abs_diff<const N: u64, T: MachineInteger + Copy>(
 /// # Safety
 ///
 /// Each element of `rhs` must be less than `<int>::BITS`.
-pub fn simd_shl<const N: u64, T: Shl + Copy>(
+pub fn simd_shl<const N: u32, T: Shl + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, <T as Shl>::Output> {
-    FunArray::from_fn(|i| (x[i] << y[i]))
+    FunArray::from_fn(|i| x[i] << y[i])
 }
 
 /// Shifts vector right elementwise, with UB on overflow.
@@ -146,38 +146,38 @@ pub fn simd_shl<const N: u64, T: Shl + Copy>(
 ///
 /// Each element of `rhs` must be less than `<int>::BITS`.
 
-pub fn simd_shr<const N: u64, T: Shr + Copy>(
+pub fn simd_shr<const N: u32, T: Shr + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, <T as Shr>::Output> {
-    FunArray::from_fn(|i| (x[i] >> y[i]))
+    FunArray::from_fn(|i| x[i] >> y[i])
 }
 
 /// "Ands" vectors elementwise.
 
-pub fn simd_and<const N: u64, T: BitAnd + Copy>(
+pub fn simd_and<const N: u32, T: BitAnd + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, <T as BitAnd>::Output> {
-    FunArray::from_fn(|i| (x[i] & y[i]))
+    FunArray::from_fn(|i| x[i] & y[i])
 }
 
 /// "Ors" vectors elementwise.
 
-pub fn simd_or<const N: u64, T: BitOr + Copy>(
+pub fn simd_or<const N: u32, T: BitOr + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, <T as BitOr>::Output> {
-    FunArray::from_fn(|i| (x[i] | y[i]))
+    FunArray::from_fn(|i| x[i] | y[i])
 }
 
 /// "Exclusive ors" vectors elementwise.
 
-pub fn simd_xor<const N: u64, T: BitXor + Copy>(
+pub fn simd_xor<const N: u32, T: BitXor + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, <T as BitXor>::Output> {
-    FunArray::from_fn(|i| (x[i] ^ y[i]))
+    FunArray::from_fn(|i| x[i] ^ y[i])
 }
 
 pub trait CastsFrom<T> {
@@ -327,7 +327,7 @@ self_impls!(u8, u16, u32, u64, u128, i8, i16, i32, i64, i128);
 ///
 /// When casting from a wider number to a smaller number, the higher bits are removed.
 /// Otherwise, it extends the number, following signedness.
-pub fn simd_cast<const N: u64, T1: Copy, T2: CastsFrom<T1>>(x: FunArray<N, T1>) -> FunArray<N, T2> {
+pub fn simd_cast<const N: u32, T1: Copy, T2: CastsFrom<T1>>(x: FunArray<N, T1>) -> FunArray<N, T2> {
     FunArray::from_fn(|i| T2::cast(x[i]))
 }
 
@@ -335,7 +335,7 @@ pub fn simd_cast<const N: u64, T1: Copy, T2: CastsFrom<T1>>(x: FunArray<N, T1>) 
 ///
 /// Rust panics for `-<int>::Min` due to overflow, but here, it just returns the element as is.
 
-pub fn simd_neg<const N: u64, T: From<<T as Neg>::Output> + MachineInteger + Eq + Neg + Copy>(
+pub fn simd_neg<const N: u32, T: From<<T as Neg>::Output> + MachineInteger + Eq + Neg + Copy>(
     x: FunArray<N, T>,
 ) -> FunArray<N, T> {
     FunArray::from_fn(|i| {
@@ -350,7 +350,7 @@ pub fn simd_neg<const N: u64, T: From<<T as Neg>::Output> + MachineInteger + Eq 
 ///
 /// Returns `0` (all zeros) for false and `!0` (all ones) for true.
 
-pub fn simd_eq<const N: u64, T: Eq + MachineInteger + Copy>(
+pub fn simd_eq<const N: u32, T: Eq + MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -361,7 +361,7 @@ pub fn simd_eq<const N: u64, T: Eq + MachineInteger + Copy>(
 ///
 /// Returns `0` (all zeros) for false and `!0` (all ones) for true.
 
-pub fn simd_ne<const N: u64, T: Eq + MachineInteger + Copy>(
+pub fn simd_ne<const N: u32, T: Eq + MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -372,7 +372,7 @@ pub fn simd_ne<const N: u64, T: Eq + MachineInteger + Copy>(
 ///
 /// Returns `0` (all zeros) for false and `!0` (all ones) for true.
 
-pub fn simd_lt<const N: u64, T: Ord + MachineInteger + Copy>(
+pub fn simd_lt<const N: u32, T: Ord + MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -383,7 +383,7 @@ pub fn simd_lt<const N: u64, T: Ord + MachineInteger + Copy>(
 ///
 /// Returns `0` (all zeros) for false and `!0` (all ones) for true.
 
-pub fn simd_le<const N: u64, T: Ord + MachineInteger + Copy>(
+pub fn simd_le<const N: u32, T: Ord + MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -394,7 +394,7 @@ pub fn simd_le<const N: u64, T: Ord + MachineInteger + Copy>(
 ///
 /// Returns `0` (all zeros) for false and `!0` (all ones) for true.
 
-pub fn simd_gt<const N: u64, T: Ord + MachineInteger + Copy>(
+pub fn simd_gt<const N: u32, T: Ord + MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -405,7 +405,7 @@ pub fn simd_gt<const N: u64, T: Ord + MachineInteger + Copy>(
 ///
 /// Returns `0` (all zeros) for false and `!0` (all ones) for true.
 
-pub fn simd_ge<const N: u64, T: Ord + MachineInteger + Copy>(
+pub fn simd_ge<const N: u32, T: Ord + MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -415,10 +415,10 @@ pub fn simd_ge<const N: u64, T: Ord + MachineInteger + Copy>(
 /// Shuffles two vectors by the indices in idx.
 ///
 /// For safety, `N2 <= N1 + N3` must hold.
-pub fn simd_shuffle<T: Copy, const N1: u64, const N2: usize, const N3: u64>(
+pub fn simd_shuffle<T: Copy, const N1: u32, const N2: usize, const N3: u32>(
     x: FunArray<N1, T>,
     y: FunArray<N1, T>,
-    idx: [u64; N2],
+    idx: [u32; N2],
 ) -> FunArray<N3, T> {
     FunArray::from_fn(|i| {
         let i = idx[i as usize];
@@ -432,7 +432,7 @@ pub fn simd_shuffle<T: Copy, const N1: u64, const N2: usize, const N3: u64>(
 
 /// Adds two vectors elementwise, with saturation.
 
-pub fn simd_saturating_add<T: MachineInteger + Copy, const N: u64>(
+pub fn simd_saturating_add<T: MachineInteger + Copy, const N: u32>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -441,7 +441,7 @@ pub fn simd_saturating_add<T: MachineInteger + Copy, const N: u64>(
 
 /// Subtracts `y` from `x` elementwise, with saturation.
 
-pub fn simd_saturating_sub<T: MachineInteger + Copy, const N: u64>(
+pub fn simd_saturating_sub<T: MachineInteger + Copy, const N: u32>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
@@ -923,7 +923,7 @@ pub(crate) use simd_bitmask_big;
 /// # Safety
 /// `mask` must only contain `0` and `!0`.
 
-pub fn simd_select<const N: u64, T1: Eq + MachineInteger, T2: Copy + MachineInteger>(
+pub fn simd_select<const N: u32, T1: Eq + MachineInteger, T2: Copy + MachineInteger>(
     mask: FunArray<N, T1>,
     if_true: FunArray<N, T2>,
     if_false: FunArray<N, T2>,

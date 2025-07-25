@@ -7,7 +7,7 @@ use super::types::*;
 mod c_extern {
     use crate::abstractions::simd::*;
     pub fn pshufb128(a: u8x16, b: u8x16) -> u8x16 {
-        u8x16::from_fn(|i| if b[i] > 127 { 0 } else { a[(b[i] % 16) as u64] })
+        u8x16::from_fn(|i| if b[i] > 127 { 0 } else { a[(b[i] % 16) as u32] })
     }
 
     pub fn phaddw128(a: i16x8, b: i16x8) -> i16x8 {
@@ -220,7 +220,7 @@ pub fn _mm_alignr_epi8<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i {
     } else {
         (a, b)
     };
-    const fn mask(shift: u64, i: u64) -> u64 {
+    const fn mask(shift: u32, i: u32) -> u32 {
         if shift > 32 {
             // Unused, but needs to be a valid index.
             i
@@ -235,22 +235,26 @@ pub fn _mm_alignr_epi8<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i {
         BitVec::to_i8x16(b),
         BitVec::to_i8x16(a),
         [
-            mask(IMM8 as u64, 0),
-            mask(IMM8 as u64, 1),
-            mask(IMM8 as u64, 2),
-            mask(IMM8 as u64, 3),
-            mask(IMM8 as u64, 4),
-            mask(IMM8 as u64, 5),
-            mask(IMM8 as u64, 6),
-            mask(IMM8 as u64, 7),
-            mask(IMM8 as u64, 8),
-            mask(IMM8 as u64, 9),
-            mask(IMM8 as u64, 10),
-            mask(IMM8 as u64, 11),
-            mask(IMM8 as u64, 12),
-            mask(IMM8 as u64, 13),
-            mask(IMM8 as u64, 14),
-            mask(IMM8 as u64, 15),
+            mask(IMM8 as u32, 0),
+            mask(IMM8 as u32, 0),
+            mask(IMM8 as u32, 0),
+            mask(IMM8 as u32, 0),
+            mask(IMM8 as u32, 0),
+            mask(IMM8 as u32, 1),
+            mask(IMM8 as u32, 2),
+            mask(IMM8 as u32, 3),
+            mask(IMM8 as u32, 4),
+            mask(IMM8 as u32, 5),
+            mask(IMM8 as u32, 6),
+            mask(IMM8 as u32, 7),
+            mask(IMM8 as u32, 8),
+            mask(IMM8 as u32, 9),
+            mask(IMM8 as u32, 10),
+            mask(IMM8 as u32, 11),
+            mask(IMM8 as u32, 12),
+            mask(IMM8 as u32, 13),
+            mask(IMM8 as u32, 14),
+            mask(IMM8 as u32, 15),
         ],
     );
     r.into()

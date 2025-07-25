@@ -23,6 +23,8 @@ tests work by testing the models against the intrinsics in the Rust
 core, trying out random inputs (generally 1000), and comparing their
 outputs.
 
+The tests can run by executing `cargo test`.
+
 ## Modeling Process
 The process of adding a specific intrinsic's model goes as follows.
 For this example, let us say the intrinsic we are adding is

@@ -169,7 +169,7 @@ pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m25
 
 pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
     // // static_assert_uimm_bits!(INDEX, 5);
-    simd_insert(BitVec::to_i8x32(a), INDEX as u64, i).into()
+    simd_insert(BitVec::to_i8x32(a), INDEX as u32, i).into()
 }
 
 /// Copies `a` to result, and inserts the 16-bit integer `i` into result
@@ -181,7 +181,7 @@ pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
 
 pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
     // // static_assert_uimm_bits!(INDEX, 4);
-    simd_insert(BitVec::to_i16x16(a), INDEX as u64, i).into()
+    simd_insert(BitVec::to_i16x16(a), INDEX as u32, i).into()
 }
 
 /// Computes the bitwise AND of 256 bits (representing integer data) in `a` and

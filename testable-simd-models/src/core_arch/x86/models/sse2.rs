@@ -491,12 +491,12 @@ pub fn _mm_slli_si128<const IMM8: i32>(a: __m128i) -> __m128i {
 /// `_mm_slli_si128` intrinsic into a compile-time constant.
 
 fn _mm_slli_si128_impl<const IMM8: i32>(a: __m128i) -> __m128i {
-    const fn mask(shift: i32, i: u32) -> u64 {
+    const fn mask(shift: i32, i: u32) -> u32 {
         let shift = shift as u32 & 0xff;
         if shift > 15 {
-            i as u64
+            i as u32
         } else {
-            (16 - shift + i) as u64
+            (16 - shift + i) as u32
         }
     }
     (simd_shuffle(
@@ -662,11 +662,11 @@ pub fn _mm_srli_si128<const IMM8: i32>(a: __m128i) -> __m128i {
 /// `_mm_srli_si128` intrinsic into a compile-time constant.
 
 fn _mm_srli_si128_impl<const IMM8: i32>(a: __m128i) -> __m128i {
-    const fn mask(shift: i32, i: u32) -> u64 {
+    const fn mask(shift: i32, i: u32) -> u32 {
         if (shift as u32) > 15 {
-            (i + 16) as u64
+            (i + 16) as u32
         } else {
-            (i + (shift as u32)) as u64
+            (i + (shift as u32)) as u32
         }
     }
     let x: i8x16 = simd_shuffle(
@@ -1105,7 +1105,7 @@ pub fn _mm_packus_epi16(a: __m128i, b: __m128i) -> __m128i {
 
 pub fn _mm_extract_epi16<const IMM8: i32>(a: __m128i) -> i32 {
     // static_assert_uimm_bits!(IMM8, 3);
-    simd_extract(BitVec::to_u16x8(a), IMM8 as u64) as i32
+    simd_extract(BitVec::to_u16x8(a), IMM8 as u32) as i32
 }
 
 /// Returns a new vector where the `imm8` element of `a` is replaced with `i`.
@@ -1114,7 +1114,7 @@ pub fn _mm_extract_epi16<const IMM8: i32>(a: __m128i) -> i32 {
 
 pub fn _mm_insert_epi16<const IMM8: i32>(a: __m128i, i: i32) -> __m128i {
     // static_assert_uimm_bits!(IMM8, 3);
-    simd_insert(BitVec::to_i16x8(a), IMM8 as u64, i as i16).into()
+    simd_insert(BitVec::to_i16x8(a), IMM8 as u32, i as i16).into()
 }
 
 /// Returns a mask of the most significant bit of each element in `a`.
@@ -1140,10 +1140,10 @@ pub fn _mm_shuffle_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
         a,
         a,
         [
-            IMM8 as u64 & 0b11,
-            (IMM8 as u64 >> 2) & 0b11,
-            (IMM8 as u64 >> 4) & 0b11,
-            (IMM8 as u64 >> 6) & 0b11,
+            IMM8 as u32 & 0b11,
+            (IMM8 as u32 >> 2) & 0b11,
+            (IMM8 as u32 >> 4) & 0b11,
+            (IMM8 as u32 >> 6) & 0b11,
         ],
     );
     x.into()
@@ -1169,10 +1169,10 @@ pub fn _mm_shufflehi_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
             1,
             2,
             3,
-            (IMM8 as u64 & 0b11) + 4,
-            ((IMM8 as u64 >> 2) & 0b11) + 4,
-            ((IMM8 as u64 >> 4) & 0b11) + 4,
-            ((IMM8 as u64 >> 6) & 0b11) + 4,
+            (IMM8 as u32 & 0b11) + 4,
+            ((IMM8 as u32 >> 2) & 0b11) + 4,
+            ((IMM8 as u32 >> 4) & 0b11) + 4,
+            ((IMM8 as u32 >> 6) & 0b11) + 4,
         ],
     );
     x.into()
@@ -1194,10 +1194,10 @@ pub fn _mm_shufflelo_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
         a,
         a,
         [
-            IMM8 as u64 & 0b11,
-            (IMM8 as u64 >> 2) & 0b11,
-            (IMM8 as u64 >> 4) & 0b11,
-            (IMM8 as u64 >> 6) & 0b11,
+            IMM8 as u32 & 0b11,
+            (IMM8 as u32 >> 2) & 0b11,
+            (IMM8 as u32 >> 4) & 0b11,
+            (IMM8 as u32 >> 6) & 0b11,
             4,
             5,
             6,

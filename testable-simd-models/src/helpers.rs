@@ -38,13 +38,13 @@ pub mod test {
             crate::abstractions::bit::Bit::from(bool::random())
         }
     }
-    impl<const N: u64> HasRandom for BitVec<N> {
+    impl<const N: u32> HasRandom for BitVec<N> {
         fn random() -> Self {
             Self::from_fn(|_| Bit::random())
         }
     }
 
-    impl<const N: u64, T: HasRandom> HasRandom for FunArray<N, T> {
+    impl<const N: u32, T: HasRandom> HasRandom for FunArray<N, T> {
         fn random() -> Self {
             FunArray::from_fn(|_| T::random())
         }
