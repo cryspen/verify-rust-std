@@ -120,22 +120,25 @@
 //!
 //! Rust guarantees to optimize the following types `T` such that
 //! [`Option<T>`] has the same size, alignment, and [function call ABI] as `T`. In some
-//! of these cases, Rust further guarantees that
-//! `transmute::<_, Option<T>>([0u8; size_of::<T>()])` is sound and
-//! produces `Option::<T>::None`. These cases are identified by the
-//! second column:
+//! of these cases, Rust further guarantees the following:
+//! - `transmute::<_, Option<T>>([0u8; size_of::<T>()])` is sound and produces
+//!   `Option::<T>::None`
+//! - `transmute::<_, [u8; size_of::<T>()]>(Option::<T>::None)` is sound and produces
+//!   `[0u8; size_of::<T>()]`
 //!
-//! | `T`                                                                 | `transmute::<_, Option<T>>([0u8; size_of::<T>()])` sound? |
-//! |---------------------------------------------------------------------|----------------------------------------------------------------------|
-//! | [`Box<U>`] (specifically, only `Box<U, Global>`)                    | when `U: Sized`                                                      |
-//! | `&U`                                                                | when `U: Sized`                                                      |
-//! | `&mut U`                                                            | when `U: Sized`                                                      |
-//! | `fn`, `extern "C" fn`[^extern_fn]                                   | always                                                               |
-//! | [`num::NonZero*`]                                                   | always                                                               |
-//! | [`ptr::NonNull<U>`]                                                 | when `U: Sized`                                                      |
-//! | `#[repr(transparent)]` struct around one of the types in this list. | when it holds for the inner type                                     |
+//! These cases are identified by the second column:
 //!
-//! [^extern_fn]: this remains true for any argument/return types and any other ABI: `extern "abi" fn` (_e.g._, `extern "system" fn`)
+//! | `T`                                                                 | Transmuting between `[0u8; size_of::<T>()]` and `Option::<T>::None` sound? |
+//! |---------------------------------------------------------------------|----------------------------------------------------------------------------|
+//! | [`Box<U>`] (specifically, only `Box<U, Global>`)                    | when `U: Sized`                                                            |
+//! | `&U`                                                                | when `U: Sized`                                                            |
+//! | `&mut U`                                                            | when `U: Sized`                                                            |
+//! | `fn`, `extern "C" fn`[^extern_fn]                                   | always                                                                     |
+//! | [`num::NonZero*`]                                                   | always                                                                     |
+//! | [`ptr::NonNull<U>`]                                                 | when `U: Sized`                                                            |
+//! | `#[repr(transparent)]` struct around one of the types in this list. | when it holds for the inner type                                           |
+//!
+//! [^extern_fn]: this remains true for `unsafe` variants, any argument/return types, and any other ABI: `[unsafe] extern "abi" fn` (_e.g._, `extern "system" fn`)
 //!
 //! Under some conditions the above types `T` are also null pointer optimized when wrapped in a [`Result`][result_repr].
 //!
@@ -162,8 +165,14 @@
 //! The [`is_some`] and [`is_none`] methods return [`true`] if the [`Option`]
 //! is [`Some`] or [`None`], respectively.
 //!
+//! The [`is_some_and`] and [`is_none_or`] methods apply the provided function
+//! to the contents of the [`Option`] to produce a boolean value.
+//! If this is [`None`] then a default result is returned instead without executing the function.
+//!
 //! [`is_none`]: Option::is_none
 //! [`is_some`]: Option::is_some
+//! [`is_some_and`]: Option::is_some_and
+//! [`is_none_or`]: Option::is_none_or
 //!
 //! ## Adapters for working with references
 //!
@@ -177,6 +186,10 @@
 //!   <code>[Option]<[Pin]<[&]T>></code>
 //! * [`as_pin_mut`] converts from <code>[Pin]<[&mut] [Option]\<T>></code> to
 //!   <code>[Option]<[Pin]<[&mut] T>></code>
+//! * [`as_slice`] returns a one-element slice of the contained value, if any.
+//!   If this is [`None`], an empty slice is returned.
+//! * [`as_mut_slice`] returns a mutable one-element slice of the contained value, if any.
+//!   If this is [`None`], an empty slice is returned.
 //!
 //! [&]: reference "shared reference"
 //! [&mut]: reference "mutable reference"
@@ -187,6 +200,8 @@
 //! [`as_pin_mut`]: Option::as_pin_mut
 //! [`as_pin_ref`]: Option::as_pin_ref
 //! [`as_ref`]: Option::as_ref
+//! [`as_slice`]: Option::as_slice
+//! [`as_mut_slice`]: Option::as_mut_slice
 //!
 //! ## Extracting the contained value
 //!
@@ -200,12 +215,15 @@
 //!   (which must implement the [`Default`] trait)
 //! * [`unwrap_or_else`] returns the result of evaluating the provided
 //!   function
+//! * [`unwrap_unchecked`] produces *[undefined behavior]*
 //!
 //! [`expect`]: Option::expect
 //! [`unwrap`]: Option::unwrap
 //! [`unwrap_or`]: Option::unwrap_or
 //! [`unwrap_or_default`]: Option::unwrap_or_default
 //! [`unwrap_or_else`]: Option::unwrap_or_else
+//! [`unwrap_unchecked`]: Option::unwrap_unchecked
+//! [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
 //!
 //! ## Transforming contained values
 //!
@@ -230,8 +248,9 @@
 //! * [`filter`] calls the provided predicate function on the contained
 //!   value `t` if the [`Option`] is [`Some(t)`], and returns [`Some(t)`]
 //!   if the function returns `true`; otherwise, returns [`None`]
-//! * [`flatten`] removes one level of nesting from an
-//!   [`Option<Option<T>>`]
+//! * [`flatten`] removes one level of nesting from an [`Option<Option<T>>`]
+//! * [`inspect`] method takes ownership of the [`Option`] and applies
+//!   the provided function to the contained value by reference if [`Some`]
 //! * [`map`] transforms [`Option<T>`] to [`Option<U>`] by applying the
 //!   provided function to the contained value of [`Some`] and leaving
 //!   [`None`] values unchanged
@@ -239,6 +258,7 @@
 //! [`Some(t)`]: Some
 //! [`filter`]: Option::filter
 //! [`flatten`]: Option::flatten
+//! [`inspect`]: Option::inspect
 //! [`map`]: Option::map
 //!
 //! These methods transform [`Option<T>`] to a value of a possibly
@@ -563,6 +583,7 @@ use crate::pin::Pin;
 use crate::{cmp, convert, hint, mem, slice};
 
 /// The `Option` type. See [the module level documentation](self) for more.
+#[doc(search_unbox)]
 #[derive(Copy, Eq, Debug, Hash)]
 #[rustc_diagnostic_item = "Option"]
 #[lang = "Option"]
@@ -620,6 +641,10 @@ impl<T> Option<T> {
     ///
     /// let x: Option<u32> = None;
     /// assert_eq!(x.is_some_and(|x| x > 1), false);
+    ///
+    /// let x: Option<String> = Some("ownership".to_string());
+    /// assert_eq!(x.as_ref().is_some_and(|x| x.len() > 1), true);
+    /// println!("still alive {:?}", x);
     /// ```
     #[must_use]
     #[inline]
@@ -664,6 +689,10 @@ impl<T> Option<T> {
     ///
     /// let x: Option<u32> = None;
     /// assert_eq!(x.is_none_or(|x| x > 1), true);
+    ///
+    /// let x: Option<String> = Some("ownership".to_string());
+    /// assert_eq!(x.as_ref().is_none_or(|x| x.len() > 1), true);
+    /// println!("still alive {:?}", x);
     /// ```
     #[must_use]
     #[inline]
@@ -737,7 +766,7 @@ impl<T> Option<T> {
     #[inline]
     #[must_use]
     #[stable(feature = "pin", since = "1.33.0")]
-    #[rustc_const_unstable(feature = "const_option_ext", issue = "91930")]
+    #[rustc_const_stable(feature = "const_option_ext", since = "1.84.0")]
     pub const fn as_pin_ref(self: Pin<&Self>) -> Option<Pin<&T>> {
         // FIXME(const-hack): use `map` once that is possible
         match Pin::get_ref(self).as_ref() {
@@ -754,7 +783,7 @@ impl<T> Option<T> {
     #[inline]
     #[must_use]
     #[stable(feature = "pin", since = "1.33.0")]
-    #[rustc_const_unstable(feature = "const_option_ext", issue = "91930")]
+    #[rustc_const_stable(feature = "const_option_ext", since = "1.84.0")]
     pub const fn as_pin_mut(self: Pin<&mut Self>) -> Option<Pin<&mut T>> {
         // SAFETY: `get_unchecked_mut` is never used to move the `Option` inside `self`.
         // `x` is guaranteed to be pinned because it comes from `self` which is pinned.
@@ -801,7 +830,7 @@ impl<T> Option<T> {
     #[inline]
     #[must_use]
     #[stable(feature = "option_as_slice", since = "1.75.0")]
-    #[rustc_const_unstable(feature = "const_option_ext", issue = "91930")]
+    #[rustc_const_stable(feature = "const_option_ext", since = "1.84.0")]
     pub const fn as_slice(&self) -> &[T] {
         // SAFETY: When the `Option` is `Some`, we're using the actual pointer
         // to the payload, with a length of 1, so this is equivalent to
@@ -856,7 +885,7 @@ impl<T> Option<T> {
     #[inline]
     #[must_use]
     #[stable(feature = "option_as_slice", since = "1.75.0")]
-    #[rustc_const_unstable(feature = "const_option_ext", issue = "91930")]
+    #[rustc_const_stable(feature = "const_option_ext", since = "1.84.0")]
     pub const fn as_mut_slice(&mut self) -> &mut [T] {
         // SAFETY: When the `Option` is `Some`, we're using the actual pointer
         // to the payload, with a length of 1, so this is equivalent to
@@ -923,7 +952,7 @@ impl<T> Option<T> {
     #[inline]
     #[track_caller]
     #[stable(feature = "rust1", since = "1.0.0")]
-    #[cfg_attr(not(test), rustc_diagnostic_item = "option_expect")]
+    #[rustc_diagnostic_item = "option_expect"]
     #[rustc_allow_const_fn_unstable(const_precise_live_drops)]
     #[rustc_const_stable(feature = "const_option", since = "1.83.0")]
     pub const fn expect(self, msg: &str) -> T {
@@ -936,10 +965,16 @@ impl<T> Option<T> {
     /// Returns the contained [`Some`] value, consuming the `self` value.
     ///
     /// Because this function may panic, its use is generally discouraged.
+    /// Panics are meant for unrecoverable errors, and
+    /// [may abort the entire program][panic-abort].
+    ///
     /// Instead, prefer to use pattern matching and handle the [`None`]
     /// case explicitly, or call [`unwrap_or`], [`unwrap_or_else`], or
-    /// [`unwrap_or_default`].
+    /// [`unwrap_or_default`]. In functions returning `Option`, you can use
+    /// [the `?` (try) operator][try-option].
     ///
+    /// [panic-abort]: https://doc.rust-lang.org/book/ch09-01-unrecoverable-errors-with-panic.html
+    /// [try-option]: https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#where-the--operator-can-be-used
     /// [`unwrap_or`]: Option::unwrap_or
     /// [`unwrap_or_else`]: Option::unwrap_or_else
     /// [`unwrap_or_default`]: Option::unwrap_or_default
@@ -962,7 +997,7 @@ impl<T> Option<T> {
     #[inline(always)]
     #[track_caller]
     #[stable(feature = "rust1", since = "1.0.0")]
-    #[cfg_attr(not(test), rustc_diagnostic_item = "option_unwrap")]
+    #[rustc_diagnostic_item = "option_unwrap"]
     #[rustc_allow_const_fn_unstable(const_precise_live_drops)]
     #[rustc_const_stable(feature = "const_option", since = "1.83.0")]
     pub const fn unwrap(self) -> T {
@@ -1216,6 +1251,36 @@ impl<T> Option<T> {
         match self {
             Some(t) => f(t),
             None => default(),
+        }
+    }
+
+    /// Maps an `Option<T>` to a `U` by applying function `f` to the contained
+    /// value if the option is [`Some`], otherwise if [`None`], returns the
+    /// [default value] for the type `U`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #![feature(result_option_map_or_default)]
+    ///
+    /// let x: Option<&str> = Some("hi");
+    /// let y: Option<&str> = None;
+    ///
+    /// assert_eq!(x.map_or_default(|x| x.len()), 2);
+    /// assert_eq!(y.map_or_default(|y| y.len()), 0);
+    /// ```
+    ///
+    /// [default value]: Default::default
+    #[inline]
+    #[unstable(feature = "result_option_map_or_default", issue = "138099")]
+    pub fn map_or_default<U, F>(self, f: F) -> U
+    where
+        U: Default,
+        F: FnOnce(T) -> U,
+    {
+        match self {
+            Some(t) => f(t),
+            None => U::default(),
         }
     }
 
@@ -2043,8 +2108,12 @@ where
     }
 }
 
+#[unstable(feature = "ergonomic_clones", issue = "132290")]
+impl<T> crate::clone::UseCloned for Option<T> where T: crate::clone::UseCloned {}
+
 #[stable(feature = "rust1", since = "1.0.0")]
-impl<T> Default for Option<T> {
+#[rustc_const_unstable(feature = "const_default", issue = "67792")]
+impl<T> const Default for Option<T> {
     /// Returns [`None`][Option::None].
     ///
     /// # Examples
@@ -2465,7 +2534,7 @@ impl<A, V: FromIterator<A>> FromIterator<Option<A>> for Option<V> {
     }
 }
 
-#[unstable(feature = "try_trait_v2", issue = "84277")]
+#[unstable(feature = "try_trait_v2", issue = "84277", old_name = "try_trait")]
 impl<T> ops::Try for Option<T> {
     type Output = T;
     type Residual = Option<convert::Infallible>;
@@ -2484,7 +2553,7 @@ impl<T> ops::Try for Option<T> {
     }
 }
 
-#[unstable(feature = "try_trait_v2", issue = "84277")]
+#[unstable(feature = "try_trait_v2", issue = "84277", old_name = "try_trait")]
 // Note: manually specifying the residual type instead of using the default to work around
 // https://github.com/rust-lang/rust/issues/99940
 impl<T> ops::FromResidual<Option<convert::Infallible>> for Option<T> {
@@ -2569,5 +2638,32 @@ impl<T, const N: usize> [Option<T>; N] {
     #[unstable(feature = "option_array_transpose", issue = "130828")]
     pub fn transpose(self) -> Option<[T; N]> {
         self.try_map(core::convert::identity)
+    }
+}
+
+#[cfg(kani)]
+#[unstable(feature = "kani", issue = "none")]
+mod verify {
+    use crate::kani;
+    use crate::option::Option;
+
+    #[kani::proof]
+    fn verify_as_slice() {
+        if kani::any() {
+            // Case 1: Option is Some
+            let value: u32 = kani::any();
+            let some_option: Option<u32> = Some(value);
+
+            let slice = some_option.as_slice();
+            assert_eq!(slice.len(), 1); // The slice should have exactly one element
+            assert_eq!(slice[0], value); // The value in the slice should match
+        } else {
+            // Case 2: Option is None
+            let none_option: Option<u32> = None;
+
+            let empty_slice = none_option.as_slice();
+            assert_eq!(empty_slice.len(), 0); // The slice should be empty
+            assert!(empty_slice.is_empty()); // Explicit check for emptiness
+        }
     }
 }

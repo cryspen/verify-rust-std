@@ -2,8 +2,9 @@
 
 - **Status:** Open
 - **Tracking Issue:** [#83](https://github.com/model-checking/verify-rust-std/issues/83)
-- **Start date:** *2024-10-30*
-- **End date:** *2024-12-10*
+- **Start date:** *2024/10/30*
+- **End date:** *2025/04/10*
+- **Reward:** *10,000 USD*
 
 -------------------
 
@@ -86,14 +87,18 @@ Write and verify safety contracts for the unsafe functions:
 - `atomic_umax`
 - `atomic_umin`
 
+##### Panicking (Optional)
 Then, for each of the safe abstractions that invoke the unsafe functions listed above, write contracts that ensure that they are not invoked with `order`s that would cause panics.
 
 For example, `atomic_store` panics if invoked with `Acquire` or `AcqRel` ordering.
 In this case, you would write contracts on the safe `store` methods that enforce that they are not called with either of those `order`s.
 
+This section is not required to complete the challenge, since panicking is not undefined behavior.
+However, it would be incorrect for someone to call these functions with the wrong arguments, so we encourage providing these specifications.
+
 #### Part 3: Atomic Intrinsics
 
-Write and verify safety contracts for the intrinsics invoked by the unsafe functions from Part 2 (in `core::intrinsics`):
+Write safety contracts for the intrinsics invoked by the unsafe functions from Part 2 (in `core::intrinsics`):
 
 | Operations            |  Functions |
 |-----------------------|-------------|

@@ -1,20 +1,19 @@
+use safety::{ensures, requires};
+
 use crate::cmp::Ordering;
-use crate::marker::Unsize;
+#[cfg(kani)]
+use crate::kani;
+use crate::marker::{PointeeSized, Unsize};
 use crate::mem::{MaybeUninit, SizedTypeProperties};
 use crate::num::NonZero;
 use crate::ops::{CoerceUnsized, DispatchFromDyn};
 use crate::pin::PinCoerceUnsized;
 use crate::ptr::Unique;
 use crate::slice::{self, SliceIndex};
-use crate::ub_checks::assert_unsafe_precondition;
-use crate::{fmt, hash, intrinsics, ptr};
-use safety::{ensures, requires};
-
-
-#[cfg(kani)]
-use crate::kani;
 #[cfg(kani)]
 use crate::ub_checks;
+use crate::ub_checks::assert_unsafe_precondition;
+use crate::{fmt, hash, intrinsics, mem, ptr};
 
 /// `*mut T` but non-zero and [covariant].
 ///
@@ -27,19 +26,24 @@ use crate::ub_checks;
 /// as a discriminant -- `Option<NonNull<T>>` has the same size as `*mut T`.
 /// However the pointer may still dangle if it isn't dereferenced.
 ///
-/// Unlike `*mut T`, `NonNull<T>` was chosen to be covariant over `T`. This makes it
-/// possible to use `NonNull<T>` when building covariant types, but introduces the
-/// risk of unsoundness if used in a type that shouldn't actually be covariant.
-/// (The opposite choice was made for `*mut T` even though technically the unsoundness
-/// could only be caused by calling unsafe functions.)
+/// Unlike `*mut T`, `NonNull<T>` is covariant over `T`. This is usually the correct
+/// choice for most data structures and safe abstractions, such as `Box`, `Rc`, `Arc`, `Vec`,
+/// and `LinkedList`.
 ///
-/// Covariance is correct for most safe abstractions, such as `Box`, `Rc`, `Arc`, `Vec`,
-/// and `LinkedList`. This is the case because they provide a public API that follows the
-/// normal shared XOR mutable rules of Rust.
+/// In rare cases, if your type exposes a way to mutate the value of `T` through a `NonNull<T>`,
+/// and you need to prevent unsoundness from variance (for example, if `T` could be a reference
+/// with a shorter lifetime), you should add a field to make your type invariant, such as
+/// `PhantomData<Cell<T>>` or `PhantomData<&'a mut T>`.
 ///
-/// If your type cannot safely be covariant, you must ensure it contains some
-/// additional field to provide invariance. Often this field will be a [`PhantomData`]
-/// type like `PhantomData<Cell<T>>` or `PhantomData<&'a mut T>`.
+/// Example of a type that must be invariant:
+/// ```rust
+/// use std::cell::Cell;
+/// use std::marker::PhantomData;
+/// struct Invariant<T> {
+///     ptr: std::ptr::NonNull<T>,
+///     _invariant: PhantomData<Cell<T>>,
+/// }
+/// ```
 ///
 /// Notice that `NonNull<T>` has a `From` instance for `&T`. However, this does
 /// not change the fact that mutating through a (pointer derived from a) shared
@@ -56,7 +60,6 @@ use crate::ub_checks;
 /// are guaranteed to have the same size and alignment:
 ///
 /// ```
-/// # use std::mem::{size_of, align_of};
 /// use std::ptr::NonNull;
 ///
 /// assert_eq!(size_of::<NonNull<i16>>(), size_of::<Option<NonNull<i16>>>());
@@ -75,21 +78,38 @@ use crate::ub_checks;
 #[rustc_layout_scalar_valid_range_start(1)]
 #[rustc_nonnull_optimization_guaranteed]
 #[rustc_diagnostic_item = "NonNull"]
-pub struct NonNull<T: ?Sized> {
+pub struct NonNull<T: PointeeSized> {
+    // Remember to use `.as_ptr()` instead of `.pointer`, as field projecting to
+    // this is banned by <https://github.com/rust-lang/compiler-team/issues/807>.
     pointer: *const T,
 }
 
 /// `NonNull` pointers are not `Send` because the data they reference may be aliased.
 // N.B., this impl is unnecessary, but should provide better error messages.
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> !Send for NonNull<T> {}
+impl<T: PointeeSized> !Send for NonNull<T> {}
 
 /// `NonNull` pointers are not `Sync` because the data they reference may be aliased.
 // N.B., this impl is unnecessary, but should provide better error messages.
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> !Sync for NonNull<T> {}
+impl<T: PointeeSized> !Sync for NonNull<T> {}
 
 impl<T: Sized> NonNull<T> {
+    /// Creates a pointer with the given address and no [provenance][crate::ptr#provenance].
+    ///
+    /// For more details, see the equivalent method on a raw pointer, [`ptr::without_provenance_mut`].
+    ///
+    /// This is a [Strict Provenance][crate::ptr#strict-provenance] API.
+    #[stable(feature = "nonnull_provenance", since = "1.89.0")]
+    #[rustc_const_stable(feature = "nonnull_provenance", since = "1.89.0")]
+    #[must_use]
+    #[inline]
+    pub const fn without_provenance(addr: NonZero<usize>) -> Self {
+        let pointer = crate::ptr::without_provenance(addr.get());
+        // SAFETY: we know `addr` is non-zero.
+        unsafe { NonNull { pointer } }
+    }
+
     /// Creates a new `NonNull` that is dangling, but well-aligned.
     ///
     /// This is useful for initializing types which lazily allocate, like
@@ -113,10 +133,24 @@ impl<T: Sized> NonNull<T> {
     #[rustc_const_stable(feature = "const_nonnull_dangling", since = "1.36.0")]
     #[must_use]
     #[inline]
+    #[ensures(|result| !result.pointer.is_null() && result.pointer.is_aligned())]
     pub const fn dangling() -> Self {
-        // SAFETY: ptr::dangling_mut() returns a non-null well-aligned pointer.
+        let align = crate::ptr::Alignment::of::<T>();
+        NonNull::without_provenance(align.as_nonzero())
+    }
+
+    /// Converts an address back to a mutable pointer, picking up some previously 'exposed'
+    /// [provenance][crate::ptr#provenance].
+    ///
+    /// For more details, see the equivalent method on a raw pointer, [`ptr::with_exposed_provenance_mut`].
+    ///
+    /// This is an [Exposed Provenance][crate::ptr#exposed-provenance] API.
+    #[stable(feature = "nonnull_provenance", since = "1.89.0")]
+    #[inline]
+    pub fn with_exposed_provenance(addr: NonZero<usize>) -> Self {
+        // SAFETY: we know `addr` is non-zero.
         unsafe {
-            let ptr = crate::ptr::dangling_mut::<T>();
+            let ptr = crate::ptr::with_exposed_provenance_mut(addr.get());
             NonNull::new_unchecked(ptr)
         }
     }
@@ -138,9 +172,8 @@ impl<T: Sized> NonNull<T> {
     #[inline]
     #[must_use]
     #[unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[rustc_const_unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[requires(ub_checks::can_dereference(self.as_ptr()))]  // Ensure the pointer is valid to create a reference.
-    #[ensures(|result: &&MaybeUninit<T>| core::ptr::eq(*result, self.cast().as_ptr()))]  // Ensure returned reference points to the correct memory location.
+    #[requires(ub_checks::can_dereference(self.as_ptr()))] // Ensure the pointer is valid to create a reference.
+    #[ensures(|result: &&MaybeUninit<T>| core::ptr::eq(*result, self.cast().as_ptr()))] // Ensure returned reference points to the correct memory location.
     pub const unsafe fn as_uninit_ref<'a>(self) -> &'a MaybeUninit<T> {
         // SAFETY: the caller must guarantee that `self` meets all the
         // requirements for a reference.
@@ -164,9 +197,8 @@ impl<T: Sized> NonNull<T> {
     #[inline]
     #[must_use]
     #[unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[rustc_const_unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[requires(ub_checks::can_dereference(self.as_ptr()))]  // Ensure pointer is valid to create a mutable reference.
-    #[ensures(|result: &&mut MaybeUninit<T>| core::ptr::eq(*result, self.cast().as_ptr()))]  // Ensure the returned reference points to the correct memory.
+    #[requires(ub_checks::can_dereference(self.as_ptr()))] // Ensure pointer is valid to create a mutable reference.
+    #[ensures(|result: &&mut MaybeUninit<T>| core::ptr::eq(*result, self.cast().as_ptr()))] // Ensure the returned reference points to the correct memory.
     pub const unsafe fn as_uninit_mut<'a>(self) -> &'a mut MaybeUninit<T> {
         // SAFETY: the caller must guarantee that `self` meets all the
         // requirements for a reference.
@@ -174,7 +206,7 @@ impl<T: Sized> NonNull<T> {
     }
 }
 
-impl<T: ?Sized> NonNull<T> {
+impl<T: PointeeSized> NonNull<T> {
     /// Creates a new `NonNull`.
     ///
     /// # Safety
@@ -201,6 +233,7 @@ impl<T: ?Sized> NonNull<T> {
     #[stable(feature = "nonnull", since = "1.25.0")]
     #[rustc_const_stable(feature = "const_nonnull_new_unchecked", since = "1.25.0")]
     #[inline]
+    #[track_caller]
     #[requires(!ptr.is_null())]
     #[ensures(|result| result.as_ptr() == ptr)]
     pub const unsafe fn new_unchecked(ptr: *mut T) -> Self {
@@ -217,6 +250,13 @@ impl<T: ?Sized> NonNull<T> {
 
     /// Creates a new `NonNull` if `ptr` is non-null.
     ///
+    /// # Panics during const evaluation
+    ///
+    /// This method will panic during const evaluation if the pointer cannot be
+    /// determined to be null or not. See [`is_null`] for more information.
+    ///
+    /// [`is_null`]: ../primitive.pointer.html#method.is_null-1
+    ///
     /// # Examples
     ///
     /// ```
@@ -230,7 +270,7 @@ impl<T: ?Sized> NonNull<T> {
     /// }
     /// ```
     #[stable(feature = "nonnull", since = "1.25.0")]
-    #[rustc_const_unstable(feature = "const_nonnull_new", issue = "93235")]
+    #[rustc_const_stable(feature = "const_nonnull_new", since = "1.85.0")]
     #[inline]
     #[ensures(|result| result.is_some() == !ptr.is_null())]
     #[ensures(|result| result.is_none() || result.expect("ptr is null!").as_ptr() == ptr)]
@@ -244,8 +284,8 @@ impl<T: ?Sized> NonNull<T> {
     }
 
     /// Converts a reference to a `NonNull` pointer.
-    #[unstable(feature = "non_null_from_ref", issue = "130823")]
-    #[rustc_const_unstable(feature = "non_null_from_ref", issue = "130823")]
+    #[stable(feature = "non_null_from_ref", since = "1.89.0")]
+    #[rustc_const_stable(feature = "non_null_from_ref", since = "1.89.0")]
     #[inline]
     pub const fn from_ref(r: &T) -> Self {
         // SAFETY: A reference cannot be null.
@@ -253,8 +293,8 @@ impl<T: ?Sized> NonNull<T> {
     }
 
     /// Converts a mutable reference to a `NonNull` pointer.
-    #[unstable(feature = "non_null_from_ref", issue = "130823")]
-    #[rustc_const_unstable(feature = "non_null_from_ref", issue = "130823")]
+    #[stable(feature = "non_null_from_ref", since = "1.89.0")]
+    #[rustc_const_stable(feature = "non_null_from_ref", since = "1.89.0")]
     #[inline]
     pub const fn from_mut(r: &mut T) -> Self {
         // SAFETY: A mutable reference cannot be null.
@@ -268,10 +308,10 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// [`std::ptr::from_raw_parts`]: crate::ptr::from_raw_parts
     #[unstable(feature = "ptr_metadata", issue = "81513")]
-    #[rustc_const_unstable(feature = "ptr_metadata", issue = "81513")]
     #[inline]
+    #[ensures(|result| !result.pointer.is_null())]
     pub const fn from_raw_parts(
-        data_pointer: NonNull<()>,
+        data_pointer: NonNull<impl super::Thin>,
         metadata: <T as super::Pointee>::Metadata,
     ) -> NonNull<T> {
         // SAFETY: The result of `ptr::from::raw_parts_mut` is non-null because `data_pointer` is.
@@ -284,52 +324,68 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// The pointer can be later reconstructed with [`NonNull::from_raw_parts`].
     #[unstable(feature = "ptr_metadata", issue = "81513")]
-    #[rustc_const_unstable(feature = "ptr_metadata", issue = "81513")]
     #[must_use = "this returns the result of the operation, \
                   without modifying the original"]
     #[inline]
+    #[ensures(|(data_ptr, metadata)| !data_ptr.as_ptr().is_null())]
+    #[ensures(|(data_ptr, metadata)| self.as_ptr() as *const () == data_ptr.as_ptr() as *const ())]
     pub const fn to_raw_parts(self) -> (NonNull<()>, <T as super::Pointee>::Metadata) {
         (self.cast(), super::metadata(self.as_ptr()))
     }
 
     /// Gets the "address" portion of the pointer.
     ///
-    /// For more details see the equivalent method on a raw pointer, [`pointer::addr`].
+    /// For more details, see the equivalent method on a raw pointer, [`pointer::addr`].
     ///
     /// This is a [Strict Provenance][crate::ptr#strict-provenance] API.
     #[must_use]
     #[inline]
-    #[stable(feature = "strict_provenance", since = "CURRENT_RUSTC_VERSION")]
+    #[stable(feature = "strict_provenance", since = "1.84.0")]
     #[ensures(|result| result.get() == self.as_ptr() as *const() as usize)]
     pub fn addr(self) -> NonZero<usize> {
         // SAFETY: The pointer is guaranteed by the type to be non-null,
         // meaning that the address will be non-zero.
-        unsafe { NonZero::new_unchecked(self.pointer.addr()) }
+        unsafe { NonZero::new_unchecked(self.as_ptr().addr()) }
+    }
+
+    /// Exposes the ["provenance"][crate::ptr#provenance] part of the pointer for future use in
+    /// [`with_exposed_provenance`][NonNull::with_exposed_provenance] and returns the "address" portion.
+    ///
+    /// For more details, see the equivalent method on a raw pointer, [`pointer::expose_provenance`].
+    ///
+    /// This is an [Exposed Provenance][crate::ptr#exposed-provenance] API.
+    #[stable(feature = "nonnull_provenance", since = "1.89.0")]
+    pub fn expose_provenance(self) -> NonZero<usize> {
+        // SAFETY: The pointer is guaranteed by the type to be non-null,
+        // meaning that the address will be non-zero.
+        unsafe { NonZero::new_unchecked(self.as_ptr().expose_provenance()) }
     }
 
     /// Creates a new pointer with the given address and the [provenance][crate::ptr#provenance] of
     /// `self`.
     ///
-    /// For more details see the equivalent method on a raw pointer, [`pointer::with_addr`].
+    /// For more details, see the equivalent method on a raw pointer, [`pointer::with_addr`].
     ///
     /// This is a [Strict Provenance][crate::ptr#strict-provenance] API.
     #[must_use]
     #[inline]
-    #[stable(feature = "strict_provenance", since = "CURRENT_RUSTC_VERSION")]
+    #[stable(feature = "strict_provenance", since = "1.84.0")]
+    #[ensures(|result: &Self| !result.as_ptr().is_null() && result.addr() == addr)]
     pub fn with_addr(self, addr: NonZero<usize>) -> Self {
         // SAFETY: The result of `ptr::from::with_addr` is non-null because `addr` is guaranteed to be non-zero.
-        unsafe { NonNull::new_unchecked(self.pointer.with_addr(addr.get()) as *mut _) }
+        unsafe { NonNull::new_unchecked(self.as_ptr().with_addr(addr.get()) as *mut _) }
     }
 
     /// Creates a new pointer by mapping `self`'s address to a new one, preserving the
     /// [provenance][crate::ptr#provenance] of `self`.
     ///
-    /// For more details see the equivalent method on a raw pointer, [`pointer::map_addr`].
+    /// For more details, see the equivalent method on a raw pointer, [`pointer::map_addr`].
     ///
     /// This is a [Strict Provenance][crate::ptr#strict-provenance] API.
     #[must_use]
     #[inline]
-    #[stable(feature = "strict_provenance", since = "CURRENT_RUSTC_VERSION")]
+    #[stable(feature = "strict_provenance", since = "1.84.0")]
+    #[ensures(|result: &Self| !result.as_ptr().is_null())]
     pub fn map_addr(self, f: impl FnOnce(NonZero<usize>) -> NonZero<usize>) -> Self {
         self.with_addr(f(self.addr()))
     }
@@ -356,8 +412,15 @@ impl<T: ?Sized> NonNull<T> {
     #[rustc_never_returns_null_ptr]
     #[must_use]
     #[inline(always)]
+    //Ensures address of resulting pointer is same as original
+    #[ensures(|result: &*mut T| *result == self.pointer as *mut T)]
     pub const fn as_ptr(self) -> *mut T {
-        self.pointer as *mut T
+        // This is a transmute for the same reasons as `NonZero::get`.
+
+        // SAFETY: `NonNull` is `transparent` over a `*const T`, and `*const T`
+        // and `*mut T` have the same layout, so transitively we can transmute
+        // our `NonNull` to a `*mut T` directly.
+        unsafe { mem::transmute::<Self, *mut T>(self) }
     }
 
     /// Returns a shared reference to the value. If the value may be uninitialized, [`as_uninit_ref`]
@@ -391,7 +454,7 @@ impl<T: ?Sized> NonNull<T> {
     #[must_use]
     #[inline(always)]
     #[requires(ub_checks::can_dereference(self.as_ptr() as *const()))] // Ensure input is convertible to a reference
-    #[ensures(|result: &&T| core::ptr::eq(*result, self.as_ptr()))]  // Ensure returned reference matches pointer
+    #[ensures(|result: &&T| core::ptr::eq(*result, self.as_ptr()))] // Ensure returned reference matches pointer
     pub const unsafe fn as_ref<'a>(&self) -> &'a T {
         // SAFETY: the caller must guarantee that `self` meets all the
         // requirements for a reference.
@@ -457,9 +520,38 @@ impl<T: ?Sized> NonNull<T> {
     #[must_use = "this returns the result of the operation, \
                   without modifying the original"]
     #[inline]
+    // Address preservation
+    #[ensures(|result: &NonNull<U>| result.as_ptr().addr() == self.as_ptr().addr())]
     pub const fn cast<U>(self) -> NonNull<U> {
         // SAFETY: `self` is a `NonNull` pointer which is necessarily non-null
         unsafe { NonNull { pointer: self.as_ptr() as *mut U } }
+    }
+
+    /// Try to cast to a pointer of another type by checking alignment.
+    ///
+    /// If the pointer is properly aligned to the target type, it will be
+    /// cast to the target type. Otherwise, `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// #![feature(pointer_try_cast_aligned)]
+    /// use std::ptr::NonNull;
+    ///
+    /// let mut x = 0u64;
+    ///
+    /// let aligned = NonNull::from_mut(&mut x);
+    /// let unaligned = unsafe { aligned.byte_add(1) };
+    ///
+    /// assert!(aligned.try_cast_aligned::<u32>().is_some());
+    /// assert!(unaligned.try_cast_aligned::<u32>().is_none());
+    /// ```
+    #[unstable(feature = "pointer_try_cast_aligned", issue = "141221")]
+    #[must_use = "this returns the result of the operation, \
+                  without modifying the original"]
+    #[inline]
+    pub fn try_cast_aligned<U>(self) -> Option<NonNull<U>> {
+        if self.is_aligned_to(align_of::<U>()) { Some(self.cast()) } else { None }
     }
 
     /// Adds an offset to a pointer.
@@ -474,16 +566,16 @@ impl<T: ?Sized> NonNull<T> {
     /// * The computed offset, `count * size_of::<T>()` bytes, must not overflow `isize`.
     ///
     /// * If the computed offset is non-zero, then `self` must be derived from a pointer to some
-    ///   [allocated object], and the entire memory range between `self` and the result must be in
-    ///   bounds of that allocated object. In particular, this range must not "wrap around" the edge
+    ///   [allocation], and the entire memory range between `self` and the result must be in
+    ///   bounds of that allocation. In particular, this range must not "wrap around" the edge
     ///   of the address space.
     ///
-    /// Allocated objects can never be larger than `isize::MAX` bytes, so if the computed offset
-    /// stays in bounds of the allocated object, it is guaranteed to satisfy the first requirement.
+    /// Allocations can never be larger than `isize::MAX` bytes, so if the computed offset
+    /// stays in bounds of the allocation, it is guaranteed to satisfy the first requirement.
     /// This implies, for instance, that `vec.as_ptr().add(vec.len())` (for `vec: Vec<T>`) is always
     /// safe.
     ///
-    /// [allocated object]: crate::ptr#allocated-object
+    /// [allocation]: crate::ptr#allocation
     ///
     /// # Examples
     ///
@@ -503,6 +595,12 @@ impl<T: ?Sized> NonNull<T> {
     #[must_use = "returns a new pointer rather than modifying its argument"]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "non_null_convenience", since = "1.80.0")]
+    #[requires(
+        count.checked_mul(core::mem::size_of::<T>() as isize).is_some() &&
+       (self.as_ptr() as isize).checked_add(count.wrapping_mul(core::mem::size_of::<T>() as isize)).is_some() &&
+        (count == 0 || core::ub_checks::same_allocation(self.as_ptr() as *const (), self.as_ptr().wrapping_offset(count) as *const ()))
+    )]
+    #[ensures(|result: &Self| result.as_ptr() == self.as_ptr().wrapping_offset(count))]
     pub const unsafe fn offset(self, count: isize) -> Self
     where
         T: Sized,
@@ -511,7 +609,7 @@ impl<T: ?Sized> NonNull<T> {
         // Additionally safety contract of `offset` guarantees that the resulting pointer is
         // pointing to an allocation, there can't be an allocation at null, thus it's safe to
         // construct `NonNull`.
-        unsafe { NonNull { pointer: intrinsics::offset(self.pointer, count) } }
+        unsafe { NonNull { pointer: intrinsics::offset(self.as_ptr(), count) } }
     }
 
     /// Calculates the offset from a pointer in bytes.
@@ -529,13 +627,18 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "non_null_convenience", since = "1.80.0")]
+    #[requires(
+        (self.as_ptr().addr() as isize).checked_add(count).is_some() &&
+        core::ub_checks::same_allocation(self.as_ptr(), self.as_ptr().wrapping_byte_offset(count))
+    )]
+    #[ensures(|result: &Self| result.as_ptr() == self.as_ptr().wrapping_byte_offset(count))]
     pub const unsafe fn byte_offset(self, count: isize) -> Self {
         // SAFETY: the caller must uphold the safety contract for `offset` and `byte_offset` has
         // the same safety contract.
         // Additionally safety contract of `offset` guarantees that the resulting pointer is
         // pointing to an allocation, there can't be an allocation at null, thus it's safe to
         // construct `NonNull`.
-        unsafe { NonNull { pointer: self.pointer.byte_offset(count) } }
+        unsafe { NonNull { pointer: self.as_ptr().byte_offset(count) } }
     }
 
     /// Adds an offset to a pointer (convenience for `.offset(count as isize)`).
@@ -550,16 +653,16 @@ impl<T: ?Sized> NonNull<T> {
     /// * The computed offset, `count * size_of::<T>()` bytes, must not overflow `isize`.
     ///
     /// * If the computed offset is non-zero, then `self` must be derived from a pointer to some
-    ///   [allocated object], and the entire memory range between `self` and the result must be in
-    ///   bounds of that allocated object. In particular, this range must not "wrap around" the edge
+    ///   [allocation], and the entire memory range between `self` and the result must be in
+    ///   bounds of that allocation. In particular, this range must not "wrap around" the edge
     ///   of the address space.
     ///
-    /// Allocated objects can never be larger than `isize::MAX` bytes, so if the computed offset
-    /// stays in bounds of the allocated object, it is guaranteed to satisfy the first requirement.
+    /// Allocations can never be larger than `isize::MAX` bytes, so if the computed offset
+    /// stays in bounds of the allocation, it is guaranteed to satisfy the first requirement.
     /// This implies, for instance, that `vec.as_ptr().add(vec.len())` (for `vec: Vec<T>`) is always
     /// safe.
     ///
-    /// [allocated object]: crate::ptr#allocated-object
+    /// [allocation]: crate::ptr#allocation
     ///
     /// # Examples
     ///
@@ -582,7 +685,7 @@ impl<T: ?Sized> NonNull<T> {
     #[requires(count.checked_mul(core::mem::size_of::<T>()).is_some()
         && count * core::mem::size_of::<T>() <= isize::MAX as usize
         && (self.pointer as isize).checked_add(count as isize * core::mem::size_of::<T>() as isize).is_some() // check wrapping add
-        && kani::mem::same_allocation(self.pointer, self.pointer.wrapping_offset(count as isize)))]
+        && core::ub_checks::same_allocation(self.pointer, self.pointer.wrapping_offset(count as isize)))]
     #[ensures(|result: &NonNull<T>| result.as_ptr() == self.as_ptr().offset(count as isize))]
     pub const unsafe fn add(self, count: usize) -> Self
     where
@@ -592,7 +695,7 @@ impl<T: ?Sized> NonNull<T> {
         // Additionally safety contract of `offset` guarantees that the resulting pointer is
         // pointing to an allocation, there can't be an allocation at null, thus it's safe to
         // construct `NonNull`.
-        unsafe { NonNull { pointer: intrinsics::offset(self.pointer, count) } }
+        unsafe { NonNull { pointer: intrinsics::offset(self.as_ptr(), count) } }
     }
 
     /// Calculates the offset from a pointer in bytes (convenience for `.byte_offset(count as isize)`).
@@ -610,13 +713,22 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "non_null_convenience", since = "1.80.0")]
+    // TODO: we can no longer use size_of_val_raw with the Sized hierarchy
+    // #[requires(
+    //     count == 0 || (
+    //         (core::mem::size_of_val_raw(self.as_ptr() as * const _) > 0) &&
+    //         (count <= (isize::MAX as usize)) &&
+    //         (self.as_ptr().addr().checked_add(count).is_some()) &&
+    //         (core::ub_checks::same_allocation(self.as_ptr(), self.as_ptr().wrapping_byte_add(count)))
+    //     )
+    // )]
     pub const unsafe fn byte_add(self, count: usize) -> Self {
         // SAFETY: the caller must uphold the safety contract for `add` and `byte_add` has the same
         // safety contract.
         // Additionally safety contract of `add` guarantees that the resulting pointer is pointing
         // to an allocation, there can't be an allocation at null, thus it's safe to construct
         // `NonNull`.
-        unsafe { NonNull { pointer: self.pointer.byte_add(count) } }
+        unsafe { NonNull { pointer: self.as_ptr().byte_add(count) } }
     }
 
     /// Subtracts an offset from a pointer (convenience for
@@ -632,16 +744,16 @@ impl<T: ?Sized> NonNull<T> {
     /// * The computed offset, `count * size_of::<T>()` bytes, must not overflow `isize`.
     ///
     /// * If the computed offset is non-zero, then `self` must be derived from a pointer to some
-    ///   [allocated object], and the entire memory range between `self` and the result must be in
-    ///   bounds of that allocated object. In particular, this range must not "wrap around" the edge
+    ///   [allocation], and the entire memory range between `self` and the result must be in
+    ///   bounds of that allocation. In particular, this range must not "wrap around" the edge
     ///   of the address space.
     ///
-    /// Allocated objects can never be larger than `isize::MAX` bytes, so if the computed offset
-    /// stays in bounds of the allocated object, it is guaranteed to satisfy the first requirement.
+    /// Allocations can never be larger than `isize::MAX` bytes, so if the computed offset
+    /// stays in bounds of the allocation, it is guaranteed to satisfy the first requirement.
     /// This implies, for instance, that `vec.as_ptr().add(vec.len())` (for `vec: Vec<T>`) is always
     /// safe.
     ///
-    /// [allocated object]: crate::ptr#allocated-object
+    /// [allocation]: crate::ptr#allocation
     ///
     /// # Examples
     ///
@@ -661,7 +773,12 @@ impl<T: ?Sized> NonNull<T> {
     #[must_use = "returns a new pointer rather than modifying its argument"]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "non_null_convenience", since = "1.80.0")]
-    #[cfg_attr(bootstrap, rustc_allow_const_fn_unstable(unchecked_neg))]
+    #[requires(
+        count.checked_mul(core::mem::size_of::<T>()).is_some() &&
+        count * core::mem::size_of::<T>() <= isize::MAX as usize &&
+        core::ub_checks::same_allocation(self.as_ptr(), self.as_ptr().wrapping_sub(count))
+    )]
+    #[ensures(|result: &NonNull<T>| result.as_ptr() == self.as_ptr().offset(-(count as isize)))]
     pub const unsafe fn sub(self, count: usize) -> Self
     where
         T: Sized,
@@ -693,19 +810,28 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "non_null_convenience", since = "1.80.0")]
+    // TODO: we can no longer use size_of_val_raw with the Sized hierarchy
+    // #[requires(
+    //     count == 0 || (
+    //         (core::mem::size_of_val_raw(self.as_ptr() as * const _) > 0) &&
+    //         (count <= (isize::MAX as usize)) &&
+    //         (self.as_ptr().addr().checked_sub(count).is_some()) &&
+    //         (core::ub_checks::same_allocation(self.as_ptr(), self.as_ptr().wrapping_byte_sub(count)))
+    //     )
+    // )]
     pub const unsafe fn byte_sub(self, count: usize) -> Self {
         // SAFETY: the caller must uphold the safety contract for `sub` and `byte_sub` has the same
         // safety contract.
         // Additionally safety contract of `sub` guarantees that the resulting pointer is pointing
         // to an allocation, there can't be an allocation at null, thus it's safe to construct
         // `NonNull`.
-        unsafe { NonNull { pointer: self.pointer.byte_sub(count) } }
+        unsafe { NonNull { pointer: self.as_ptr().byte_sub(count) } }
     }
 
     /// Calculates the distance between two pointers within the same allocation. The returned value is in
-    /// units of T: the distance in bytes divided by `mem::size_of::<T>()`.
+    /// units of T: the distance in bytes divided by `size_of::<T>()`.
     ///
-    /// This is equivalent to `(self as isize - origin as isize) / (mem::size_of::<T>() as isize)`,
+    /// This is equivalent to `(self as isize - origin as isize) / (size_of::<T>() as isize)`,
     /// except that it has a lot more opportunities for UB, in exchange for the compiler
     /// better understanding what you are doing.
     ///
@@ -725,7 +851,7 @@ impl<T: ?Sized> NonNull<T> {
     /// * `self` and `origin` must either
     ///
     ///   * point to the same address, or
-    ///   * both be *derived from* a pointer to the same [allocated object], and the memory range between
+    ///   * both be *derived from* a pointer to the same [allocation], and the memory range between
     ///     the two pointers must be in bounds of that object. (See below for an example.)
     ///
     /// * The distance between the pointers, in bytes, must be an exact multiple
@@ -733,19 +859,19 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// As a consequence, the absolute distance between the pointers, in bytes, computed on
     /// mathematical integers (without "wrapping around"), cannot overflow an `isize`. This is
-    /// implied by the in-bounds requirement, and the fact that no allocated object can be larger
+    /// implied by the in-bounds requirement, and the fact that no allocation can be larger
     /// than `isize::MAX` bytes.
     ///
-    /// The requirement for pointers to be derived from the same allocated object is primarily
+    /// The requirement for pointers to be derived from the same allocation is primarily
     /// needed for `const`-compatibility: the distance between pointers into *different* allocated
     /// objects is not known at compile-time. However, the requirement also exists at
     /// runtime and may be exploited by optimizations. If you wish to compute the difference between
     /// pointers that are not guaranteed to be from the same allocation, use `(self as isize -
-    /// origin as isize) / mem::size_of::<T>()`.
+    /// origin as isize) / size_of::<T>()`.
     // FIXME: recommend `addr()` instead of `as usize` once that is stable.
     ///
     /// [`add`]: #method.add
-    /// [allocated object]: crate::ptr#allocated-object
+    /// [allocation]: crate::ptr#allocation
     ///
     /// # Panics
     ///
@@ -791,12 +917,18 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "non_null_convenience", since = "1.80.0")]
+    #[requires(
+        core::ub_checks::same_allocation(self.as_ptr(), origin.as_ptr()) &&
+        (self.as_ptr().addr().checked_sub(origin.as_ptr().addr()).is_some_and(|distance| distance % core::mem::size_of::<T>() == 0) ||
+        origin.as_ptr().addr().checked_sub(self.as_ptr().addr()).is_some_and(|distance| distance % core::mem::size_of::<T>() == 0))
+    )] // Ensure both pointers meet safety conditions for offset_from
+    #[ensures(|result: &isize| *result == (self.as_ptr() as isize - origin.as_ptr() as isize) / core::mem::size_of::<T>() as isize)]
     pub const unsafe fn offset_from(self, origin: NonNull<T>) -> isize
     where
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `offset_from`.
-        unsafe { self.pointer.offset_from(origin.pointer) }
+        unsafe { self.as_ptr().offset_from(origin.as_ptr()) }
     }
 
     /// Calculates the distance between two pointers within the same allocation. The returned value is in
@@ -812,16 +944,24 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "non_null_convenience", since = "1.80.0")]
+    #[requires(
+        self.as_ptr().addr() == origin.as_ptr().addr() ||
+        core::ub_checks::same_allocation(self.as_ptr() as *const(), origin.as_ptr() as *const())
+    )]
+    #[ensures(
+        |result: &isize|
+        *result == (self.as_ptr() as *const u8).offset_from(origin.as_ptr() as *const u8)
+    )]
     pub const unsafe fn byte_offset_from<U: ?Sized>(self, origin: NonNull<U>) -> isize {
         // SAFETY: the caller must uphold the safety contract for `byte_offset_from`.
-        unsafe { self.pointer.byte_offset_from(origin.pointer) }
+        unsafe { self.as_ptr().byte_offset_from(origin.as_ptr()) }
     }
 
     // N.B. `wrapping_offset``, `wrapping_add`, etc are not implemented because they can wrap to null
 
     /// Calculates the distance between two pointers within the same allocation, *where it's known that
     /// `self` is equal to or greater than `origin`*. The returned value is in
-    /// units of T: the distance in bytes is divided by `mem::size_of::<T>()`.
+    /// units of T: the distance in bytes is divided by `size_of::<T>()`.
     ///
     /// This computes the same value that [`offset_from`](#method.offset_from)
     /// would compute, but with the added precondition that the offset is
@@ -835,14 +975,13 @@ impl<T: ?Sized> NonNull<T> {
     /// to [`sub`](#method.sub)).  The following are all equivalent, assuming
     /// that their safety preconditions are met:
     /// ```rust
-    /// # #![feature(ptr_sub_ptr)]
-    /// # unsafe fn blah(ptr: std::ptr::NonNull<u32>, origin: std::ptr::NonNull<u32>, count: usize) -> bool {
-    /// ptr.sub_ptr(origin) == count
+    /// # unsafe fn blah(ptr: std::ptr::NonNull<u32>, origin: std::ptr::NonNull<u32>, count: usize) -> bool { unsafe {
+    /// ptr.offset_from_unsigned(origin) == count
     /// # &&
     /// origin.add(count) == ptr
     /// # &&
     /// ptr.sub(count) == origin
-    /// # }
+    /// # } }
     /// ```
     ///
     /// # Safety
@@ -864,32 +1003,38 @@ impl<T: ?Sized> NonNull<T> {
     /// # Examples
     ///
     /// ```
-    /// #![feature(ptr_sub_ptr)]
     /// use std::ptr::NonNull;
     ///
     /// let a = [0; 5];
     /// let ptr1: NonNull<u32> = NonNull::from(&a[1]);
     /// let ptr2: NonNull<u32> = NonNull::from(&a[3]);
     /// unsafe {
-    ///     assert_eq!(ptr2.sub_ptr(ptr1), 2);
+    ///     assert_eq!(ptr2.offset_from_unsigned(ptr1), 2);
     ///     assert_eq!(ptr1.add(2), ptr2);
     ///     assert_eq!(ptr2.sub(2), ptr1);
-    ///     assert_eq!(ptr2.sub_ptr(ptr2), 0);
+    ///     assert_eq!(ptr2.offset_from_unsigned(ptr2), 0);
     /// }
     ///
     /// // This would be incorrect, as the pointers are not correctly ordered:
-    /// // ptr1.sub_ptr(ptr2)
+    /// // ptr1.offset_from_unsigned(ptr2)
     /// ```
     #[inline]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
-    #[unstable(feature = "ptr_sub_ptr", issue = "95892")]
-    #[rustc_const_unstable(feature = "const_ptr_sub_ptr", issue = "95892")]
-    pub const unsafe fn sub_ptr(self, subtracted: NonNull<T>) -> usize
+    #[stable(feature = "ptr_sub_ptr", since = "1.87.0")]
+    #[rustc_const_stable(feature = "const_ptr_sub_ptr", since = "1.87.0")]
+    #[requires(
+        self.as_ptr().addr().checked_sub(subtracted.as_ptr().addr()).is_some() &&
+        core::ub_checks::same_allocation(self.as_ptr(), subtracted.as_ptr()) &&
+        (self.as_ptr().addr()) >= (subtracted.as_ptr().addr()) &&
+        (self.as_ptr().addr() - subtracted.as_ptr().addr()) % core::mem::size_of::<T>() == 0
+    )]
+    #[ensures(|result: &usize| *result == self.as_ptr().offset_from(subtracted.as_ptr()) as usize)]
+    pub const unsafe fn offset_from_unsigned(self, subtracted: NonNull<T>) -> usize
     where
         T: Sized,
     {
-        // SAFETY: the caller must uphold the safety contract for `sub_ptr`.
-        unsafe { self.pointer.sub_ptr(subtracted.pointer) }
+        // SAFETY: the caller must uphold the safety contract for `offset_from_unsigned`.
+        unsafe { self.as_ptr().offset_from_unsigned(subtracted.as_ptr()) }
     }
 
     /// Calculates the distance between two pointers within the same allocation, *where it's known that
@@ -897,18 +1042,18 @@ impl<T: ?Sized> NonNull<T> {
     /// units of **bytes**.
     ///
     /// This is purely a convenience for casting to a `u8` pointer and
-    /// using [`sub_ptr`][NonNull::sub_ptr] on it. See that method for
-    /// documentation and safety requirements.
+    /// using [`offset_from_unsigned`][NonNull::offset_from_unsigned] on it.
+    /// See that method for documentation and safety requirements.
     ///
     /// For non-`Sized` pointees this operation considers only the data pointers,
     /// ignoring the metadata.
     #[inline(always)]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
-    #[unstable(feature = "ptr_sub_ptr", issue = "95892")]
-    #[rustc_const_unstable(feature = "const_ptr_sub_ptr", issue = "95892")]
-    pub const unsafe fn byte_sub_ptr<U: ?Sized>(self, origin: NonNull<U>) -> usize {
-        // SAFETY: the caller must uphold the safety contract for `byte_sub_ptr`.
-        unsafe { self.pointer.byte_sub_ptr(origin.pointer) }
+    #[stable(feature = "ptr_sub_ptr", since = "1.87.0")]
+    #[rustc_const_stable(feature = "const_ptr_sub_ptr", since = "1.87.0")]
+    pub const unsafe fn byte_offset_from_unsigned<U: ?Sized>(self, origin: NonNull<U>) -> usize {
+        // SAFETY: the caller must uphold the safety contract for `byte_offset_from_unsigned`.
+        unsafe { self.as_ptr().byte_offset_from_unsigned(origin.as_ptr()) }
     }
 
     /// Reads the value from `self` without moving it. This leaves the
@@ -927,7 +1072,7 @@ impl<T: ?Sized> NonNull<T> {
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `read`.
-        unsafe { ptr::read(self.pointer) }
+        unsafe { ptr::read(self.as_ptr()) }
     }
 
     /// Performs a volatile read of the value from `self` without moving it. This
@@ -949,7 +1094,7 @@ impl<T: ?Sized> NonNull<T> {
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `read_volatile`.
-        unsafe { ptr::read_volatile(self.pointer) }
+        unsafe { ptr::read_volatile(self.as_ptr()) }
     }
 
     /// Reads the value from `self` without moving it. This leaves the
@@ -970,10 +1115,10 @@ impl<T: ?Sized> NonNull<T> {
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `read_unaligned`.
-        unsafe { ptr::read_unaligned(self.pointer) }
+        unsafe { ptr::read_unaligned(self.as_ptr()) }
     }
 
-    /// Copies `count * size_of<T>` bytes from `self` to `dest`. The source
+    /// Copies `count * size_of::<T>()` bytes from `self` to `dest`. The source
     /// and destination may overlap.
     ///
     /// NOTE: this has the *same* argument order as [`ptr::copy`].
@@ -983,17 +1128,23 @@ impl<T: ?Sized> NonNull<T> {
     /// [`ptr::copy`]: crate::ptr::copy()
     #[inline(always)]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
+    #[cfg_attr(kani, kani::modifies(NonNull::slice_from_raw_parts(dest, count).as_ptr()))]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.83.0")]
+    #[requires(count.checked_mul(core::mem::size_of::<T>()).map_or_else(|| false, |size| size <= isize::MAX as usize)
+        && ub_checks::can_dereference(NonNull::slice_from_raw_parts(self, count).as_ptr())
+        && ub_checks::can_write(NonNull::slice_from_raw_parts(dest, count).as_ptr()))]
+    #[ensures(|result: &()| ub_checks::can_dereference(self.as_ptr() as *const u8)
+        && ub_checks::can_dereference(dest.as_ptr() as *const u8))]
     pub const unsafe fn copy_to(self, dest: NonNull<T>, count: usize)
     where
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `copy`.
-        unsafe { ptr::copy(self.pointer, dest.as_ptr(), count) }
+        unsafe { ptr::copy(self.as_ptr(), dest.as_ptr(), count) }
     }
 
-    /// Copies `count * size_of<T>` bytes from `self` to `dest`. The source
+    /// Copies `count * size_of::<T>()` bytes from `self` to `dest`. The source
     /// and destination may *not* overlap.
     ///
     /// NOTE: this has the *same* argument order as [`ptr::copy_nonoverlapping`].
@@ -1003,17 +1154,24 @@ impl<T: ?Sized> NonNull<T> {
     /// [`ptr::copy_nonoverlapping`]: crate::ptr::copy_nonoverlapping()
     #[inline(always)]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
+    #[cfg_attr(kani, kani::modifies(NonNull::slice_from_raw_parts(dest, count).as_ptr()))]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.83.0")]
+    #[requires(count.checked_mul(core::mem::size_of::<T>()).map_or_else(|| false, |size| size <= isize::MAX as usize)
+        && ub_checks::can_dereference(NonNull::slice_from_raw_parts(self, count).as_ptr())
+        && ub_checks::can_write(NonNull::slice_from_raw_parts(dest, count).as_ptr())
+        && ub_checks::maybe_is_nonoverlapping(self.as_ptr() as *const (), dest.as_ptr() as *const (), count, core::mem::size_of::<T>()))]
+    #[ensures(|result: &()| ub_checks::can_dereference(self.as_ptr() as *const u8)
+        && ub_checks::can_dereference(dest.as_ptr() as *const u8))]
     pub const unsafe fn copy_to_nonoverlapping(self, dest: NonNull<T>, count: usize)
     where
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `copy_nonoverlapping`.
-        unsafe { ptr::copy_nonoverlapping(self.pointer, dest.as_ptr(), count) }
+        unsafe { ptr::copy_nonoverlapping(self.as_ptr(), dest.as_ptr(), count) }
     }
 
-    /// Copies `count * size_of<T>` bytes from `src` to `self`. The source
+    /// Copies `count * size_of::<T>()` bytes from `src` to `self`. The source
     /// and destination may overlap.
     ///
     /// NOTE: this has the *opposite* argument order of [`ptr::copy`].
@@ -1023,17 +1181,23 @@ impl<T: ?Sized> NonNull<T> {
     /// [`ptr::copy`]: crate::ptr::copy()
     #[inline(always)]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
+    #[cfg_attr(kani, kani::modifies(NonNull::slice_from_raw_parts(self, count).as_ptr()))]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.83.0")]
+    #[requires(count.checked_mul(core::mem::size_of::<T>()).map_or_else(|| false, |size| size <= isize::MAX as usize)
+        && ub_checks::can_dereference(NonNull::slice_from_raw_parts(src, count).as_ptr())
+        && ub_checks::can_write(NonNull::slice_from_raw_parts(self, count).as_ptr()))]
+    #[ensures(|result: &()| ub_checks::can_dereference(src.as_ptr() as *const u8)
+        && ub_checks::can_dereference(self.as_ptr() as *const u8))]
     pub const unsafe fn copy_from(self, src: NonNull<T>, count: usize)
     where
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `copy`.
-        unsafe { ptr::copy(src.pointer, self.as_ptr(), count) }
+        unsafe { ptr::copy(src.as_ptr(), self.as_ptr(), count) }
     }
 
-    /// Copies `count * size_of<T>` bytes from `src` to `self`. The source
+    /// Copies `count * size_of::<T>()` bytes from `src` to `self`. The source
     /// and destination may *not* overlap.
     ///
     /// NOTE: this has the *opposite* argument order of [`ptr::copy_nonoverlapping`].
@@ -1043,14 +1207,21 @@ impl<T: ?Sized> NonNull<T> {
     /// [`ptr::copy_nonoverlapping`]: crate::ptr::copy_nonoverlapping()
     #[inline(always)]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
+    #[cfg_attr(kani, kani::modifies(NonNull::slice_from_raw_parts(self, count).as_ptr()))]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.83.0")]
+    #[requires(count.checked_mul(core::mem::size_of::<T>()).map_or_else(|| false, |size| size <= isize::MAX as usize)
+        && ub_checks::can_dereference(NonNull::slice_from_raw_parts(src, count).as_ptr())
+        && ub_checks::can_write(NonNull::slice_from_raw_parts(self, count).as_ptr())
+        && ub_checks::maybe_is_nonoverlapping(src.as_ptr() as *const (), self.as_ptr() as *const (), count, core::mem::size_of::<T>()))]
+    #[ensures(|result: &()| ub_checks::can_dereference(src.as_ptr() as *const u8)
+        && ub_checks::can_dereference(self.as_ptr() as *const u8))]
     pub const unsafe fn copy_from_nonoverlapping(self, src: NonNull<T>, count: usize)
     where
         T: Sized,
     {
         // SAFETY: the caller must uphold the safety contract for `copy_nonoverlapping`.
-        unsafe { ptr::copy_nonoverlapping(src.pointer, self.as_ptr(), count) }
+        unsafe { ptr::copy_nonoverlapping(src.as_ptr(), self.as_ptr(), count) }
     }
 
     /// Executes the destructor (if any) of the pointed-to value.
@@ -1060,6 +1231,8 @@ impl<T: ?Sized> NonNull<T> {
     /// [`ptr::drop_in_place`]: crate::ptr::drop_in_place()
     #[inline(always)]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
+    #[requires(ub_checks::can_dereference(self.as_ptr() as *const()))] // Ensure self is aligned, initialized, and valid for read
+    #[requires(ub_checks::can_write(self.as_ptr() as *mut()))] // Ensure self is valid for write
     pub unsafe fn drop_in_place(self) {
         // SAFETY: the caller must uphold the safety contract for `drop_in_place`.
         unsafe { ptr::drop_in_place(self.as_ptr()) }
@@ -1075,6 +1248,8 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "const_ptr_write", since = "1.83.0")]
+    #[cfg_attr(kani, kani::modifies(self.as_ptr()))]
+    #[requires(ub_checks::can_write(self.as_ptr()))]
     pub const unsafe fn write(self, val: T)
     where
         T: Sized,
@@ -1094,6 +1269,13 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "const_ptr_write", since = "1.83.0")]
+    #[cfg_attr(kani, kani::modifies(crate::ptr::slice_from_raw_parts(self.as_ptr(), count)))]
+    #[requires(
+        count.checked_mul(core::mem::size_of::<T>() as usize).is_some_and(|byte_count| byte_count.wrapping_add(self.as_ptr() as usize) <= isize::MAX as usize) &&
+        ub_checks::can_write(core::ptr::slice_from_raw_parts_mut(self.as_ptr(), count))
+    )]
+    #[ensures(|_|
+        ub_checks::can_dereference(crate::ptr::slice_from_raw_parts(self.as_ptr() as *const u8, count * size_of::<T>())))]
     pub const unsafe fn write_bytes(self, val: u8, count: usize)
     where
         T: Sized,
@@ -1115,6 +1297,8 @@ impl<T: ?Sized> NonNull<T> {
     #[inline(always)]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
+    #[cfg_attr(kani, kani::modifies(self.as_ptr()))]
+    #[requires(ub_checks::can_write(self.as_ptr()))]
     pub unsafe fn write_volatile(self, val: T)
     where
         T: Sized,
@@ -1135,6 +1319,8 @@ impl<T: ?Sized> NonNull<T> {
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
     #[rustc_const_stable(feature = "const_ptr_write", since = "1.83.0")]
+    #[cfg_attr(kani, kani::modifies(self.as_ptr()))]
+    #[requires(ub_checks::can_write_unaligned(self.as_ptr()))]
     pub const unsafe fn write_unaligned(self, val: T)
     where
         T: Sized,
@@ -1151,7 +1337,11 @@ impl<T: ?Sized> NonNull<T> {
     /// [`ptr::replace`]: crate::ptr::replace()
     #[inline(always)]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
-    pub unsafe fn replace(self, src: T) -> T
+    #[cfg_attr(kani, kani::modifies(self.as_ptr()))]
+    #[requires(ub_checks::can_dereference(self.as_ptr()))] // Ensure self is aligned, initialized, and valid for read
+    #[requires(ub_checks::can_write(self.as_ptr()))] // Ensure self is valid for write
+    #[rustc_const_stable(feature = "const_inherent_ptr_replace", since = "1.88.0")]
+    pub const unsafe fn replace(self, src: T) -> T
     where
         T: Sized,
     {
@@ -1168,7 +1358,10 @@ impl<T: ?Sized> NonNull<T> {
     /// [`ptr::swap`]: crate::ptr::swap()
     #[inline(always)]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
-    #[rustc_const_unstable(feature = "const_swap", issue = "83163")]
+    #[rustc_const_stable(feature = "const_swap", since = "1.85.0")]
+    #[cfg_attr(kani, kani::modifies(self.as_ptr(), with.as_ptr()))]
+    #[requires(ub_checks::can_dereference(self.as_ptr()) && ub_checks::can_write(self.as_ptr()))]
+    #[requires(ub_checks::can_dereference(with.as_ptr()) && ub_checks::can_write(with.as_ptr()))]
     pub const unsafe fn swap(self, with: NonNull<T>)
     where
         T: Sized,
@@ -1207,7 +1400,6 @@ impl<T: ?Sized> NonNull<T> {
     /// Accessing adjacent `u8` as `u16`
     ///
     /// ```
-    /// use std::mem::align_of;
     /// use std::ptr::NonNull;
     ///
     /// # unsafe {
@@ -1227,7 +1419,6 @@ impl<T: ?Sized> NonNull<T> {
     #[inline]
     #[must_use]
     #[stable(feature = "non_null_convenience", since = "1.80.0")]
-    #[rustc_const_unstable(feature = "const_align_offset", issue = "90962")]
     #[ensures(|result| {
         // Post-condition reference: https://github.com/model-checking/verify-rust-std/pull/69/files
         let stride = crate::mem::size_of::<T>();
@@ -1258,7 +1449,7 @@ impl<T: ?Sized> NonNull<T> {
         let new_addr = usize::wrapping_add(product, self.pointer.addr());
         *result != usize::MAX && new_addr % align == 0
     })]
-    pub const fn align_offset(self, align: usize) -> usize
+    pub fn align_offset(self, align: usize) -> usize
     where
         T: Sized,
     {
@@ -1268,7 +1459,7 @@ impl<T: ?Sized> NonNull<T> {
 
         {
             // SAFETY: `align` has been checked to be a power of 2 above.
-            unsafe { ptr::align_offset(self.pointer, align) }
+            unsafe { ptr::align_offset(self.as_ptr(), align) }
         }
     }
 
@@ -1289,102 +1480,15 @@ impl<T: ?Sized> NonNull<T> {
     /// assert!(ptr.is_aligned());
     /// assert!(!NonNull::new(ptr.as_ptr().wrapping_byte_add(1)).unwrap().is_aligned());
     /// ```
-    ///
-    /// # At compiletime
-    /// **Note: Alignment at compiletime is experimental and subject to change. See the
-    /// [tracking issue] for details.**
-    ///
-    /// At compiletime, the compiler may not know where a value will end up in memory.
-    /// Calling this function on a pointer created from a reference at compiletime will only
-    /// return `true` if the pointer is guaranteed to be aligned. This means that the pointer
-    /// is never aligned if cast to a type with a stricter alignment than the reference's
-    /// underlying allocation.
-    ///
-    /// ```
-    /// #![feature(const_nonnull_new)]
-    /// #![feature(const_pointer_is_aligned)]
-    /// use std::ptr::NonNull;
-    ///
-    /// // On some platforms, the alignment of primitives is less than their size.
-    /// #[repr(align(4))]
-    /// struct AlignedI32(i32);
-    /// #[repr(align(8))]
-    /// struct AlignedI64(i64);
-    ///
-    /// const _: () = {
-    ///     let data = [AlignedI32(42), AlignedI32(42)];
-    ///     let ptr = NonNull::<AlignedI32>::new(&data[0] as *const _ as *mut _).unwrap();
-    ///     assert!(ptr.is_aligned());
-    ///
-    ///     // At runtime either `ptr1` or `ptr2` would be aligned, but at compiletime neither is aligned.
-    ///     let ptr1 = ptr.cast::<AlignedI64>();
-    ///     let ptr2 = unsafe { ptr.add(1).cast::<AlignedI64>() };
-    ///     assert!(!ptr1.is_aligned());
-    ///     assert!(!ptr2.is_aligned());
-    /// };
-    /// ```
-    ///
-    /// Due to this behavior, it is possible that a runtime pointer derived from a compiletime
-    /// pointer is aligned, even if the compiletime pointer wasn't aligned.
-    ///
-    /// ```
-    /// #![feature(const_pointer_is_aligned)]
-    ///
-    /// // On some platforms, the alignment of primitives is less than their size.
-    /// #[repr(align(4))]
-    /// struct AlignedI32(i32);
-    /// #[repr(align(8))]
-    /// struct AlignedI64(i64);
-    ///
-    /// // At compiletime, neither `COMPTIME_PTR` nor `COMPTIME_PTR + 1` is aligned.
-    /// const COMPTIME_PTR: *const AlignedI32 = &AlignedI32(42);
-    /// const _: () = assert!(!COMPTIME_PTR.cast::<AlignedI64>().is_aligned());
-    /// const _: () = assert!(!COMPTIME_PTR.wrapping_add(1).cast::<AlignedI64>().is_aligned());
-    ///
-    /// // At runtime, either `runtime_ptr` or `runtime_ptr + 1` is aligned.
-    /// let runtime_ptr = COMPTIME_PTR;
-    /// assert_ne!(
-    ///     runtime_ptr.cast::<AlignedI64>().is_aligned(),
-    ///     runtime_ptr.wrapping_add(1).cast::<AlignedI64>().is_aligned(),
-    /// );
-    /// ```
-    ///
-    /// If a pointer is created from a fixed address, this function behaves the same during
-    /// runtime and compiletime.
-    ///
-    /// ```
-    /// #![feature(const_pointer_is_aligned)]
-    /// #![feature(const_nonnull_new)]
-    /// use std::ptr::NonNull;
-    ///
-    /// // On some platforms, the alignment of primitives is less than their size.
-    /// #[repr(align(4))]
-    /// struct AlignedI32(i32);
-    /// #[repr(align(8))]
-    /// struct AlignedI64(i64);
-    ///
-    /// const _: () = {
-    ///     let ptr = NonNull::new(40 as *mut AlignedI32).unwrap();
-    ///     assert!(ptr.is_aligned());
-    ///
-    ///     // For pointers with a known address, runtime and compiletime behavior are identical.
-    ///     let ptr1 = ptr.cast::<AlignedI64>();
-    ///     let ptr2 = NonNull::new(ptr.as_ptr().wrapping_add(1)).unwrap().cast::<AlignedI64>();
-    ///     assert!(ptr1.is_aligned());
-    ///     assert!(!ptr2.is_aligned());
-    /// };
-    /// ```
-    ///
-    /// [tracking issue]: https://github.com/rust-lang/rust/issues/104203
     #[inline]
     #[must_use]
     #[stable(feature = "pointer_is_aligned", since = "1.79.0")]
-    #[rustc_const_unstable(feature = "const_pointer_is_aligned", issue = "104203")]
-    pub const fn is_aligned(self) -> bool
+    #[ensures(|result: &bool| *result == (self.as_ptr().addr() % core::mem::align_of::<T>() == 0))]
+    pub fn is_aligned(self) -> bool
     where
         T: Sized,
     {
-        self.pointer.is_aligned()
+        self.as_ptr().is_aligned()
     }
 
     /// Returns whether the pointer is aligned to `align`.
@@ -1417,86 +1521,13 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// assert_ne!(ptr.is_aligned_to(8), ptr.wrapping_add(1).is_aligned_to(8));
     /// ```
-    ///
-    /// # At compiletime
-    /// **Note: Alignment at compiletime is experimental and subject to change. See the
-    /// [tracking issue] for details.**
-    ///
-    /// At compiletime, the compiler may not know where a value will end up in memory.
-    /// Calling this function on a pointer created from a reference at compiletime will only
-    /// return `true` if the pointer is guaranteed to be aligned. This means that the pointer
-    /// cannot be stricter aligned than the reference's underlying allocation.
-    ///
-    /// ```
-    /// #![feature(pointer_is_aligned_to)]
-    /// #![feature(const_pointer_is_aligned)]
-    ///
-    /// // On some platforms, the alignment of i32 is less than 4.
-    /// #[repr(align(4))]
-    /// struct AlignedI32(i32);
-    ///
-    /// const _: () = {
-    ///     let data = AlignedI32(42);
-    ///     let ptr = &data as *const AlignedI32;
-    ///
-    ///     assert!(ptr.is_aligned_to(1));
-    ///     assert!(ptr.is_aligned_to(2));
-    ///     assert!(ptr.is_aligned_to(4));
-    ///
-    ///     // At compiletime, we know for sure that the pointer isn't aligned to 8.
-    ///     assert!(!ptr.is_aligned_to(8));
-    ///     assert!(!ptr.wrapping_add(1).is_aligned_to(8));
-    /// };
-    /// ```
-    ///
-    /// Due to this behavior, it is possible that a runtime pointer derived from a compiletime
-    /// pointer is aligned, even if the compiletime pointer wasn't aligned.
-    ///
-    /// ```
-    /// #![feature(pointer_is_aligned_to)]
-    /// #![feature(const_pointer_is_aligned)]
-    ///
-    /// // On some platforms, the alignment of i32 is less than 4.
-    /// #[repr(align(4))]
-    /// struct AlignedI32(i32);
-    ///
-    /// // At compiletime, neither `COMPTIME_PTR` nor `COMPTIME_PTR + 1` is aligned.
-    /// const COMPTIME_PTR: *const AlignedI32 = &AlignedI32(42);
-    /// const _: () = assert!(!COMPTIME_PTR.is_aligned_to(8));
-    /// const _: () = assert!(!COMPTIME_PTR.wrapping_add(1).is_aligned_to(8));
-    ///
-    /// // At runtime, either `runtime_ptr` or `runtime_ptr + 1` is aligned.
-    /// let runtime_ptr = COMPTIME_PTR;
-    /// assert_ne!(
-    ///     runtime_ptr.is_aligned_to(8),
-    ///     runtime_ptr.wrapping_add(1).is_aligned_to(8),
-    /// );
-    /// ```
-    ///
-    /// If a pointer is created from a fixed address, this function behaves the same during
-    /// runtime and compiletime.
-    ///
-    /// ```
-    /// #![feature(pointer_is_aligned_to)]
-    /// #![feature(const_pointer_is_aligned)]
-    ///
-    /// const _: () = {
-    ///     let ptr = 40 as *const u8;
-    ///     assert!(ptr.is_aligned_to(1));
-    ///     assert!(ptr.is_aligned_to(2));
-    ///     assert!(ptr.is_aligned_to(4));
-    ///     assert!(ptr.is_aligned_to(8));
-    ///     assert!(!ptr.is_aligned_to(16));
-    /// };
-    /// ```
-    ///
-    /// [tracking issue]: https://github.com/rust-lang/rust/issues/104203
     #[inline]
     #[must_use]
     #[unstable(feature = "pointer_is_aligned_to", issue = "96284")]
-    #[rustc_const_unstable(feature = "const_pointer_is_aligned", issue = "104203")]
-    pub const fn is_aligned_to(self, align: usize) -> bool {
-        self.pointer.is_aligned_to(align)
+    #[requires(align.is_power_of_two())]
+    #[ensures(|result: &bool| *result == (self.as_ptr().addr() % align == 0))] // Ensure the returned value is correct based on the given alignment
+    pub fn is_aligned_to(self, align: usize) -> bool {
+        self.as_ptr().is_aligned_to(align)
     }
 }
 
@@ -1526,6 +1557,9 @@ impl<T> NonNull<[T]> {
     #[rustc_const_stable(feature = "const_slice_from_raw_parts_mut", since = "1.83.0")]
     #[must_use]
     #[inline]
+    #[ensures(|result| !result.pointer.is_null()
+        && result.pointer as *const T == data.pointer
+        && unsafe { result.as_ref() }.len() == len)]
     pub const fn slice_from_raw_parts(data: NonNull<T>, len: usize) -> Self {
         // SAFETY: `data` is a `NonNull` pointer which is necessarily non-null
         unsafe { Self::new_unchecked(super::slice_from_raw_parts_mut(data.as_ptr(), len)) }
@@ -1586,6 +1620,8 @@ impl<T> NonNull<[T]> {
     #[inline]
     #[must_use]
     #[unstable(feature = "slice_ptr_get", issue = "74265")]
+    // Address preservation
+    #[ensures(|result: &NonNull<T>| result.as_ptr().addr() == self.as_ptr().addr())]
     pub const fn as_non_null_ptr(self) -> NonNull<T> {
         self.cast()
     }
@@ -1604,8 +1640,9 @@ impl<T> NonNull<[T]> {
     #[inline]
     #[must_use]
     #[unstable(feature = "slice_ptr_get", issue = "74265")]
-    #[rustc_const_unstable(feature = "slice_ptr_get", issue = "74265")]
     #[rustc_never_returns_null_ptr]
+    // Address preservation
+    #[ensures(|result: &*mut T| *result == self.pointer as *mut T)]
     pub const fn as_mut_ptr(self) -> *mut T {
         self.as_non_null_ptr().as_ptr()
     }
@@ -1622,11 +1659,11 @@ impl<T> NonNull<[T]> {
     ///
     /// When calling this method, you have to ensure that all of the following is true:
     ///
-    /// * The pointer must be [valid] for reads for `ptr.len() * mem::size_of::<T>()` many bytes,
+    /// * The pointer must be [valid] for reads for `ptr.len() * size_of::<T>()` many bytes,
     ///   and it must be properly aligned. This means in particular:
     ///
-    ///     * The entire memory range of this slice must be contained within a single allocated object!
-    ///       Slices can never span across multiple allocated objects.
+    ///     * The entire memory range of this slice must be contained within a single allocation!
+    ///       Slices can never span across multiple allocations.
     ///
     ///     * The pointer must be aligned even for zero-length slices. One
     ///       reason for this is that enum layout optimizations may rely on references
@@ -1634,7 +1671,7 @@ impl<T> NonNull<[T]> {
     ///       them from other data. You can obtain a pointer that is usable as `data`
     ///       for zero-length slices using [`NonNull::dangling()`].
     ///
-    /// * The total size `ptr.len() * mem::size_of::<T>()` of the slice must be no larger than `isize::MAX`.
+    /// * The total size `ptr.len() * size_of::<T>()` of the slice must be no larger than `isize::MAX`.
     ///   See the safety documentation of [`pointer::offset`].
     ///
     /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
@@ -1650,12 +1687,15 @@ impl<T> NonNull<[T]> {
     #[inline]
     #[must_use]
     #[unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[rustc_const_unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[requires(self.as_ptr().cast::<T>().align_offset(core::mem::align_of::<T>()) == 0)] // Ensure the pointer is properly aligned
-    #[requires(self.len().checked_mul(core::mem::size_of::<T>()).is_some() && self.len() * core::mem::size_of::<T>() <= isize::MAX as usize)] // Ensure the slice size does not exceed isize::MAX
-    #[requires(kani::mem::same_allocation(self.as_ptr() as *const(), self.as_ptr().byte_add(self.len() * core::mem::size_of::<T>()) as *const()))] // Ensure the slice is contained within a single allocation
-    #[ensures(|result: &&[MaybeUninit<T>]| result.len() == self.len())] // Length check
-    #[ensures(|result: &&[MaybeUninit<T>]| core::ptr::eq(result.as_ptr(), self.cast().as_ptr()))] // Ensure the memory addresses match.
+    // Ensure the pointer is properly aligned
+    #[requires(self.as_ptr().cast::<T>().align_offset(core::mem::align_of::<T>()) == 0)]
+    // Ensure the slice size does not exceed isize::MAX
+    #[requires(self.len().checked_mul(core::mem::size_of::<T>()).is_some() && self.len() * core::mem::size_of::<T>() <= isize::MAX as usize)]
+    #[requires(self.as_ptr().addr().checked_add(self.len() * core::mem::size_of::<T>()).is_some())]
+    // Ensure the slice is contained within a single allocation
+    #[requires(core::ub_checks::same_allocation(self.as_ptr() as *const(), self.as_ptr().wrapping_byte_add(self.len() * core::mem::size_of::<T>()) as *const()))]
+    #[ensures(|result: &&[MaybeUninit<T>]| result.len() == self.len())]
+    #[ensures(|result: &&[MaybeUninit<T>]| core::ptr::eq(result.as_ptr(), self.cast().as_ptr()))]
     pub const unsafe fn as_uninit_slice<'a>(self) -> &'a [MaybeUninit<T>] {
         // SAFETY: the caller must uphold the safety contract for `as_uninit_slice`.
         unsafe { slice::from_raw_parts(self.cast().as_ptr(), self.len()) }
@@ -1673,11 +1713,11 @@ impl<T> NonNull<[T]> {
     ///
     /// When calling this method, you have to ensure that all of the following is true:
     ///
-    /// * The pointer must be [valid] for reads and writes for `ptr.len() * mem::size_of::<T>()`
+    /// * The pointer must be [valid] for reads and writes for `ptr.len() * size_of::<T>()`
     ///   many bytes, and it must be properly aligned. This means in particular:
     ///
-    ///     * The entire memory range of this slice must be contained within a single allocated object!
-    ///       Slices can never span across multiple allocated objects.
+    ///     * The entire memory range of this slice must be contained within a single allocation!
+    ///       Slices can never span across multiple allocations.
     ///
     ///     * The pointer must be aligned even for zero-length slices. One
     ///       reason for this is that enum layout optimizations may rely on references
@@ -1685,7 +1725,7 @@ impl<T> NonNull<[T]> {
     ///       them from other data. You can obtain a pointer that is usable as `data`
     ///       for zero-length slices using [`NonNull::dangling()`].
     ///
-    /// * The total size `ptr.len() * mem::size_of::<T>()` of the slice must be no larger than `isize::MAX`.
+    /// * The total size `ptr.len() * size_of::<T>()` of the slice must be no larger than `isize::MAX`.
     ///   See the safety documentation of [`pointer::offset`].
     ///
     /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
@@ -1720,12 +1760,15 @@ impl<T> NonNull<[T]> {
     #[inline]
     #[must_use]
     #[unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[rustc_const_unstable(feature = "ptr_as_uninit", issue = "75402")]
-    #[requires(self.as_ptr().cast::<T>().align_offset(core::mem::align_of::<T>()) == 0)] // Ensure the pointer is properly aligned
-    #[requires(self.len().checked_mul(core::mem::size_of::<T>()).is_some() && self.len() * core::mem::size_of::<T>() <= isize::MAX as usize)] // Ensure the slice size does not exceed isize::MAX
-    #[requires(kani::mem::same_allocation(self.as_ptr() as *const(), self.as_ptr().byte_add(self.len() * core::mem::size_of::<T>()) as *const()))] // Ensure the slice is contained within a single allocation
+    // Ensure the pointer is properly aligned
+    #[requires(self.as_ptr().cast::<T>().align_offset(core::mem::align_of::<T>()) == 0)]
+    // Ensure the slice size does not exceed isize::MAX
+    #[requires(self.len().checked_mul(core::mem::size_of::<T>()).is_some() && self.len() * core::mem::size_of::<T>() <= isize::MAX as usize)]
+    #[requires(self.as_ptr().addr().checked_add(self.len() * core::mem::size_of::<T>()).is_some())]
+    // Ensure the slice is contained within a single allocation
+    #[requires(core::ub_checks::same_allocation(self.as_ptr() as *const(), self.as_ptr().wrapping_byte_add(self.len() * core::mem::size_of::<T>()) as *const()))]
     #[ensures(|result: &&mut [MaybeUninit<T>]| result.len() == self.len())] // Length check
-    #[ensures(|result: &&mut [MaybeUninit<T>]| core::ptr::eq(result.as_ptr(), self.cast().as_ptr()))]  // Address check
+    #[ensures(|result: &&mut [MaybeUninit<T>]| core::ptr::eq(result.as_ptr(), self.cast().as_ptr()))] // Address check
     pub const unsafe fn as_uninit_slice_mut<'a>(self) -> &'a mut [MaybeUninit<T>] {
         // SAFETY: the caller must uphold the safety contract for `as_uninit_slice_mut`.
         unsafe { slice::from_raw_parts_mut(self.cast().as_ptr(), self.len()) }
@@ -1766,7 +1809,7 @@ impl<T> NonNull<[T]> {
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> Clone for NonNull<T> {
+impl<T: PointeeSized> Clone for NonNull<T> {
     #[inline(always)]
     fn clone(&self) -> Self {
         *self
@@ -1774,36 +1817,36 @@ impl<T: ?Sized> Clone for NonNull<T> {
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> Copy for NonNull<T> {}
+impl<T: PointeeSized> Copy for NonNull<T> {}
 
 #[unstable(feature = "coerce_unsized", issue = "18598")]
-impl<T: ?Sized, U: ?Sized> CoerceUnsized<NonNull<U>> for NonNull<T> where T: Unsize<U> {}
+impl<T: PointeeSized, U: PointeeSized> CoerceUnsized<NonNull<U>> for NonNull<T> where T: Unsize<U> {}
 
 #[unstable(feature = "dispatch_from_dyn", issue = "none")]
-impl<T: ?Sized, U: ?Sized> DispatchFromDyn<NonNull<U>> for NonNull<T> where T: Unsize<U> {}
+impl<T: PointeeSized, U: PointeeSized> DispatchFromDyn<NonNull<U>> for NonNull<T> where T: Unsize<U> {}
 
 #[stable(feature = "pin", since = "1.33.0")]
-unsafe impl<T: ?Sized> PinCoerceUnsized for NonNull<T> {}
+unsafe impl<T: PointeeSized> PinCoerceUnsized for NonNull<T> {}
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> fmt::Debug for NonNull<T> {
+impl<T: PointeeSized> fmt::Debug for NonNull<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Pointer::fmt(&self.as_ptr(), f)
     }
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> fmt::Pointer for NonNull<T> {
+impl<T: PointeeSized> fmt::Pointer for NonNull<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Pointer::fmt(&self.as_ptr(), f)
     }
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> Eq for NonNull<T> {}
+impl<T: PointeeSized> Eq for NonNull<T> {}
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> PartialEq for NonNull<T> {
+impl<T: PointeeSized> PartialEq for NonNull<T> {
     #[inline]
     #[allow(ambiguous_wide_pointer_comparisons)]
     fn eq(&self, other: &Self) -> bool {
@@ -1812,7 +1855,7 @@ impl<T: ?Sized> PartialEq for NonNull<T> {
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> Ord for NonNull<T> {
+impl<T: PointeeSized> Ord for NonNull<T> {
     #[inline]
     #[allow(ambiguous_wide_pointer_comparisons)]
     fn cmp(&self, other: &Self) -> Ordering {
@@ -1821,7 +1864,7 @@ impl<T: ?Sized> Ord for NonNull<T> {
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> PartialOrd for NonNull<T> {
+impl<T: PointeeSized> PartialOrd for NonNull<T> {
     #[inline]
     #[allow(ambiguous_wide_pointer_comparisons)]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -1830,7 +1873,7 @@ impl<T: ?Sized> PartialOrd for NonNull<T> {
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> hash::Hash for NonNull<T> {
+impl<T: PointeeSized> hash::Hash for NonNull<T> {
     #[inline]
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.as_ptr().hash(state)
@@ -1838,7 +1881,7 @@ impl<T: ?Sized> hash::Hash for NonNull<T> {
 }
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> From<Unique<T>> for NonNull<T> {
+impl<T: PointeeSized> From<Unique<T>> for NonNull<T> {
     #[inline]
     fn from(unique: Unique<T>) -> Self {
         unique.as_non_null_ptr()
@@ -1846,7 +1889,7 @@ impl<T: ?Sized> From<Unique<T>> for NonNull<T> {
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> From<&mut T> for NonNull<T> {
+impl<T: PointeeSized> From<&mut T> for NonNull<T> {
     /// Converts a `&mut T` to a `NonNull<T>`.
     ///
     /// This conversion is safe and infallible since references cannot be null.
@@ -1857,7 +1900,7 @@ impl<T: ?Sized> From<&mut T> for NonNull<T> {
 }
 
 #[stable(feature = "nonnull", since = "1.25.0")]
-impl<T: ?Sized> From<&T> for NonNull<T> {
+impl<T: PointeeSized> From<&T> for NonNull<T> {
     /// Converts a `&T` to a `NonNull<T>`.
     ///
     /// This conversion is safe and infallible since references cannot be null.
@@ -1868,11 +1911,38 @@ impl<T: ?Sized> From<&T> for NonNull<T> {
 }
 
 #[cfg(kani)]
-#[unstable(feature="kani", issue="none")]
+#[unstable(feature = "kani", issue = "none")]
 mod verify {
-    use super::*;
-    use crate::ptr::null_mut;
+    use core::num::NonZeroUsize;
+    use core::ptr::NonNull;
+
     use kani::PointerGenerator;
+
+    use super::*;
+    use crate::mem;
+    use crate::ptr::null_mut;
+
+    trait SampleTrait {
+        fn get_value(&self) -> i32;
+    }
+
+    struct SampleStruct {
+        value: i32,
+    }
+
+    impl SampleTrait for SampleStruct {
+        fn get_value(&self) -> i32 {
+            self.value
+        }
+    }
+
+    impl<T> kani::Arbitrary for NonNull<T> {
+        fn any() -> Self {
+            let ptr: *mut T = kani::any::<usize>() as *mut T;
+            kani::assume(!ptr.is_null());
+            NonNull::new(ptr).expect("Non-null pointer expected")
+        }
+    }
 
     // pub const unsafe fn new_unchecked(ptr: *mut T) -> Self
     #[kani::proof_for_contract(NonNull::new_unchecked)]
@@ -1888,10 +1958,10 @@ mod verify {
     pub fn non_null_check_new() {
         let mut x: i32 = kani::any();
         let xptr = &mut x;
-        let maybe_null_ptr =  if kani::any() { xptr as *mut i32 } else { null_mut() };
+        let maybe_null_ptr = if kani::any() { xptr as *mut i32 } else { null_mut() };
         let _ = NonNull::new(maybe_null_ptr);
     }
-    
+
     // pub const unsafe fn read(self) -> T where T: Sized
     #[kani::proof_for_contract(NonNull::read)]
     pub fn non_null_check_read() {
@@ -1906,10 +1976,10 @@ mod verify {
         const ARR_LEN: usize = 10000;
         let mut generator = PointerGenerator::<ARR_LEN>::new();
         let raw_ptr: *mut i8 = generator.any_in_bounds().ptr;
-        let nonnull_ptr = unsafe { NonNull::new(raw_ptr).unwrap()};
+        let nonnull_ptr = unsafe { NonNull::new(raw_ptr).unwrap() };
         unsafe {
             let result = nonnull_ptr.read();
-            kani::assert( *nonnull_ptr.as_ptr() == result, "read returns the correct value");
+            kani::assert(*nonnull_ptr.as_ptr() == result, "read returns the correct value");
         }
     }
 
@@ -1927,10 +1997,10 @@ mod verify {
         const ARR_LEN: usize = 10000;
         let mut generator = PointerGenerator::<ARR_LEN>::new();
         let raw_ptr: *mut i8 = generator.any_in_bounds().ptr;
-        let nonnull_ptr = unsafe { NonNull::new(raw_ptr).unwrap()};
+        let nonnull_ptr = unsafe { NonNull::new(raw_ptr).unwrap() };
         unsafe {
             let result = nonnull_ptr.read_volatile();
-            kani::assert( *nonnull_ptr.as_ptr() == result, "read returns the correct value");
+            kani::assert(*nonnull_ptr.as_ptr() == result, "read returns the correct value");
         }
     }
 
@@ -1949,15 +2019,15 @@ mod verify {
         let unaligned_nonnull_ptr = NonNull::new(unaligned_ptr).unwrap();
         unsafe {
             let result = unaligned_nonnull_ptr.read_unaligned();
-            kani::assert( *unaligned_nonnull_ptr.as_ptr() == result, "read returns the correct value");
+            kani::assert(
+                *unaligned_nonnull_ptr.as_ptr() == result,
+                "read returns the correct value",
+            );
         }
 
         // read an unaligned value from a packed struct
         let unaligned_value: u32 = kani::any();
-        let packed = Packed {
-            _padding: kani::any::<u8>(),
-            unaligned: unaligned_value,
-        };
+        let packed = Packed { _padding: kani::any::<u8>(), unaligned: unaligned_value };
 
         let unaligned_ptr = ptr::addr_of!(packed.unaligned);
         let nonnull_packed_ptr = NonNull::new(unaligned_ptr as *mut u32).unwrap();
@@ -1971,7 +2041,7 @@ mod verify {
         const SIZE: usize = 100000;
         let mut generator = PointerGenerator::<100000>::new();
         let raw_ptr: *mut i8 = generator.any_in_bounds().ptr;
-        let ptr = unsafe { NonNull::new(raw_ptr).unwrap()};
+        let ptr = unsafe { NonNull::new(raw_ptr).unwrap() };
         // Create a non-deterministic count value
         let count: usize = kani::any();
 
@@ -1985,7 +2055,9 @@ mod verify {
     pub fn non_null_check_addr() {
         // Create NonNull pointer & get pointer address
         let x = kani::any::<usize>() as *mut i32;
-        let Some(nonnull_xptr) = NonNull::new(x) else { return; };
+        let Some(nonnull_xptr) = NonNull::new(x) else {
+            return;
+        };
         let address = nonnull_xptr.addr();
     }
 
@@ -1994,7 +2066,9 @@ mod verify {
     pub fn non_null_check_align_offset() {
         // Create NonNull pointer
         let x = kani::any::<usize>() as *mut i32;
-        let Some(nonnull_xptr) = NonNull::new(x) else { return; };
+        let Some(nonnull_xptr) = NonNull::new(x) else {
+            return;
+        };
 
         // Call align_offset with valid align value
         let align: usize = kani::any();
@@ -2008,13 +2082,135 @@ mod verify {
     pub fn non_null_check_align_offset_negative() {
         // Create NonNull pointer
         let x = kani::any::<usize>() as *mut i8;
-        let Some(nonnull_xptr) = NonNull::new(x) else { return; };
+        let Some(nonnull_xptr) = NonNull::new(x) else {
+            return;
+        };
 
         // Generate align value that is not necessarily a power of two
         let invalid_align: usize = kani::any();
 
         // Trigger panic
         let offset = nonnull_xptr.align_offset(invalid_align);
+    }
+
+    // FIXME -- the postcondition fails, c.f. https://github.com/model-checking/kani/issues/3905
+    // (dangling() calls Alignment::of, and the linked issue tracks the Alignment::of proof)
+    // pub const fn dangling() -> Self
+    // #[kani::proof_for_contract(NonNull::dangling)]
+    // pub fn non_null_check_dangling() {
+    // unsigned integer types
+    // let ptr_u8 = NonNull::<u8>::dangling();
+    // let ptr_u16 = NonNull::<u16>::dangling();
+    // let ptr_u32 = NonNull::<u32>::dangling();
+    // let ptr_u64 = NonNull::<u64>::dangling();
+    // let ptr_u128 = NonNull::<u128>::dangling();
+    // let ptr_usize = NonNull::<usize>::dangling();
+    // // signed integer types
+    // let ptr_i8 = NonNull::<i8>::dangling();
+    // let ptr_i16 = NonNull::<i16>::dangling();
+    // let ptr_i32 = NonNull::<i32>::dangling();
+    // let ptr_i64 = NonNull::<i64>::dangling();
+    // let ptr_i128 = NonNull::<i128>::dangling();
+    // let ptr_isize = NonNull::<isize>::dangling();
+    // // unit type
+    // let ptr_unit = NonNull::<()>::dangling();
+    // // zero length slice from dangling unit pointer
+    // let zero_len_slice = NonNull::slice_from_raw_parts(ptr_unit, 0);
+    // }
+
+    // pub const fn from_raw_parts(data_pointer: NonNull<()>, metadata: <T as super::Pointee>::Metadata,) -> NonNull<T>
+    // FIXME -- the postcondition fails, c.f. https://github.com/model-checking/kani/issues/3905
+    // (dangling() calls Alignment::of, and the linked issue tracks the Alignment::of proof)
+    // #[kani::proof_for_contract(NonNull::from_raw_parts)]
+    // #[kani::unwind(101)]
+    // pub fn non_null_check_from_raw_parts() {
+    //     const ARR_LEN: usize = 100;
+    //     // Create a non-deterministic array and its slice
+    //     let arr: [i8; ARR_LEN] = kani::any();
+    //     let arr_slice = kani::slice::any_slice_of_array(&arr);
+    //     // Get a raw NonNull pointer to the start of the slice
+    //     let arr_slice_raw_ptr = NonNull::new(arr_slice.as_ptr() as *mut ()).unwrap();
+    //     // Create NonNull pointer from the start pointer and the length of the slice
+    //     let nonnull_slice = NonNull::<[i8]>::from_raw_parts(arr_slice_raw_ptr, arr_slice.len());
+    //     // Ensure slice content is preserved, runtime at this step is proportional to ARR_LEN
+    //     unsafe {
+    //         kani::assert(arr_slice == nonnull_slice.as_ref(), "slice content must be preserve");
+    //     }
+
+    //     // zero-length dangling pointer example
+    //     let dangling_ptr = NonNull::<()>::dangling();
+    //     let zero_length = NonNull::<[()]>::from_raw_parts(dangling_ptr, 0);
+    // }
+
+    #[kani::proof_for_contract(NonNull::from_raw_parts)]
+    pub fn non_null_check_from_raw_part_trait() {
+        // Create a SampleTrait object from SampleStruct
+        let sample_struct = SampleStruct { value: kani::any() };
+        let trait_object: &dyn SampleTrait = &sample_struct;
+
+        // Get the raw data pointer and metadata for the trait object
+        let trait_ptr = NonNull::new(trait_object as *const dyn SampleTrait as *mut ()).unwrap();
+        // Safety: For trait objects, the metadata must come from a pointer to the same underlying erased type
+        let metadata = core::ptr::metadata(trait_object);
+
+        // Create NonNull<dyn MyTrait> from the data pointer and metadata
+        let nonnull_trait_object: NonNull<dyn SampleTrait> =
+            NonNull::from_raw_parts(trait_ptr, metadata);
+
+        unsafe {
+            // Ensure trait method and member is preserved
+            kani::assert(
+                trait_object.get_value() == nonnull_trait_object.as_ref().get_value(),
+                "trait method and member must correctly preserve",
+            );
+        }
+    }
+
+    // pub const fn slice_from_raw_parts(data: NonNull<T>, len: usize) -> Self
+    #[kani::proof_for_contract(NonNull::slice_from_raw_parts)]
+    #[kani::unwind(1001)]
+    pub fn non_null_check_slice_from_raw_parts() {
+        const ARR_LEN: usize = 1000;
+        // Create a non-deterministic array
+        let mut arr: [i8; ARR_LEN] = kani::any();
+        // Get a raw NonNull pointer to the start of the slice
+        let arr_raw_ptr = NonNull::new(arr.as_mut_ptr()).unwrap();
+        // Create NonNull slice from the start pointer and ends at random slice_len
+        // Safety: https://doc.rust-lang.org/std/slice/fn.from_raw_parts.html
+        let slice_len: usize = kani::any();
+        kani::assume(slice_len <= ARR_LEN);
+        let nonnull_slice = NonNull::<[i8]>::slice_from_raw_parts(arr_raw_ptr, slice_len);
+        // Ensure slice content is preserved, runtime at this step is proportional to ARR_LEN
+        unsafe {
+            kani::assert(
+                &arr[..slice_len] == nonnull_slice.as_ref(),
+                "slice content must be preserve",
+            );
+        }
+
+        // TODO: zero-length example blocked by kani issue [#3670](https://github.com/model-checking/kani/issues/3670)
+        //let dangling_ptr = NonNull::<()>::dangling();
+        //let zero_length = NonNull::<[()]>::slice_from_raw_parts(dangling_ptr, 0);
+    }
+
+    // pub const fn to_raw_parts(self) -> (NonNull<()>, <T as super::Pointee>::Metadata)
+    #[kani::proof_for_contract(NonNull::to_raw_parts)]
+    pub fn non_null_check_to_raw_parts() {
+        // Create a SampleTrait object from SampleStruct
+        let sample_struct = SampleStruct { value: kani::any() };
+        let trait_object: &dyn SampleTrait = &sample_struct;
+
+        // Get the raw data pointer and metadata for the trait object
+        let trait_ptr = NonNull::from(trait_object).cast::<()>(); //both have eq failure
+        //let trait_ptr = NonNull::new(trait_object as *const dyn SampleTrait as *mut ()).unwrap(); //Question: what's the difference
+        // Safety: For trait objects, the metadata must come from a pointer to the same underlying erased type
+        let metadata = core::ptr::metadata(trait_object);
+
+        // Create NonNull<dyn MyTrait> from the data pointer and metadata
+        let nonnull_trait_object: NonNull<dyn SampleTrait> =
+            NonNull::from_raw_parts(trait_ptr, metadata);
+        let (decomposed_data_ptr, decomposed_metadata) =
+            NonNull::to_raw_parts(nonnull_trait_object);
     }
 
     #[kani::proof_for_contract(NonNull::as_mut)]
@@ -2068,7 +2264,7 @@ mod verify {
         use core::mem::MaybeUninit;
 
         const SIZE: usize = 100000;
-        let arr: [MaybeUninit<i32>; SIZE] = MaybeUninit::uninit_array();
+        let arr = [MaybeUninit::uninit(); SIZE];
         let slice: &[MaybeUninit<i32>] = kani::slice::any_slice_of_array(&arr);
         let ptr = NonNull::slice_from_raw_parts(
             NonNull::new(slice.as_ptr() as *mut MaybeUninit<i32>).unwrap(),
@@ -2085,7 +2281,7 @@ mod verify {
         use core::mem::MaybeUninit;
 
         const SIZE: usize = 100000;
-        let mut arr: [MaybeUninit<i32>; SIZE] = MaybeUninit::uninit_array();
+        let mut arr = [MaybeUninit::uninit(); SIZE];
         let slice: &[MaybeUninit<i32>] = kani::slice::any_slice_of_array(&mut arr);
         let ptr = NonNull::slice_from_raw_parts(
             NonNull::new(slice.as_ptr() as *mut MaybeUninit<i32>).unwrap(),
@@ -2102,10 +2298,7 @@ mod verify {
         const ARR_SIZE: usize = 100000;
         let mut arr: [i32; ARR_SIZE] = kani::any();
         let raw_ptr = arr.as_mut_ptr();
-        let ptr = NonNull::slice_from_raw_parts(
-            NonNull::new(raw_ptr).unwrap(),
-            ARR_SIZE,
-        );
+        let ptr = NonNull::slice_from_raw_parts(NonNull::new(raw_ptr).unwrap(), ARR_SIZE);
         let lower = kani::any_where(|x| *x < ARR_SIZE);
         let upper = kani::any_where(|x| *x < ARR_SIZE && *x >= lower);
         unsafe {
@@ -2116,6 +2309,677 @@ mod verify {
             // as a workaround.
             kani::assume(ptr.as_ref().get(lower..upper).is_some());
             let _ = ptr.get_unchecked_mut(lower..upper);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::replace)]
+    pub fn non_null_check_replace() {
+        let mut x: i32 = kani::any();
+        let mut y: i32 = kani::any();
+
+        let origin_ptr = NonNull::new(&mut x as *mut i32).unwrap();
+        unsafe {
+            let captured_original = ptr::read(origin_ptr.as_ptr());
+            let replaced = origin_ptr.replace(y);
+            let after_replace = ptr::read(origin_ptr.as_ptr());
+
+            assert_eq!(captured_original, replaced);
+            assert_eq!(after_replace, y)
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::drop_in_place)]
+    pub fn non_null_check_drop_in_place() {
+        struct Droppable {
+            value: i32,
+        }
+        impl Drop for Droppable {
+            fn drop(&mut self) {}
+        }
+
+        let mut droppable = Droppable { value: kani::any() };
+        let ptr = NonNull::new(&mut droppable as *mut Droppable).unwrap();
+        unsafe {
+            ptr.drop_in_place();
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::swap)]
+    pub fn non_null_check_swap() {
+        let mut a: i32 = kani::any();
+        let mut b: i32 = kani::any();
+
+        let ptr_a = NonNull::new(&mut a as *mut i32).unwrap();
+        let ptr_b = NonNull::new(&mut b as *mut i32).unwrap();
+
+        unsafe {
+            let old_a = ptr::read(ptr_a.as_ptr());
+            let old_b = ptr::read(ptr_b.as_ptr());
+            ptr_a.swap(ptr_b);
+            // Verify that the values have been swapped.
+            let new_a = ptr::read(ptr_a.as_ptr());
+            let new_b = ptr::read(ptr_b.as_ptr());
+            assert_eq!(old_a, new_b);
+            assert_eq!(old_b, new_a);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::as_ptr)]
+    pub fn non_null_check_as_ptr() {
+        // Create a non-null pointer to a random value
+        let non_null_ptr: *mut i32 = kani::any::<usize>() as *mut i32;
+        if let Some(ptr) = NonNull::new(non_null_ptr) {
+            let result = ptr.as_ptr();
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::<[T]>::as_mut_ptr)]
+    pub fn non_null_check_as_mut_ptr() {
+        const ARR_LEN: usize = 100;
+        let mut values: [i32; ARR_LEN] = kani::any();
+        let slice = kani::slice::any_slice_of_array_mut(&mut values);
+        let non_null_ptr = NonNull::new(slice as *mut [i32]).unwrap();
+        let result = non_null_ptr.as_mut_ptr();
+    }
+    #[kani::proof_for_contract(NonNull::<T>::cast)]
+    pub fn non_null_check_cast() {
+        // Create a non-null pointer to a random value
+        let non_null_ptr: *mut i32 = kani::any::<usize>() as *mut i32;
+        if let Some(ptr) = NonNull::new(non_null_ptr) {
+            let result: NonNull<u8> = ptr.cast();
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::<[T]>::as_non_null_ptr)]
+    pub fn non_null_check_as_non_null_ptr() {
+        const ARR_LEN: usize = 100;
+        let mut values: [i32; ARR_LEN] = kani::any();
+        let slice = kani::slice::any_slice_of_array_mut(&mut values);
+        let non_null_ptr = NonNull::new(slice as *mut [i32]).unwrap();
+        let result = non_null_ptr.as_non_null_ptr();
+    }
+
+    #[kani::proof]
+    pub fn non_null_check_len() {
+        // Create a non-deterministic NonNull pointer using kani::any()
+        let non_null_ptr: NonNull<i8> = kani::any();
+        // Create a non-deterministic size using kani::any()
+        let size: usize = kani::any();
+        // Create a NonNull slice from the non-null pointer and size
+        let non_null_slice: NonNull<[i8]> = NonNull::slice_from_raw_parts(non_null_ptr, size);
+
+        // Perform the length check
+        let len = non_null_slice.len();
+        assert!(len == size);
+    }
+
+    #[kani::proof]
+    pub fn non_null_check_is_empty() {
+        // Create a non-deterministic NonNull pointer using kani::any()
+        let non_null_ptr: NonNull<i8> = kani::any();
+        // Create a non-deterministic size using kani::any(), constrained to zero
+        let size: usize = 0;
+
+        // Create a NonNull slice from the non-null pointer and size
+        let non_null_slice: NonNull<[i8]> =
+            unsafe { NonNull::slice_from_raw_parts(non_null_ptr, size) };
+
+        // Perform the is_empty check
+        let is_empty = non_null_slice.is_empty();
+        assert!(is_empty);
+    }
+
+    #[kani::proof_for_contract(NonNull::is_aligned)]
+    pub fn non_null_slice_is_aligned_check() {
+        // Create a non-deterministic NonNull pointer using kani::any()
+        let non_null_ptr: NonNull<i32> = kani::any();
+
+        // Perform the alignment check
+        let result = non_null_ptr.is_aligned();
+    }
+
+    #[kani::proof_for_contract(NonNull::is_aligned_to)]
+    pub fn non_null_check_is_aligned_to() {
+        // Create a non-deterministic NonNull pointer using kani::any()
+        let non_null_ptr: NonNull<i32> = kani::any();
+
+        // Create a non-deterministic alignment using kani::any()
+        let align: usize = kani::any();
+        kani::assume(align > 0); // Ensure alignment is greater than zero
+
+        // Perform the alignment check
+        let result = non_null_ptr.is_aligned_to(align);
+    }
+
+    #[kani::proof]
+    #[kani::should_panic] // Add this if we expect a panic when the alignment is invalid
+    pub fn non_null_check_is_aligned_to_no_power_two() {
+        // Create a non-deterministic NonNull pointer using kani::any()
+        let non_null_ptr: NonNull<i32> = kani::any();
+
+        // Create a non-deterministic alignment value using kani::any()
+        let align: usize = kani::any();
+
+        // Perform the alignment check
+        let result = non_null_ptr.is_aligned_to(align);
+    }
+
+    // TODO: we can no longer use size_of_val_raw with the Sized hierarchy
+    // #[kani::proof_for_contract(NonNull::byte_sub)]
+    // pub fn non_null_check_byte_sub() {
+    //     const SIZE: usize = mem::size_of::<i32>() * 10000;
+    //     let mut generator = PointerGenerator::<SIZE>::new();
+    //     let count: usize = kani::any();
+    //     let raw_ptr: *mut i32 = generator.any_in_bounds().ptr as *mut i32;
+    //     let ptr = NonNull::new(raw_ptr).unwrap();
+    //     unsafe {
+    //         let result = ptr.byte_sub(count);
+    //     }
+    // }
+
+    #[kani::proof_for_contract(NonNull::offset)]
+    pub fn non_null_check_offset() {
+        const SIZE: usize = mem::size_of::<i32>() * 10000;
+        let mut generator = PointerGenerator::<SIZE>::new();
+        let start_ptr = generator.any_in_bounds().ptr as *mut i32;
+        let ptr_nonnull = NonNull::new(start_ptr).unwrap();
+        let count: isize = kani::any();
+        unsafe {
+            let result = ptr_nonnull.offset(count);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::map_addr)]
+    pub fn non_null_check_map_addr() {
+        const SIZE: usize = 10000;
+        let arr: [i32; SIZE] = kani::any();
+        let ptr = NonNull::new(arr.as_ptr() as *mut i32).unwrap();
+        let new_offset: usize = kani::any_where(|&x| x <= SIZE);
+        let f = |addr: NonZeroUsize| -> NonZeroUsize {
+            NonZeroUsize::new(addr.get().wrapping_add(new_offset)).unwrap()
+        };
+        let result = ptr.map_addr(f);
+    }
+
+    #[kani::proof_for_contract(NonNull::with_addr)]
+    pub fn non_null_check_with_addr() {
+        const SIZE: usize = 10000;
+        let arr: [i32; SIZE] = kani::any();
+        let ptr = NonNull::new(arr.as_ptr() as *mut i32).unwrap();
+        let new_offset: usize = kani::any_where(|&x| x <= SIZE);
+        let new_addr = NonZeroUsize::new(ptr.as_ptr().addr() + new_offset).unwrap();
+        let result = ptr.with_addr(new_addr);
+    }
+
+    #[kani::proof_for_contract(NonNull::sub)]
+    pub fn non_null_check_sub() {
+        const SIZE: usize = 10000;
+        let mut generator = kani::PointerGenerator::<SIZE>::new();
+        // Get a raw pointer from the generator within bounds
+        let raw_ptr: *mut i32 = generator.any_in_bounds().ptr;
+        // Create a non-null pointer from the raw pointer
+        let ptr = unsafe { NonNull::new(raw_ptr).unwrap() };
+        // Create a non-deterministic count value
+        let count: usize = kani::any();
+
+        unsafe {
+            let result = ptr.sub(count);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::offset_from_unsigned)]
+    pub fn non_null_check_sub_ptr() {
+        const SIZE: usize = core::mem::size_of::<i32>() * 1000;
+        let mut generator1 = kani::PointerGenerator::<SIZE>::new();
+        let mut generator2 = kani::PointerGenerator::<SIZE>::new();
+
+        let ptr: *mut i32 = if kani::any() {
+            generator1.any_in_bounds().ptr as *mut i32
+        } else {
+            generator2.any_in_bounds().ptr as *mut i32
+        };
+
+        let origin: *mut i32 = if kani::any() {
+            generator1.any_in_bounds().ptr as *mut i32
+        } else {
+            generator2.any_in_bounds().ptr as *mut i32
+        };
+
+        let ptr_nonnull = unsafe { NonNull::new(ptr).unwrap() };
+        let origin_nonnull = unsafe { NonNull::new(origin).unwrap() };
+
+        unsafe {
+            let distance = ptr_nonnull.offset_from_unsigned(origin_nonnull);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::offset_from)]
+    pub fn non_null_check_offset_from() {
+        const SIZE: usize = core::mem::size_of::<i32>() * 1000;
+        let mut generator1 = kani::PointerGenerator::<SIZE>::new();
+        let mut generator2 = kani::PointerGenerator::<SIZE>::new();
+
+        let ptr: *mut i32 = if kani::any() {
+            generator1.any_in_bounds().ptr as *mut i32
+        } else {
+            generator2.any_in_bounds().ptr as *mut i32
+        };
+
+        let origin: *mut i32 = if kani::any() {
+            generator1.any_in_bounds().ptr as *mut i32
+        } else {
+            generator2.any_in_bounds().ptr as *mut i32
+        };
+
+        let ptr_nonnull = unsafe { NonNull::new(ptr).unwrap() };
+        let origin_nonnull = unsafe { NonNull::new(origin).unwrap() };
+
+        unsafe {
+            let distance = ptr_nonnull.offset_from(origin_nonnull);
+        }
+    }
+
+    macro_rules! generate_write_harness {
+        ($type:ty, $harness_name:ident) => {
+            #[kani::proof_for_contract(NonNull::write)]
+            pub fn $harness_name() {
+                // Create a pointer generator for the given type with appropriate byte size
+                const ARR_SIZE: usize = mem::size_of::<$type>() * 100;
+                let mut generator = kani::PointerGenerator::<ARR_SIZE>::new();
+
+                // Get a raw pointer from the generator
+                let raw_ptr: *mut $type = generator.any_in_bounds().ptr;
+
+                // Create a non-null pointer from the raw pointer
+                let ptr = NonNull::new(raw_ptr).unwrap();
+
+                // Create a non-deterministic value to write
+                let new_value: $type = kani::any();
+
+                unsafe {
+                    // Perform the volatile write operation
+                    ptr.write(new_value);
+
+                    // Read back the value and assert it's correct
+                    assert_eq!(ptr.as_ptr().read(), new_value);
+                }
+            }
+        };
+    }
+
+    #[kani::proof_for_contract(NonNull::write)]
+    pub fn non_null_check_write_unit() {
+        // Create a pointer generator for the given type with appropriate byte size
+        let mut generator = kani::PointerGenerator::<1>::new();
+
+        // Get a raw pointer from the generator
+        let raw_ptr: *mut () = generator.any_in_bounds().ptr;
+
+        // Create a non-null pointer from the raw pointer
+        let ptr = NonNull::new(raw_ptr).unwrap();
+
+        // Create a non-deterministic value to write
+        let new_value: () = kani::any();
+
+        unsafe {
+            // Perform the volatile write operation
+            ptr.write(new_value);
+
+            // Read back the value and assert it's correct
+            assert_eq!(ptr.as_ptr().read(), new_value);
+        }
+    }
+
+    // Generate proof harnesses for multiple types with appropriate byte sizes
+    generate_write_harness!(i8, non_null_check_write_i8);
+    generate_write_harness!(i16, non_null_check_write_i16);
+    generate_write_harness!(i32, non_null_check_write_i32);
+    generate_write_harness!(i64, non_null_check_write_i64);
+    generate_write_harness!(i128, non_null_check_write_i128);
+    generate_write_harness!(isize, non_null_check_write_isize);
+    generate_write_harness!(u8, non_null_check_write_u8);
+    generate_write_harness!(u16, non_null_check_write_u16);
+    generate_write_harness!(u32, non_null_check_write_u32);
+    generate_write_harness!(u64, non_null_check_write_u64);
+    generate_write_harness!(u128, non_null_check_write_u128);
+    generate_write_harness!(usize, non_null_check_write_usize);
+
+    macro_rules! generate_write_unaligned_harness {
+        ($type:ty, $harness_name:ident) => {
+            #[kani::proof_for_contract(NonNull::write_unaligned)]
+            pub fn $harness_name() {
+                // Create a pointer generator for the given type with appropriate byte size
+                const ARR_SIZE: usize = mem::size_of::<$type>() * 100;
+                let mut generator = kani::PointerGenerator::<ARR_SIZE>::new();
+
+                // Get a raw pointer from the generator
+                let raw_ptr: *mut $type = generator.any_in_bounds().ptr;
+
+                // Create a non-null pointer from the raw pointer
+                let ptr = NonNull::new(raw_ptr).unwrap();
+
+                // Create a non-deterministic value to write
+                let new_value: $type = kani::any();
+
+                unsafe {
+                    // Perform the volatile write operation
+                    ptr.write_unaligned(new_value);
+
+                    // Read back the value and assert it's correct
+                    assert_eq!(ptr.as_ptr().read_unaligned(), new_value);
+                }
+            }
+        };
+    }
+
+    #[kani::proof_for_contract(NonNull::write_unaligned)]
+    pub fn non_null_check_write_unaligned_unit() {
+        // Create a pointer generator for the given type with appropriate byte size
+        let mut generator = kani::PointerGenerator::<1>::new();
+
+        // Get a raw pointer from the generator
+        let raw_ptr: *mut () = generator.any_in_bounds().ptr;
+
+        // Create a non-null pointer from the raw pointer
+        let ptr = NonNull::new(raw_ptr).unwrap();
+
+        // Create a non-deterministic value to write
+        let new_value: () = kani::any();
+
+        unsafe {
+            // Perform the volatile write operation
+            ptr.write_unaligned(new_value);
+
+            // Read back the value and assert it's correct
+            assert_eq!(ptr.as_ptr().read_unaligned(), new_value);
+        }
+    }
+
+    // Generate proof harnesses for multiple types with appropriate byte sizes
+    generate_write_unaligned_harness!(i8, non_null_check_write_unaligned_i8);
+    generate_write_unaligned_harness!(i16, non_null_check_write_unaligned_i16);
+    generate_write_unaligned_harness!(i32, non_null_check_write_unaligned_i32);
+    generate_write_unaligned_harness!(i64, non_null_check_write_unaligned_i64);
+    generate_write_unaligned_harness!(i128, non_null_check_write_unaligned_i128);
+    generate_write_unaligned_harness!(isize, non_null_check_write_unaligned_isize);
+    generate_write_unaligned_harness!(u8, non_null_check_write_unaligned_u8);
+    generate_write_unaligned_harness!(u16, non_null_check_write_unaligned_u16);
+    generate_write_unaligned_harness!(u32, non_null_check_write_unaligned_u32);
+    generate_write_unaligned_harness!(u64, non_null_check_write_unaligned_u64);
+    generate_write_unaligned_harness!(u128, non_null_check_write_unaligned_u128);
+    generate_write_unaligned_harness!(usize, non_null_check_write_unaligned_usize);
+
+    macro_rules! generate_write_volatile_harness {
+        ($type:ty, $harness_name:ident) => {
+            #[kani::proof_for_contract(NonNull::write_volatile)]
+            pub fn $harness_name() {
+                // Create a pointer generator for the given type with appropriate byte size
+                const ARR_SIZE: usize = mem::size_of::<$type>() * 100;
+                let mut generator = kani::PointerGenerator::<ARR_SIZE>::new();
+
+                // Get a raw pointer from the generator
+                let raw_ptr: *mut $type = generator.any_in_bounds().ptr;
+
+                // Create a non-null pointer from the raw pointer
+                let ptr = NonNull::new(raw_ptr).unwrap();
+
+                // Create a non-deterministic value to write
+                let new_value: $type = kani::any();
+
+                unsafe {
+                    // Perform the volatile write operation
+                    ptr.write_volatile(new_value);
+
+                    // Read back the value and assert it's correct
+                    assert_eq!(ptr.as_ptr().read_volatile(), new_value);
+                }
+            }
+        };
+    }
+
+    #[kani::proof_for_contract(NonNull::write_volatile)]
+    pub fn non_null_check_write_volatile_unit() {
+        // Create a pointer generator for the given type with appropriate byte size
+        let mut generator = kani::PointerGenerator::<1>::new();
+
+        // Get a raw pointer from the generator
+        let raw_ptr: *mut () = generator.any_in_bounds().ptr;
+
+        // Create a non-null pointer from the raw pointer
+        let ptr = NonNull::new(raw_ptr).unwrap();
+
+        // Create a non-deterministic value to write
+        let new_value: () = kani::any();
+
+        unsafe {
+            // Perform the volatile write operation
+            ptr.write_volatile(new_value);
+
+            // Read back the value and assert it's correct
+            assert_eq!(ptr.as_ptr().read_volatile(), new_value);
+        }
+    }
+
+    // Generate proof harnesses for multiple types with appropriate byte sizes
+    generate_write_volatile_harness!(i8, non_null_check_write_volatile_i8);
+    generate_write_volatile_harness!(i16, non_null_check_write_volatile_i16);
+    generate_write_volatile_harness!(i32, non_null_check_write_volatile_i32);
+    generate_write_volatile_harness!(i64, non_null_check_write_volatile_i64);
+    generate_write_volatile_harness!(i128, non_null_check_write_volatile_i128);
+    generate_write_volatile_harness!(isize, non_null_check_write_volatile_isize);
+    generate_write_volatile_harness!(u8, non_null_check_write_volatile_u8);
+    generate_write_volatile_harness!(u16, non_null_check_write_volatile_u16);
+    generate_write_volatile_harness!(u32, non_null_check_write_volatile_u32);
+    generate_write_volatile_harness!(u64, non_null_check_write_volatile_u64);
+    generate_write_volatile_harness!(u128, non_null_check_write_volatile_u128);
+    generate_write_volatile_harness!(usize, non_null_check_write_volatile_usize);
+
+    macro_rules! generate_write_bytes_harness {
+        ($type:ty, $harness_name:ident) => {
+            #[kani::proof_for_contract(NonNull::write_bytes)]
+            pub fn $harness_name() {
+                // Create a pointer generator for the given type with appropriate byte size
+                const ARR_SIZE: usize = mem::size_of::<$type>() * 10;
+                let mut generator = kani::PointerGenerator::<ARR_SIZE>::new();
+
+                // Get a raw pointer from the generator
+                let raw_ptr: *mut $type = generator.any_in_bounds().ptr;
+
+                // Create a non-null pointer from the raw pointer
+                let ptr = NonNull::new(raw_ptr).unwrap();
+
+                // Create a non-deterministic value to write
+                let val: u8 = kani::any();
+
+                // Create a non-deterministic count
+                let count: usize = kani::any();
+
+                unsafe {
+                    // Perform the volatile write operation
+                    ptr.write_bytes(val, count);
+
+                    // Create a non-deterministic count
+                    let i: usize = kani::any_where(|&x| x < count * mem::size_of::<$type>());
+                    let ptr_byte = ptr.as_ptr() as *const u8;
+
+                    // Read back the value and assert it's correct
+                    assert_eq!(*ptr_byte.add(i), val);
+                }
+            }
+        };
+    }
+
+    #[kani::proof_for_contract(NonNull::write_bytes)]
+    pub fn non_null_check_write_bytes_unit() {
+        // Create a pointer generator for the given type with appropriate byte size
+        let mut generator = kani::PointerGenerator::<1>::new();
+
+        // Get a raw pointer from the generator
+        let raw_ptr: *mut () = generator.any_in_bounds().ptr;
+
+        // Create a non-null pointer from the raw pointer
+        let ptr = NonNull::new(raw_ptr).unwrap();
+
+        // Create a non-deterministic value to write
+        let val: u8 = kani::any();
+
+        // Create a non-deterministic count
+        let count: usize = kani::any();
+
+        unsafe {
+            // Perform the volatile write operation
+            ptr.write_bytes(val, count);
+        }
+    }
+
+    // Generate proof harnesses for multiple types with appropriate byte sizes
+    generate_write_bytes_harness!(i8, non_null_check_write_bytes_i8);
+    generate_write_bytes_harness!(i16, non_null_check_write_bytes_i16);
+    generate_write_bytes_harness!(i32, non_null_check_write_bytes_i32);
+    generate_write_bytes_harness!(i64, non_null_check_write_bytes_i64);
+    generate_write_bytes_harness!(i128, non_null_check_write_bytes_i128);
+    generate_write_bytes_harness!(isize, non_null_check_write_bytes_isize);
+    generate_write_bytes_harness!(u8, non_null_check_write_bytes_u8);
+    generate_write_bytes_harness!(u16, non_null_check_write_bytes_u16);
+    generate_write_bytes_harness!(u32, non_null_check_write_bytes_u32);
+    generate_write_bytes_harness!(u64, non_null_check_write_bytes_u64);
+    generate_write_bytes_harness!(u128, non_null_check_write_bytes_u128);
+    generate_write_bytes_harness!(usize, non_null_check_write_bytes_usize);
+
+    // TODO: we can no longer use size_of_val_raw with the Sized hierarchy
+    // #[kani::proof_for_contract(NonNull::byte_add)]
+    // pub fn non_null_byte_add_proof() {
+    //     // Make size as 1000 to ensure the array is large enough to cover various senarios
+    //     // while maintaining a reasonable proof runtime
+    //     const ARR_SIZE: usize = mem::size_of::<i32>() * 1000;
+    //     let mut generator = PointerGenerator::<ARR_SIZE>::new();
+    //
+    //     let count: usize = kani::any();
+    //     let raw_ptr: *mut i32 = generator.any_in_bounds().ptr as *mut i32;
+    //
+    //     unsafe {
+    //         let ptr = NonNull::new(raw_ptr).unwrap();
+    //         let result = ptr.byte_add(count);
+    //     }
+    // }
+
+    // TODO: we can no longer use size_of_val_raw with the Sized hierarchy
+    // #[kani::proof_for_contract(NonNull::byte_add)]
+    // pub fn non_null_byte_add_dangling_proof() {
+    //     let ptr = NonNull::<i32>::dangling();
+    //     unsafe {
+    //         let _ = ptr.byte_add(0);
+    //     }
+    // }
+
+    #[kani::proof_for_contract(NonNull::byte_offset)]
+    pub fn non_null_byte_offset_proof() {
+        const ARR_SIZE: usize = mem::size_of::<i32>() * 1000;
+        let mut generator = PointerGenerator::<ARR_SIZE>::new();
+
+        let count: isize = kani::any();
+        let raw_ptr: *mut i32 = generator.any_in_bounds().ptr as *mut i32;
+
+        unsafe {
+            let ptr = NonNull::new(raw_ptr).unwrap();
+            let result = ptr.byte_offset(count);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::byte_offset_from)]
+    pub fn non_null_byte_offset_from_proof() {
+        const SIZE: usize = mem::size_of::<i32>() * 1000;
+        let mut generator1 = PointerGenerator::<SIZE>::new();
+        let mut generator2 = PointerGenerator::<SIZE>::new();
+
+        let ptr: *mut i32 = generator1.any_in_bounds().ptr as *mut i32;
+
+        let origin: *mut i32 = if kani::any() {
+            generator1.any_in_bounds().ptr as *mut i32
+        } else {
+            generator2.any_in_bounds().ptr as *mut i32
+        };
+
+        let ptr_nonnull = unsafe { NonNull::new(ptr).unwrap() };
+        let origin_nonnull = unsafe { NonNull::new(origin).unwrap() };
+
+        unsafe {
+            let result = ptr_nonnull.byte_offset_from(origin_nonnull);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::byte_offset_from)]
+    pub fn non_null_byte_offset_from_dangling_proof() {
+        let origin = NonNull::<i32>::dangling();
+        let ptr = origin;
+        unsafe {
+            let _ = ptr.byte_offset_from(origin);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::<T>::copy_to)]
+    pub fn non_null_check_copy_to() {
+        // PointerGenerator instance
+        let mut generator = PointerGenerator::<16>::new();
+        // Generate arbitrary pointers for src and dest
+        let src_ptr = generator.any_in_bounds::<i32>().ptr;
+        let dest_ptr = generator.any_in_bounds::<i32>().ptr;
+        // Wrap the raw pointers in NonNull
+        let src = NonNull::new(src_ptr).unwrap();
+        let dest = NonNull::new(dest_ptr).unwrap();
+        // Generate an arbitrary count using kani::any
+        let count: usize = kani::any();
+        unsafe {
+            src.copy_to(dest, count);
+        }
+    }
+
+    #[kani::proof_for_contract(NonNull::<T>::copy_from)]
+    pub fn non_null_check_copy_from() {
+        // PointerGenerator instance
+        let mut generator = PointerGenerator::<16>::new();
+        // Generate arbitrary pointers for src and dest
+        let src_ptr = generator.any_in_bounds::<i32>().ptr;
+        let dest_ptr = generator.any_in_bounds::<i32>().ptr;
+        // Wrap the raw pointers in NonNull
+        let src = NonNull::new(src_ptr).unwrap();
+        let dest = NonNull::new(dest_ptr).unwrap();
+        // Generate an arbitrary count using kani::any
+        let count: usize = kani::any();
+        unsafe {
+            src.copy_from(dest, count);
+        }
+    }
+    #[kani::proof_for_contract(NonNull::<T>::copy_to_nonoverlapping)]
+    pub fn non_null_check_copy_to_nonoverlapping() {
+        // PointerGenerator instance
+        let mut generator = PointerGenerator::<16>::new();
+        // Generate arbitrary pointers for src and dest
+        let src_ptr = generator.any_in_bounds::<i32>().ptr;
+        let dest_ptr = generator.any_in_bounds::<i32>().ptr;
+        // Wrap the raw pointers in NonNull
+        let src = NonNull::new(src_ptr).unwrap();
+        let dest = NonNull::new(dest_ptr).unwrap();
+        // Generate an arbitrary count using kani::any
+        let count: usize = kani::any();
+        unsafe {
+            src.copy_to_nonoverlapping(dest, count);
+        }
+    }
+    #[kani::proof_for_contract(NonNull::<T>::copy_from_nonoverlapping)]
+    pub fn non_null_check_copy_from_nonoverlapping() {
+        // PointerGenerator instance
+        let mut generator = PointerGenerator::<16>::new();
+        // Generate arbitrary pointers for src and dest
+        let src_ptr = generator.any_in_bounds::<i32>().ptr;
+        let dest_ptr = generator.any_in_bounds::<i32>().ptr;
+        // Wrap the raw pointers in NonNull
+        let src = NonNull::new(src_ptr).unwrap();
+        let dest = NonNull::new(dest_ptr).unwrap();
+        // Generate an arbitrary count using kani::any
+        let count: usize = kani::any();
+        unsafe {
+            src.copy_from_nonoverlapping(dest, count);
         }
     }
 }

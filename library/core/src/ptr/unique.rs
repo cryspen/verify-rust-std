@@ -1,12 +1,12 @@
 use safety::{ensures, requires};
+
 use crate::fmt;
-use crate::marker::{PhantomData, Unsize};
+#[cfg(kani)]
+use crate::kani;
+use crate::marker::{PhantomData, PointeeSized, Unsize};
 use crate::ops::{CoerceUnsized, DispatchFromDyn};
 use crate::pin::PinCoerceUnsized;
 use crate::ptr::NonNull;
-
-#[cfg(kani)]
-use crate::kani;
 
 /// A wrapper around a raw non-null `*mut T` that indicates that the possessor
 /// of this wrapper owns the referent. Useful for building abstractions like
@@ -38,7 +38,7 @@ use crate::kani;
 #[repr(transparent)]
 // Lang item used experimentally by Miri to define the semantics of `Unique`.
 #[lang = "ptr_unique"]
-pub struct Unique<T: ?Sized> {
+pub struct Unique<T: PointeeSized> {
     pointer: NonNull<T>,
     // NOTE: this marker has no consequences for variance, but is necessary
     // for dropck to understand that we logically own a `T`.
@@ -53,14 +53,14 @@ pub struct Unique<T: ?Sized> {
 /// unenforced by the type system; the abstraction using the
 /// `Unique` must enforce it.
 #[unstable(feature = "ptr_internals", issue = "none")]
-unsafe impl<T: Send + ?Sized> Send for Unique<T> {}
+unsafe impl<T: Send + PointeeSized> Send for Unique<T> {}
 
 /// `Unique` pointers are `Sync` if `T` is `Sync` because the data they
 /// reference is unaliased. Note that this aliasing invariant is
 /// unenforced by the type system; the abstraction using the
 /// `Unique` must enforce it.
 #[unstable(feature = "ptr_internals", issue = "none")]
-unsafe impl<T: Sync + ?Sized> Sync for Unique<T> {}
+unsafe impl<T: Sync + PointeeSized> Sync for Unique<T> {}
 
 #[unstable(feature = "ptr_internals", issue = "none")]
 impl<T: Sized> Unique<T> {
@@ -82,7 +82,7 @@ impl<T: Sized> Unique<T> {
 }
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> Unique<T> {
+impl<T: PointeeSized> Unique<T> {
     /// Creates a new `Unique`.
     ///
     /// # Safety
@@ -98,7 +98,6 @@ impl<T: ?Sized> Unique<T> {
 
     /// Creates a new `Unique` if `ptr` is non-null.
     #[inline]
-    #[rustc_const_unstable(feature = "const_align_offset", issue = "90962")]
     #[ensures(|result| result.is_none() == ptr.is_null())]
     #[ensures(|result| result.is_none() || result.unwrap().as_ptr() == ptr)]
     pub const fn new(ptr: *mut T) -> Option<Self> {
@@ -107,6 +106,12 @@ impl<T: ?Sized> Unique<T> {
         } else {
             None
         }
+    }
+
+    /// Create a new `Unique` from a `NonNull` in const context.
+    #[inline]
+    pub const fn from_non_null(pointer: NonNull<T>) -> Self {
+        Unique { pointer, _marker: PhantomData }
     }
 
     /// Acquires the underlying `*mut` pointer.
@@ -162,7 +167,7 @@ impl<T: ?Sized> Unique<T> {
 }
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> Clone for Unique<T> {
+impl<T: PointeeSized> Clone for Unique<T> {
     #[inline]
     fn clone(&self) -> Self {
         *self
@@ -170,33 +175,33 @@ impl<T: ?Sized> Clone for Unique<T> {
 }
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> Copy for Unique<T> {}
+impl<T: PointeeSized> Copy for Unique<T> {}
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized, U: ?Sized> CoerceUnsized<Unique<U>> for Unique<T> where T: Unsize<U> {}
+impl<T: PointeeSized, U: PointeeSized> CoerceUnsized<Unique<U>> for Unique<T> where T: Unsize<U> {}
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized, U: ?Sized> DispatchFromDyn<Unique<U>> for Unique<T> where T: Unsize<U> {}
+impl<T: PointeeSized, U: PointeeSized> DispatchFromDyn<Unique<U>> for Unique<T> where T: Unsize<U> {}
 
 #[unstable(feature = "pin_coerce_unsized_trait", issue = "123430")]
-unsafe impl<T: ?Sized> PinCoerceUnsized for Unique<T> {}
+unsafe impl<T: PointeeSized> PinCoerceUnsized for Unique<T> {}
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> fmt::Debug for Unique<T> {
+impl<T: PointeeSized> fmt::Debug for Unique<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Pointer::fmt(&self.as_ptr(), f)
     }
 }
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> fmt::Pointer for Unique<T> {
+impl<T: PointeeSized> fmt::Pointer for Unique<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Pointer::fmt(&self.as_ptr(), f)
     }
 }
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> From<&mut T> for Unique<T> {
+impl<T: PointeeSized> From<&mut T> for Unique<T> {
     /// Converts a `&mut T` to a `Unique<T>`.
     ///
     /// This conversion is infallible since references cannot be null.
@@ -207,25 +212,25 @@ impl<T: ?Sized> From<&mut T> for Unique<T> {
 }
 
 #[unstable(feature = "ptr_internals", issue = "none")]
-impl<T: ?Sized> From<NonNull<T>> for Unique<T> {
+impl<T: PointeeSized> From<NonNull<T>> for Unique<T> {
     /// Converts a `NonNull<T>` to a `Unique<T>`.
     ///
     /// This conversion is infallible since `NonNull` cannot be null.
     #[inline]
     fn from(pointer: NonNull<T>) -> Self {
-        Unique { pointer, _marker: PhantomData }
+        Unique::from_non_null(pointer)
     }
 }
 
 #[cfg(kani)]
-#[unstable(feature="kani", issue="none")]
+#[unstable(feature = "kani", issue = "none")]
 mod verify {
     use super::*;
 
     // pub const unsafe fn new_unchecked(ptr: *mut T) -> Self
     #[kani::proof_for_contract(Unique::new_unchecked)]
     pub fn check_new_unchecked() {
-        let mut x : i32 = kani::any();
+        let mut x: i32 = kani::any();
         let xptr = &mut x;
         unsafe {
             let _ = Unique::new_unchecked(xptr as *mut i32);
@@ -235,7 +240,7 @@ mod verify {
     // pub const fn new(ptr: *mut T) -> Option<Self>
     #[kani::proof_for_contract(Unique::new)]
     pub fn check_new() {
-        let mut x : i32 = kani::any();
+        let mut x: i32 = kani::any();
         let xptr = &mut x;
         let _ = Unique::new(xptr as *mut i32);
     }
@@ -243,7 +248,7 @@ mod verify {
     // pub const fn as_ptr(self) -> *mut T
     #[kani::proof_for_contract(Unique::as_ptr)]
     pub fn check_as_ptr() {
-        let mut x : i32 = kani::any();
+        let mut x: i32 = kani::any();
         let xptr = &mut x;
         unsafe {
             let unique = Unique::new_unchecked(xptr as *mut i32);
@@ -254,7 +259,7 @@ mod verify {
     // pub const fn as_non_null_ptr(self) -> NonNull<T>
     #[kani::proof_for_contract(Unique::as_non_null_ptr)]
     pub fn check_as_non_null_ptr() {
-        let mut x : i32 = kani::any();
+        let mut x: i32 = kani::any();
         let xptr = &mut x;
         unsafe {
             let unique = Unique::new_unchecked(xptr as *mut i32);
@@ -265,7 +270,7 @@ mod verify {
     // pub const unsafe fn as_ref(&self) -> &T
     #[kani::proof]
     pub fn check_as_ref() {
-        let mut x : i32 = kani::any();
+        let mut x: i32 = kani::any();
         let xptr = &mut x;
         unsafe {
             let unique = Unique::new_unchecked(xptr as *mut i32);
@@ -276,7 +281,7 @@ mod verify {
     // pub const unsafe fn as_mut(&mut self) -> &mut T
     #[kani::proof]
     pub fn check_as_mut() {
-        let mut x : i32 = kani::any();
+        let mut x: i32 = kani::any();
         let xptr = &mut x;
         unsafe {
             let mut unique = Unique::new_unchecked(xptr as *mut i32);
@@ -287,7 +292,7 @@ mod verify {
     // pub const fn cast<U>(self) -> Unique<U>
     #[kani::proof]
     pub fn check_cast() {
-        let mut x : i32 = kani::any();
+        let mut x: i32 = kani::any();
         let xptr = &mut x;
         unsafe {
             let unique = Unique::new_unchecked(xptr as *mut i32);

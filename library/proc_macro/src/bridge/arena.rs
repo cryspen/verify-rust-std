@@ -68,6 +68,7 @@ impl Arena {
     /// Allocates a byte slice with specified size from the current memory
     /// chunk. Returns `None` if there is no free space left to satisfy the
     /// request.
+    #[allow(clippy::mut_from_ref)]
     fn alloc_raw_without_grow(&self, bytes: usize) -> Option<&mut [MaybeUninit<u8>]> {
         let start = self.start.get().addr();
         let old_end = self.end.get();
@@ -102,7 +103,7 @@ impl Arena {
     #[allow(clippy::mut_from_ref)] // arena allocator
     pub(crate) fn alloc_str<'a>(&'a self, string: &str) -> &'a mut str {
         let alloc = self.alloc_raw(string.len());
-        let bytes = MaybeUninit::copy_from_slice(alloc, string.as_bytes());
+        let bytes = alloc.write_copy_of_slice(string.as_bytes());
 
         // SAFETY: we convert from `&str` to `&[u8]`, clone it into the arena,
         // and immediately convert the clone back to `&str`.

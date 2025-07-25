@@ -11,7 +11,7 @@
 //! This is because `sys_common` not only contains platform-independent code,
 //! but also code that is shared between the different platforms in `sys`.
 //! Ideally all that shared code should be moved to `sys::common`,
-//! and the dependencies between `std`, `sys_common` and `sys` all would form a dag.
+//! and the dependencies between `std`, `sys_common` and `sys` all would form a DAG.
 //! Progress on this is tracked in #84187.
 
 #![allow(missing_docs)]
@@ -20,25 +20,8 @@
 #[cfg(test)]
 mod tests;
 
-pub mod fs;
-pub mod io;
-pub mod process;
 pub mod wstr;
 pub mod wtf8;
-
-cfg_if::cfg_if! {
-    if #[cfg(any(
-        all(unix, not(target_os = "l4re")),
-        windows,
-        target_os = "hermit",
-        target_os = "solid_asp3",
-        all(target_os = "wasi", target_env = "p2")
-    ))] {
-        pub mod net;
-    } else {
-        pub use crate::sys::net;
-    }
-}
 
 // common error constructors
 

@@ -944,7 +944,7 @@ mod test_extract_if {
     #[test]
     fn empty() {
         let mut map: BTreeMap<i32, i32> = BTreeMap::new();
-        map.extract_if(|_, _| unreachable!("there's nothing to decide on")).for_each(drop);
+        map.extract_if(.., |_, _| unreachable!("there's nothing to decide on")).for_each(drop);
         assert_eq!(map.height(), None);
         map.check();
     }
@@ -954,7 +954,7 @@ mod test_extract_if {
     fn consumed_keeping_all() {
         let pairs = (0..3).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
-        assert!(map.extract_if(|_, _| false).eq(iter::empty()));
+        assert!(map.extract_if(.., |_, _| false).eq(iter::empty()));
         map.check();
     }
 
@@ -963,9 +963,33 @@ mod test_extract_if {
     fn consumed_removing_all() {
         let pairs = (0..3).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs.clone());
-        assert!(map.extract_if(|_, _| true).eq(pairs));
+        assert!(map.extract_if(.., |_, _| true).eq(pairs));
         assert!(map.is_empty());
         map.check();
+    }
+
+    #[test]
+    fn consumed_removing_some() {
+        let pairs = (0..3).map(|i| (i, i));
+        let map = BTreeMap::from_iter(pairs);
+        for x in 0..3 {
+            for y in 0..3 {
+                let mut map = map.clone();
+                assert!(map.extract_if(x..y, |_, _| true).eq((x..y).map(|i| (i, i))));
+                for i in 0..3 {
+                    assert_ne!(map.contains_key(&i), (x..y).contains(&i));
+                }
+            }
+        }
+        for x in 0..3 {
+            for y in 0..2 {
+                let mut map = map.clone();
+                assert!(map.extract_if(x..=y, |_, _| true).eq((x..=y).map(|i| (i, i))));
+                for i in 0..3 {
+                    assert_ne!(map.contains_key(&i), (x..=y).contains(&i));
+                }
+            }
+        }
     }
 
     // Explicitly consumes the iterator and modifies values through it.
@@ -974,7 +998,7 @@ mod test_extract_if {
         let pairs = (0..3).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
         assert!(
-            map.extract_if(|_, v| {
+            map.extract_if(.., |_, v| {
                 *v += 6;
                 false
             })
@@ -991,7 +1015,7 @@ mod test_extract_if {
         let pairs = (0..3).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
         assert!(
-            map.extract_if(|_, v| {
+            map.extract_if(.., |_, v| {
                 *v += 6;
                 true
             })
@@ -1005,7 +1029,7 @@ mod test_extract_if {
     fn underfull_keeping_all() {
         let pairs = (0..3).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
-        map.extract_if(|_, _| false).for_each(drop);
+        map.extract_if(.., |_, _| false).for_each(drop);
         assert!(map.keys().copied().eq(0..3));
         map.check();
     }
@@ -1015,7 +1039,7 @@ mod test_extract_if {
         let pairs = (0..3).map(|i| (i, i));
         for doomed in 0..3 {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i == doomed).for_each(drop);
+            map.extract_if(.., |i, _| *i == doomed).for_each(drop);
             assert_eq!(map.len(), 2);
             map.check();
         }
@@ -1026,7 +1050,7 @@ mod test_extract_if {
         let pairs = (0..3).map(|i| (i, i));
         for sacred in 0..3 {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i != sacred).for_each(drop);
+            map.extract_if(.., |i, _| *i != sacred).for_each(drop);
             assert!(map.keys().copied().eq(sacred..=sacred));
             map.check();
         }
@@ -1036,7 +1060,7 @@ mod test_extract_if {
     fn underfull_removing_all() {
         let pairs = (0..3).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
-        map.extract_if(|_, _| true).for_each(drop);
+        map.extract_if(.., |_, _| true).for_each(drop);
         assert!(map.is_empty());
         map.check();
     }
@@ -1045,7 +1069,7 @@ mod test_extract_if {
     fn height_0_keeping_all() {
         let pairs = (0..node::CAPACITY).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
-        map.extract_if(|_, _| false).for_each(drop);
+        map.extract_if(.., |_, _| false).for_each(drop);
         assert!(map.keys().copied().eq(0..node::CAPACITY));
         map.check();
     }
@@ -1055,7 +1079,7 @@ mod test_extract_if {
         let pairs = (0..node::CAPACITY).map(|i| (i, i));
         for doomed in 0..node::CAPACITY {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i == doomed).for_each(drop);
+            map.extract_if(.., |i, _| *i == doomed).for_each(drop);
             assert_eq!(map.len(), node::CAPACITY - 1);
             map.check();
         }
@@ -1066,7 +1090,7 @@ mod test_extract_if {
         let pairs = (0..node::CAPACITY).map(|i| (i, i));
         for sacred in 0..node::CAPACITY {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i != sacred).for_each(drop);
+            map.extract_if(.., |i, _| *i != sacred).for_each(drop);
             assert!(map.keys().copied().eq(sacred..=sacred));
             map.check();
         }
@@ -1076,7 +1100,7 @@ mod test_extract_if {
     fn height_0_removing_all() {
         let pairs = (0..node::CAPACITY).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
-        map.extract_if(|_, _| true).for_each(drop);
+        map.extract_if(.., |_, _| true).for_each(drop);
         assert!(map.is_empty());
         map.check();
     }
@@ -1084,7 +1108,7 @@ mod test_extract_if {
     #[test]
     fn height_0_keeping_half() {
         let mut map = BTreeMap::from_iter((0..16).map(|i| (i, i)));
-        assert_eq!(map.extract_if(|i, _| *i % 2 == 0).count(), 8);
+        assert_eq!(map.extract_if(.., |i, _| *i % 2 == 0).count(), 8);
         assert_eq!(map.len(), 8);
         map.check();
     }
@@ -1093,7 +1117,7 @@ mod test_extract_if {
     fn height_1_removing_all() {
         let pairs = (0..MIN_INSERTS_HEIGHT_1).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
-        map.extract_if(|_, _| true).for_each(drop);
+        map.extract_if(.., |_, _| true).for_each(drop);
         assert!(map.is_empty());
         map.check();
     }
@@ -1103,7 +1127,7 @@ mod test_extract_if {
         let pairs = (0..MIN_INSERTS_HEIGHT_1).map(|i| (i, i));
         for doomed in 0..MIN_INSERTS_HEIGHT_1 {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i == doomed).for_each(drop);
+            map.extract_if(.., |i, _| *i == doomed).for_each(drop);
             assert_eq!(map.len(), MIN_INSERTS_HEIGHT_1 - 1);
             map.check();
         }
@@ -1114,7 +1138,7 @@ mod test_extract_if {
         let pairs = (0..MIN_INSERTS_HEIGHT_1).map(|i| (i, i));
         for sacred in 0..MIN_INSERTS_HEIGHT_1 {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i != sacred).for_each(drop);
+            map.extract_if(.., |i, _| *i != sacred).for_each(drop);
             assert!(map.keys().copied().eq(sacred..=sacred));
             map.check();
         }
@@ -1125,7 +1149,7 @@ mod test_extract_if {
         let pairs = (0..MIN_INSERTS_HEIGHT_2).map(|i| (i, i));
         for doomed in (0..MIN_INSERTS_HEIGHT_2).step_by(12) {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i == doomed).for_each(drop);
+            map.extract_if(.., |i, _| *i == doomed).for_each(drop);
             assert_eq!(map.len(), MIN_INSERTS_HEIGHT_2 - 1);
             map.check();
         }
@@ -1136,7 +1160,7 @@ mod test_extract_if {
         let pairs = (0..MIN_INSERTS_HEIGHT_2).map(|i| (i, i));
         for sacred in (0..MIN_INSERTS_HEIGHT_2).step_by(12) {
             let mut map = BTreeMap::from_iter(pairs.clone());
-            map.extract_if(|i, _| *i != sacred).for_each(drop);
+            map.extract_if(.., |i, _| *i != sacred).for_each(drop);
             assert!(map.keys().copied().eq(sacred..=sacred));
             map.check();
         }
@@ -1146,7 +1170,7 @@ mod test_extract_if {
     fn height_2_removing_all() {
         let pairs = (0..MIN_INSERTS_HEIGHT_2).map(|i| (i, i));
         let mut map = BTreeMap::from_iter(pairs);
-        map.extract_if(|_, _| true).for_each(drop);
+        map.extract_if(.., |_, _| true).for_each(drop);
         assert!(map.is_empty());
         map.check();
     }
@@ -1162,7 +1186,7 @@ mod test_extract_if {
         map.insert(b.spawn(Panic::InDrop), ());
         map.insert(c.spawn(Panic::Never), ());
 
-        catch_unwind(move || map.extract_if(|dummy, _| dummy.query(true)).for_each(drop))
+        catch_unwind(move || map.extract_if(.., |dummy, _| dummy.query(true)).for_each(drop))
             .unwrap_err();
 
         assert_eq!(a.queried(), 1);
@@ -1185,7 +1209,7 @@ mod test_extract_if {
         map.insert(c.spawn(Panic::InQuery), ());
 
         catch_unwind(AssertUnwindSafe(|| {
-            map.extract_if(|dummy, _| dummy.query(true)).for_each(drop)
+            map.extract_if(.., |dummy, _| dummy.query(true)).for_each(drop)
         }))
         .unwrap_err();
 
@@ -1214,7 +1238,7 @@ mod test_extract_if {
         map.insert(c.spawn(Panic::InQuery), ());
 
         {
-            let mut it = map.extract_if(|dummy, _| dummy.query(true));
+            let mut it = map.extract_if(.., |dummy, _| dummy.query(true));
             catch_unwind(AssertUnwindSafe(|| while it.next().is_some() {})).unwrap_err();
             // Iterator behavior after a panic is explicitly unspecified,
             // so this is just the current implementation:
@@ -1658,7 +1682,7 @@ fn assert_sync() {
     }
 
     fn extract_if<T: Sync + Ord>(v: &mut BTreeMap<T, T>) -> impl Sync + '_ {
-        v.extract_if(|_, _| false)
+        v.extract_if(.., |_, _| false)
     }
 
     fn iter<T: Sync>(v: &BTreeMap<T, T>) -> impl Sync + '_ {
@@ -1727,7 +1751,7 @@ fn assert_send() {
     }
 
     fn extract_if<T: Send + Ord>(v: &mut BTreeMap<T, T>) -> impl Send + '_ {
-        v.extract_if(|_, _| false)
+        v.extract_if(.., |_, _| false)
     }
 
     fn iter<T: Send + Sync>(v: &BTreeMap<T, T>) -> impl Send + '_ {
@@ -2268,6 +2292,54 @@ fn test_into_iter_drop_leak_height_0() {
     assert_eq!(c.dropped(), 1);
     assert_eq!(d.dropped(), 1);
     assert_eq!(e.dropped(), 1);
+}
+
+#[test]
+#[cfg_attr(not(panic = "unwind"), ignore = "test requires unwinding support")]
+fn test_into_iter_drop_leak_kv_panic_in_key() {
+    let a_k = CrashTestDummy::new(0);
+    let a_v = CrashTestDummy::new(1);
+    let b_k = CrashTestDummy::new(2);
+    let b_v = CrashTestDummy::new(3);
+    let c_k = CrashTestDummy::new(4);
+    let c_v = CrashTestDummy::new(5);
+    let mut map = BTreeMap::new();
+    map.insert(a_k.spawn(Panic::Never), a_v.spawn(Panic::Never));
+    map.insert(b_k.spawn(Panic::InDrop), b_v.spawn(Panic::Never));
+    map.insert(c_k.spawn(Panic::Never), c_v.spawn(Panic::Never));
+
+    catch_unwind(move || drop(map.into_iter())).unwrap_err();
+
+    assert_eq!(a_k.dropped(), 1);
+    assert_eq!(a_v.dropped(), 1);
+    assert_eq!(b_k.dropped(), 1);
+    assert_eq!(b_v.dropped(), 1);
+    assert_eq!(c_k.dropped(), 1);
+    assert_eq!(c_v.dropped(), 1);
+}
+
+#[test]
+#[cfg_attr(not(panic = "unwind"), ignore = "test requires unwinding support")]
+fn test_into_iter_drop_leak_kv_panic_in_val() {
+    let a_k = CrashTestDummy::new(0);
+    let a_v = CrashTestDummy::new(1);
+    let b_k = CrashTestDummy::new(2);
+    let b_v = CrashTestDummy::new(3);
+    let c_k = CrashTestDummy::new(4);
+    let c_v = CrashTestDummy::new(5);
+    let mut map = BTreeMap::new();
+    map.insert(a_k.spawn(Panic::Never), a_v.spawn(Panic::Never));
+    map.insert(b_k.spawn(Panic::Never), b_v.spawn(Panic::InDrop));
+    map.insert(c_k.spawn(Panic::Never), c_v.spawn(Panic::Never));
+
+    catch_unwind(move || drop(map.into_iter())).unwrap_err();
+
+    assert_eq!(a_k.dropped(), 1);
+    assert_eq!(a_v.dropped(), 1);
+    assert_eq!(b_k.dropped(), 1);
+    assert_eq!(b_v.dropped(), 1);
+    assert_eq!(c_k.dropped(), 1);
+    assert_eq!(c_v.dropped(), 1);
 }
 
 #[test]

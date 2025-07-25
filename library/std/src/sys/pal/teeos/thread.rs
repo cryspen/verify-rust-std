@@ -2,7 +2,7 @@ use crate::ffi::CStr;
 use crate::mem::{self, ManuallyDrop};
 use crate::num::NonZero;
 use crate::sys::os;
-use crate::time::Duration;
+use crate::time::{Duration, Instant};
 use crate::{cmp, io, ptr};
 
 pub const DEFAULT_MIN_STACK_SIZE: usize = 8 * 1024;
@@ -16,7 +16,7 @@ pub struct Thread {
 unsafe impl Send for Thread {}
 unsafe impl Sync for Thread {}
 
-extern "C" {
+unsafe extern "C" {
     pub fn TEE_Wait(timeout: u32) -> u32;
 }
 
@@ -56,7 +56,7 @@ impl Thread {
             }
         };
 
-        let ret = libc::pthread_create(&mut native, &attr, thread_start, p as *mut _);
+        let ret = unsafe { libc::pthread_create(&mut native, &attr, thread_start, p as *mut _) };
         // Note: if the thread creation fails and this assert fails, then p will
         // be leaked. However, an alternative design could cause double-free
         // which is clearly worse.
@@ -106,6 +106,14 @@ impl Thread {
             if sleep_millis >= u32::MAX as u128 { u32::MAX } else { sleep_millis as u32 };
         unsafe {
             let _ = TEE_Wait(final_sleep);
+        }
+    }
+
+    pub fn sleep_until(deadline: Instant) {
+        let now = Instant::now();
+
+        if let Some(delay) = deadline.checked_duration_since(now) {
+            Self::sleep(delay);
         }
     }
 

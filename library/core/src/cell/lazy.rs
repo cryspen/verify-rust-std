@@ -1,6 +1,6 @@
 use super::UnsafeCell;
 use crate::hint::unreachable_unchecked;
-use crate::ops::Deref;
+use crate::ops::{Deref, DerefMut};
 use crate::{fmt, mem};
 
 enum State<T, F> {
@@ -219,7 +219,7 @@ impl<T, F: FnOnce() -> T> LazyCell<T, F> {
 }
 
 impl<T, F> LazyCell<T, F> {
-    /// Returns a reference to the value if initialized, or `None` if not.
+    /// Returns a mutable reference to the value if initialized, or `None` if not.
     ///
     /// # Examples
     ///
@@ -245,7 +245,7 @@ impl<T, F> LazyCell<T, F> {
         }
     }
 
-    /// Returns a mutable reference to the value if initialized, or `None` if not.
+    /// Returns a reference to the value if initialized, or `None` if not.
     ///
     /// # Examples
     ///
@@ -281,6 +281,14 @@ impl<T, F: FnOnce() -> T> Deref for LazyCell<T, F> {
     #[inline]
     fn deref(&self) -> &T {
         LazyCell::force(self)
+    }
+}
+
+#[stable(feature = "lazy_deref_mut", since = "1.89.0")]
+impl<T, F: FnOnce() -> T> DerefMut for LazyCell<T, F> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut T {
+        LazyCell::force_mut(self)
     }
 }
 

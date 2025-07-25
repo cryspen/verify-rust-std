@@ -4,11 +4,11 @@
 //! helps with clarity as we're also referring to `char` intentionally in here.
 
 use safety::{ensures, requires};
-use crate::mem::transmute;
-use crate::{assert_unsafe_precondition, fmt};
 
 #[cfg(kani)]
 use crate::kani;
+use crate::mem::transmute;
+use crate::{assert_unsafe_precondition, fmt};
 
 /// One of the 128 Unicode characters from U+0000 through U+007F,
 /// often known as the [ASCII] subset.
@@ -510,6 +510,7 @@ impl AsciiChar {
     /// something useful. It might be tightened before stabilization.)
     #[unstable(feature = "ascii_char", issue = "110998")]
     #[inline]
+    #[track_caller]
     pub const unsafe fn digit_unchecked(d: u8) -> Self {
         assert_unsafe_precondition!(
             check_language_ub,
@@ -528,6 +529,7 @@ impl AsciiChar {
 
     /// Gets this ASCII character as a byte.
     #[unstable(feature = "ascii_char", issue = "110998")]
+    #[cfg_attr(flux, flux::spec(fn(Self) -> u8{v: v <= 127}))]
     #[inline]
     pub const fn to_u8(self) -> u8 {
         self as u8
@@ -619,24 +621,5 @@ impl fmt::Debug for AsciiChar {
         };
 
         f.write_str(buf[..len].as_str())
-    }
-}
-
-#[cfg(kani)]
-#[unstable(feature="kani", issue="none")]
-mod verify {
-    use super::*;
-    use AsciiChar;
-
-    #[kani::proof_for_contract(AsciiChar::from_u8)]
-    fn check_from_u8() {
-        let b: u8 = kani::any();
-        AsciiChar::from_u8(b);
-    }
-
-    #[kani::proof_for_contract(AsciiChar::from_u8_unchecked)]
-    fn check_from_u8_unchecked() {
-        let b: u8 = kani::any();
-        unsafe { AsciiChar::from_u8_unchecked(b) };
     }
 }

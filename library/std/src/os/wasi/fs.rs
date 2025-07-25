@@ -72,7 +72,6 @@ pub trait FileExt {
     /// If this function returns an error, it is unspecified how many bytes it
     /// has read, but it will never read more than would be necessary to
     /// completely fill the buffer.
-    #[stable(feature = "rw_exact_all_at", since = "1.33.0")]
     fn read_exact_at(&self, mut buf: &mut [u8], mut offset: u64) -> io::Result<()> {
         while !buf.is_empty() {
             match self.read_at(buf, offset) {
@@ -144,7 +143,6 @@ pub trait FileExt {
     /// non-[`io::ErrorKind::Interrupted`] kind that [`write_at`] returns.
     ///
     /// [`write_at`]: FileExt::write_at
-    #[stable(feature = "rw_exact_all_at", since = "1.33.0")]
     fn write_all_at(&self, mut buf: &[u8], mut offset: u64) -> io::Result<()> {
         while !buf.is_empty() {
             match self.write_at(buf, offset) {
@@ -161,13 +159,6 @@ pub trait FileExt {
         }
         Ok(())
     }
-
-    /// Returns the current position within the file.
-    ///
-    /// This corresponds to the `fd_tell` syscall and is similar to
-    /// `seek` where you offset 0 bytes from the current position.
-    #[doc(alias = "fd_tell")]
-    fn tell(&self) -> io::Result<u64>;
 
     /// Adjusts the flags associated with this file.
     ///
@@ -240,10 +231,6 @@ impl FileExt for fs::File {
         self.as_inner().as_inner().pwrite(bufs, offset)
     }
 
-    fn tell(&self) -> io::Result<u64> {
-        self.as_inner().as_inner().tell()
-    }
-
     fn fdstat_set_flags(&self, flags: u16) -> io::Result<()> {
         self.as_inner().as_inner().set_flags(flags)
     }
@@ -261,7 +248,7 @@ impl FileExt for fs::File {
             a if a == wasi::ADVICE_DONTNEED.raw() => wasi::ADVICE_DONTNEED,
             a if a == wasi::ADVICE_NOREUSE.raw() => wasi::ADVICE_NOREUSE,
             _ => {
-                return Err(io::const_io_error!(
+                return Err(io::const_error!(
                     io::ErrorKind::InvalidInput,
                     "invalid parameter 'advice'",
                 ));
@@ -560,6 +547,5 @@ pub fn symlink_path<P: AsRef<Path>, U: AsRef<Path>>(old_path: P, new_path: U) ->
 }
 
 fn osstr2str(f: &OsStr) -> io::Result<&str> {
-    f.to_str()
-        .ok_or_else(|| io::const_io_error!(io::ErrorKind::Uncategorized, "input must be utf-8"))
+    f.to_str().ok_or_else(|| io::const_error!(io::ErrorKind::Uncategorized, "input must be utf-8"))
 }

@@ -4,7 +4,7 @@ use super::hermit_abi;
 use crate::ffi::CStr;
 use crate::mem::ManuallyDrop;
 use crate::num::NonZero;
-use crate::time::Duration;
+use crate::time::{Duration, Instant};
 use crate::{io, ptr};
 
 pub type Tid = hermit_abi::Tid;
@@ -41,9 +41,9 @@ impl Thread {
             unsafe {
                 drop(Box::from_raw(p));
             }
-            Err(io::const_io_error!(io::ErrorKind::Uncategorized, "Unable to create thread!"))
+            Err(io::const_error!(io::ErrorKind::Uncategorized, "unable to create thread!"))
         } else {
-            Ok(Thread { tid: tid })
+            Ok(Thread { tid })
         };
 
         extern "C" fn thread_start(main: usize) {
@@ -83,6 +83,14 @@ impl Thread {
 
         unsafe {
             hermit_abi::usleep(micros);
+        }
+    }
+
+    pub fn sleep_until(deadline: Instant) {
+        let now = Instant::now();
+
+        if let Some(delay) = deadline.checked_duration_since(now) {
+            Self::sleep(delay);
         }
     }
 

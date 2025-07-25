@@ -41,8 +41,10 @@ mod platform {
     pub use crate::os::aix::*;
     #[cfg(target_os = "android")]
     pub use crate::os::android::*;
+    #[cfg(target_os = "cygwin")]
+    pub use crate::os::cygwin::*;
     #[cfg(target_vendor = "apple")]
-    pub(super) use crate::os::darwin::*;
+    pub use crate::os::darwin::*;
     #[cfg(target_os = "dragonfly")]
     pub use crate::os::dragonfly::*;
     #[cfg(target_os = "emscripten")]
@@ -113,6 +115,9 @@ pub mod prelude {
     #[doc(no_inline)]
     #[stable(feature = "rust1", since = "1.0.0")]
     pub use super::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+    #[doc(no_inline)]
+    #[unstable(feature = "unix_send_signal", issue = "141975")]
+    pub use super::process::ChildExt;
     #[doc(no_inline)]
     #[stable(feature = "rust1", since = "1.0.0")]
     pub use super::process::{CommandExt, ExitStatusExt};

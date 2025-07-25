@@ -1,15 +1,15 @@
 //! Character conversions.
 
-use safety::{requires, ensures};
+use safety::{ensures, requires};
+
 use crate::char::TryFromCharError;
 use crate::error::Error;
 use crate::fmt;
+#[cfg(kani)]
+use crate::kani;
 use crate::mem::transmute;
 use crate::str::FromStr;
 use crate::ub_checks::assert_unsafe_precondition;
-
-#[cfg(kani)]
-use crate::kani;
 
 /// Converts a `u32` to a `char`. See [`char::from_u32`].
 #[must_use]
@@ -25,6 +25,8 @@ pub(super) const fn from_u32(i: u32) -> Option<char> {
 /// Converts a `u32` to a `char`, ignoring validity. See [`char::from_u32_unchecked`].
 #[inline]
 #[must_use]
+#[allow(unnecessary_transmutes)]
+#[track_caller]
 #[requires(char_try_from_u32(i).is_ok())]
 #[ensures(|result| *result as u32 == i)]
 pub(super) const unsafe fn from_u32_unchecked(i: u32) -> char {
@@ -46,11 +48,9 @@ impl From<char> for u32 {
     /// # Examples
     ///
     /// ```
-    /// use std::mem;
-    ///
     /// let c = 'c';
     /// let u = u32::from(c);
-    /// assert!(4 == mem::size_of_val(&u))
+    /// assert!(4 == size_of_val(&u))
     /// ```
     #[inline]
     fn from(c: char) -> Self {
@@ -65,11 +65,9 @@ impl From<char> for u64 {
     /// # Examples
     ///
     /// ```
-    /// use std::mem;
-    ///
     /// let c = '👤';
     /// let u = u64::from(c);
-    /// assert!(8 == mem::size_of_val(&u))
+    /// assert!(8 == size_of_val(&u))
     /// ```
     #[inline]
     fn from(c: char) -> Self {
@@ -86,11 +84,9 @@ impl From<char> for u128 {
     /// # Examples
     ///
     /// ```
-    /// use std::mem;
-    ///
     /// let c = '⚙';
     /// let u = u128::from(c);
-    /// assert!(16 == mem::size_of_val(&u))
+    /// assert!(16 == size_of_val(&u))
     /// ```
     #[inline]
     fn from(c: char) -> Self {
@@ -173,11 +169,9 @@ impl From<u8> for char {
     /// # Examples
     ///
     /// ```
-    /// use std::mem;
-    ///
     /// let u = 32 as u8;
     /// let c = char::from(u);
-    /// assert!(4 == mem::size_of_val(&c))
+    /// assert!(4 == size_of_val(&c))
     /// ```
     #[inline]
     fn from(i: u8) -> Self {
@@ -235,6 +229,7 @@ impl FromStr for char {
 }
 
 #[inline]
+#[allow(unnecessary_transmutes)]
 const fn char_try_from_u32(i: u32) -> Result<char, CharTryFromError> {
     // This is an optimized version of the check
     // (i > MAX as u32) || (i >= 0xD800 && i <= 0xDFFF),
@@ -294,17 +289,5 @@ pub(super) const fn from_digit(num: u32, radix: u32) -> Option<char> {
         if num < 10 { Some((b'0' + num) as char) } else { Some((b'a' + num - 10) as char) }
     } else {
         None
-    }
-}
-
-#[cfg(kani)]
-#[unstable(feature="kani", issue="none")]
-mod verify {
-    use super::*;
-
-    #[kani::proof_for_contract(from_u32_unchecked)]
-    fn check_from_u32_unchecked() {
-        let i: u32 = kani::any();
-        unsafe { from_u32_unchecked(i) };
     }
 }

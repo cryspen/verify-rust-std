@@ -1,13 +1,12 @@
 use safety::{ensures, invariant, requires};
-use crate::num::NonZero;
-use crate::ub_checks::assert_unsafe_precondition;
-use crate::{cmp, fmt, hash, mem, num};
 
 #[cfg(kani)]
 use crate::kani;
-
+use crate::num::NonZero;
 #[cfg(kani)]
 use crate::ub_checks::Invariant;
+use crate::ub_checks::assert_unsafe_precondition;
+use crate::{cmp, fmt, hash, mem, num};
 
 /// A type storing a `usize` which is a power of two, and thus
 /// represents a possible alignment in the Rust abstract machine.
@@ -17,12 +16,14 @@ use crate::ub_checks::Invariant;
 #[unstable(feature = "ptr_alignment_type", issue = "102070")]
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(transparent)]
-#[invariant(self.as_usize().is_power_of_two())]
+// uses .0 instead of .as_usize() to permit proving as_usize so that its proof does not itself use
+// as_usize
+#[invariant((self.0 as usize).is_power_of_two())]
 pub struct Alignment(AlignmentEnum);
 
 // Alignment is `repr(usize)`, but via extra steps.
-const _: () = assert!(mem::size_of::<Alignment>() == mem::size_of::<usize>());
-const _: () = assert!(mem::align_of::<Alignment>() == mem::align_of::<usize>());
+const _: () = assert!(size_of::<Alignment>() == size_of::<usize>());
+const _: () = assert!(align_of::<Alignment>() == align_of::<usize>());
 
 fn _alignment_can_be_structurally_matched(a: Alignment) -> bool {
     matches!(a, Alignment::MIN)
@@ -46,16 +47,16 @@ impl Alignment {
 
     /// Returns the alignment for a type.
     ///
-    /// This provides the same numerical value as [`mem::align_of`],
+    /// This provides the same numerical value as [`align_of`],
     /// but in an `Alignment` instead of a `usize`.
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-    #[cfg_attr(bootstrap, rustc_const_unstable(feature = "ptr_alignment_type", issue = "102070"))]
     #[inline]
+    #[must_use]
     #[requires(mem::align_of::<T>().is_power_of_two())]
     #[ensures(|result| result.as_usize().is_power_of_two())]
     pub const fn of<T>() -> Self {
-        // SAFETY: rustc ensures that type alignment is always a power of two.
-        unsafe { Alignment::new_unchecked(mem::align_of::<T>()) }
+        // This can't actually panic since type alignment is always a power of two.
+        const { Alignment::new(align_of::<T>()).unwrap() }
     }
 
     /// Creates an `Alignment` from a `usize`, or returns `None` if it's
@@ -63,7 +64,6 @@ impl Alignment {
     ///
     /// Note that `0` is not a power of two, nor a valid alignment.
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-    #[cfg_attr(bootstrap, rustc_const_unstable(feature = "ptr_alignment_type", issue = "102070"))]
     #[inline]
     #[ensures(|result| align.is_power_of_two() == result.is_some())]
     #[ensures(|result| result.is_none() || result.unwrap().as_usize() == align)]
@@ -85,8 +85,8 @@ impl Alignment {
     /// Equivalently, it must be `1 << exp` for some `exp` in `0..usize::BITS`.
     /// It must *not* be zero.
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-    #[cfg_attr(bootstrap, rustc_const_unstable(feature = "ptr_alignment_type", issue = "102070"))]
     #[inline]
+    #[track_caller]
     #[requires(align > 0 && (align & (align - 1)) == 0)]
     #[ensures(|result| result.as_usize() == align)]
     #[ensures(|result| result.as_usize().is_power_of_two())]
@@ -104,7 +104,6 @@ impl Alignment {
 
     /// Returns the alignment as a [`usize`].
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-    #[cfg_attr(bootstrap, rustc_const_unstable(feature = "ptr_alignment_type", issue = "102070"))]
     #[inline]
     #[ensures(|result| result.is_power_of_two())]
     pub const fn as_usize(self) -> usize {
@@ -113,13 +112,17 @@ impl Alignment {
 
     /// Returns the alignment as a <code>[NonZero]<[usize]></code>.
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-    #[cfg_attr(bootstrap, rustc_const_unstable(feature = "ptr_alignment_type", issue = "102070"))]
     #[inline]
     #[ensures(|result| result.get().is_power_of_two())]
     #[ensures(|result| result.get() == self.as_usize())]
     pub const fn as_nonzero(self) -> NonZero<usize> {
+        // This transmutes directly to avoid the UbCheck in `NonZero::new_unchecked`
+        // since there's no way for the user to trip that check anyway -- the
+        // validity invariant of the type would have to have been broken earlier --
+        // and emitting it in an otherwise simple method is bad for compile time.
+
         // SAFETY: All the discriminants are non-zero.
-        unsafe { NonZero::new_unchecked(self.as_usize()) }
+        unsafe { mem::transmute::<Alignment, NonZero<usize>>(self) }
     }
 
     /// Returns the base-2 logarithm of the alignment.
@@ -136,7 +139,6 @@ impl Alignment {
     /// assert_eq!(Alignment::new(1024).unwrap().log2(), 10);
     /// ```
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-    #[cfg_attr(bootstrap, rustc_const_unstable(feature = "ptr_alignment_type", issue = "102070"))]
     #[inline]
     #[requires(self.as_usize().is_power_of_two())]
     #[ensures(|result| (*result as usize) < mem::size_of::<usize>() * 8)]
@@ -169,7 +171,6 @@ impl Alignment {
     /// assert_ne!(one.mask(Alignment::of::<Align4>().mask()), one);
     /// ```
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-    #[cfg_attr(bootstrap, rustc_const_unstable(feature = "ptr_alignment_type", issue = "102070"))]
     #[inline]
     #[ensures(|result| *result > 0)]
     #[ensures(|result| *result == !(self.as_usize() -1))]
@@ -254,7 +255,8 @@ impl hash::Hash for Alignment {
 
 /// Returns [`Alignment::MIN`], which is valid for any type.
 #[unstable(feature = "ptr_alignment_type", issue = "102070")]
-impl Default for Alignment {
+#[rustc_const_unstable(feature = "const_default", issue = "67792")]
+impl const Default for Alignment {
     fn default() -> Alignment {
         Alignment::MIN
     }
@@ -394,7 +396,7 @@ enum AlignmentEnum {
 }
 
 #[cfg(kani)]
-#[unstable(feature="kani", issue="none")]
+#[unstable(feature = "kani", issue = "none")]
 mod verify {
     use super::*;
 
@@ -406,55 +408,10 @@ mod verify {
         }
     }
 
-    // pub const fn of<T>() -> Self
-    #[kani::proof_for_contract(Alignment::of)]
-    pub fn check_of_i32() {
-        let _ = Alignment::of::<i32>();
-    }
-
-    // pub const fn new(align: usize) -> Option<Self>
-    #[kani::proof_for_contract(Alignment::new)]
-    pub fn check_new() {
-        let a = kani::any::<usize>();
-        let _ = Alignment::new(a);
-    }
-
-    // pub const unsafe fn new_unchecked(align: usize) -> Self
-    #[kani::proof_for_contract(Alignment::new_unchecked)]
-    pub fn check_new_unchecked() {
-        let a = kani::any::<usize>();
-        unsafe {
-            let _ = Alignment::new_unchecked(a);
-        }
-    }
-
-    // pub const fn as_usize(self) -> usize
-    #[kani::proof_for_contract(Alignment::as_usize)]
-    pub fn check_as_usize() {
-        let a = kani::any::<usize>();
-        if let Some(alignment) = Alignment::new(a) {
-            assert_eq!(alignment.as_usize(), a);
-        }
-    }
-
-    // pub const fn as_nonzero(self) -> NonZero<usize>
-    #[kani::proof_for_contract(Alignment::as_nonzero)]
-    pub fn check_as_nonzero() {
-        let alignment = kani::any::<Alignment>();
-        let _ = alignment.as_nonzero();
-    }
-
-    // pub const fn log2(self) -> u32
-    #[kani::proof_for_contract(Alignment::log2)]
-    pub fn check_log2() {
-        let alignment = kani::any::<Alignment>();
-        let _ = alignment.log2();
-    }
-
-    // pub const fn mask(self) -> usize
-    #[kani::proof_for_contract(Alignment::mask)]
-    pub fn check_mask() {
-        let alignment = kani::any::<Alignment>();
-        let _ = alignment.mask();
-    }
+    // FIXME, c.f. https://github.com/model-checking/kani/issues/3905
+    // // pub const fn of<T>() -> Self
+    // #[kani::proof_for_contract(Alignment::of)]
+    // pub fn check_of_i32() {
+    //     let _ = Alignment::of::<i32>();
+    // }
 }

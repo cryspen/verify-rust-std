@@ -420,14 +420,16 @@ pub use self::adapters::{Intersperse, IntersperseWith};
     issue = "42168"
 )]
 pub use self::range::Step;
+#[unstable(feature = "iter_macro", issue = "142269", reason = "generators are unstable")]
+pub use self::sources::iter;
+#[stable(feature = "iter_empty", since = "1.2.0")]
+pub use self::sources::{Empty, empty};
 #[unstable(
     feature = "iter_from_coroutine",
     issue = "43122",
     reason = "coroutines are unstable"
 )]
-pub use self::sources::from_coroutine;
-#[stable(feature = "iter_empty", since = "1.2.0")]
-pub use self::sources::{Empty, empty};
+pub use self::sources::{FromCoroutine, from_coroutine};
 #[stable(feature = "iter_from_fn", since = "1.34.0")]
 pub use self::sources::{FromFn, from_fn};
 #[stable(feature = "iter_once", since = "1.2.0")]

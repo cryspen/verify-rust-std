@@ -7,12 +7,16 @@ use core::iter::{FusedIterator, Peekable};
 use core::mem::ManuallyDrop;
 use core::ops::{BitAnd, BitOr, BitXor, Bound, RangeBounds, Sub};
 
-use super::Recover;
-use super::map::{BTreeMap, Keys};
+use super::map::{self, BTreeMap, Keys};
 use super::merge_iter::MergeIterInner;
 use super::set_val::SetValZST;
 use crate::alloc::{Allocator, Global};
 use crate::vec::Vec;
+
+mod entry;
+
+#[unstable(feature = "btree_set_entry", issue = "133549")]
+pub use self::entry::{Entry, OccupiedEntry, VacantEntry};
 
 /// An ordered set based on a B-Tree.
 ///
@@ -135,7 +139,7 @@ pub struct Iter<'a, T: 'a> {
 #[stable(feature = "collection_debug", since = "1.17.0")]
 impl<T: fmt::Debug> fmt::Debug for Iter<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Iter").field(&self.iter.clone()).finish()
+        f.debug_tuple("Iter").field(&self.iter).finish()
     }
 }
 
@@ -635,7 +639,7 @@ impl<T, A: Allocator + Clone> BTreeSet<T, A> {
         T: Borrow<Q> + Ord,
         Q: Ord,
     {
-        Recover::get(&self.map, value)
+        self.map.get_key_value(value).map(|(k, _)| k)
     }
 
     /// Returns `true` if `self` has no elements in common with `other`.
@@ -926,7 +930,110 @@ impl<T, A: Allocator + Clone> BTreeSet<T, A> {
     where
         T: Ord,
     {
-        Recover::replace(&mut self.map, value)
+        self.map.replace(value)
+    }
+
+    /// Inserts the given `value` into the set if it is not present, then
+    /// returns a reference to the value in the set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #![feature(btree_set_entry)]
+    ///
+    /// use std::collections::BTreeSet;
+    ///
+    /// let mut set = BTreeSet::from([1, 2, 3]);
+    /// assert_eq!(set.len(), 3);
+    /// assert_eq!(set.get_or_insert(2), &2);
+    /// assert_eq!(set.get_or_insert(100), &100);
+    /// assert_eq!(set.len(), 4); // 100 was inserted
+    /// ```
+    #[inline]
+    #[unstable(feature = "btree_set_entry", issue = "133549")]
+    pub fn get_or_insert(&mut self, value: T) -> &T
+    where
+        T: Ord,
+    {
+        self.map.entry(value).insert_entry(SetValZST).into_key()
+    }
+
+    /// Inserts a value computed from `f` into the set if the given `value` is
+    /// not present, then returns a reference to the value in the set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #![feature(btree_set_entry)]
+    ///
+    /// use std::collections::BTreeSet;
+    ///
+    /// let mut set: BTreeSet<String> = ["cat", "dog", "horse"]
+    ///     .iter().map(|&pet| pet.to_owned()).collect();
+    ///
+    /// assert_eq!(set.len(), 3);
+    /// for &pet in &["cat", "dog", "fish"] {
+    ///     let value = set.get_or_insert_with(pet, str::to_owned);
+    ///     assert_eq!(value, pet);
+    /// }
+    /// assert_eq!(set.len(), 4); // a new "fish" was inserted
+    /// ```
+    #[inline]
+    #[unstable(feature = "btree_set_entry", issue = "133549")]
+    pub fn get_or_insert_with<Q: ?Sized, F>(&mut self, value: &Q, f: F) -> &T
+    where
+        T: Borrow<Q> + Ord,
+        Q: Ord,
+        F: FnOnce(&Q) -> T,
+    {
+        self.map.get_or_insert_with(value, f)
+    }
+
+    /// Gets the given value's corresponding entry in the set for in-place manipulation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #![feature(btree_set_entry)]
+    ///
+    /// use std::collections::BTreeSet;
+    /// use std::collections::btree_set::Entry::*;
+    ///
+    /// let mut singles = BTreeSet::new();
+    /// let mut dupes = BTreeSet::new();
+    ///
+    /// for ch in "a short treatise on fungi".chars() {
+    ///     if let Vacant(dupe_entry) = dupes.entry(ch) {
+    ///         // We haven't already seen a duplicate, so
+    ///         // check if we've at least seen it once.
+    ///         match singles.entry(ch) {
+    ///             Vacant(single_entry) => {
+    ///                 // We found a new character for the first time.
+    ///                 single_entry.insert()
+    ///             }
+    ///             Occupied(single_entry) => {
+    ///                 // We've already seen this once, "move" it to dupes.
+    ///                 single_entry.remove();
+    ///                 dupe_entry.insert();
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// assert!(!singles.contains(&'t') && dupes.contains(&'t'));
+    /// assert!(singles.contains(&'u') && !dupes.contains(&'u'));
+    /// assert!(!singles.contains(&'v') && !dupes.contains(&'v'));
+    /// ```
+    #[inline]
+    #[unstable(feature = "btree_set_entry", issue = "133549")]
+    pub fn entry(&mut self, value: T) -> Entry<'_, T, A>
+    where
+        T: Ord,
+    {
+        match self.map.entry(value) {
+            map::Entry::Occupied(entry) => Entry::Occupied(OccupiedEntry { inner: entry }),
+            map::Entry::Vacant(entry) => Entry::Vacant(VacantEntry { inner: entry }),
+        }
     }
 
     /// If the set contains an element equal to the value, removes it from the
@@ -978,7 +1085,7 @@ impl<T, A: Allocator + Clone> BTreeSet<T, A> {
         T: Borrow<Q> + Ord,
         Q: Ord,
     {
-        Recover::take(&mut self.map, value)
+        self.map.remove_entry(value).map(|(k, _)| k)
     }
 
     /// Retains only the elements specified by the predicate.
@@ -1002,7 +1109,7 @@ impl<T, A: Allocator + Clone> BTreeSet<T, A> {
         T: Ord,
         F: FnMut(&T) -> bool,
     {
-        self.extract_if(|v| !f(v)).for_each(drop);
+        self.extract_if(.., |v| !f(v)).for_each(drop);
     }
 
     /// Moves all elements from `other` into `self`, leaving `other` empty.
@@ -1080,7 +1187,7 @@ impl<T, A: Allocator + Clone> BTreeSet<T, A> {
         BTreeSet { map: self.map.split_off(value) }
     }
 
-    /// Creates an iterator that visits all elements in ascending order and
+    /// Creates an iterator that visits elements in the specified range in ascending order and
     /// uses a closure to determine if an element should be removed.
     ///
     /// If the closure returns `true`, the element is removed from the set and
@@ -1094,25 +1201,32 @@ impl<T, A: Allocator + Clone> BTreeSet<T, A> {
     /// [`retain`]: BTreeSet::retain
     /// # Examples
     ///
-    /// Splitting a set into even and odd values, reusing the original set:
-    ///
     /// ```
     /// #![feature(btree_extract_if)]
     /// use std::collections::BTreeSet;
     ///
+    /// // Splitting a set into even and odd values, reusing the original set:
     /// let mut set: BTreeSet<i32> = (0..8).collect();
-    /// let evens: BTreeSet<_> = set.extract_if(|v| v % 2 == 0).collect();
+    /// let evens: BTreeSet<_> = set.extract_if(.., |v| v % 2 == 0).collect();
     /// let odds = set;
     /// assert_eq!(evens.into_iter().collect::<Vec<_>>(), vec![0, 2, 4, 6]);
     /// assert_eq!(odds.into_iter().collect::<Vec<_>>(), vec![1, 3, 5, 7]);
+    ///
+    /// // Splitting a set into low and high halves, reusing the original set:
+    /// let mut set: BTreeSet<i32> = (0..8).collect();
+    /// let low: BTreeSet<_> = set.extract_if(0..4, |_v| true).collect();
+    /// let high = set;
+    /// assert_eq!(low.into_iter().collect::<Vec<_>>(), [0, 1, 2, 3]);
+    /// assert_eq!(high.into_iter().collect::<Vec<_>>(), [4, 5, 6, 7]);
     /// ```
     #[unstable(feature = "btree_extract_if", issue = "70530")]
-    pub fn extract_if<'a, F>(&'a mut self, pred: F) -> ExtractIf<'a, T, F, A>
+    pub fn extract_if<F, R>(&mut self, range: R, pred: F) -> ExtractIf<'_, T, R, F, A>
     where
         T: Ord,
-        F: 'a + FnMut(&T) -> bool,
+        R: RangeBounds<T>,
+        F: FnMut(&T) -> bool,
     {
-        let (inner, alloc) = self.map.extract_if_inner();
+        let (inner, alloc) = self.map.extract_if_inner(range);
         ExtractIf { pred, inner, alloc }
     }
 
@@ -1335,20 +1449,20 @@ impl<T, A: Allocator + Clone> BTreeSet<T, A> {
     ///
     /// let mut set = BTreeSet::from([1, 2, 3, 4]);
     ///
-    /// let mut cursor = unsafe { set.upper_bound_mut(Bound::Included(&3)) };
+    /// let mut cursor = set.upper_bound_mut(Bound::Included(&3));
     /// assert_eq!(cursor.peek_prev(), Some(&3));
     /// assert_eq!(cursor.peek_next(), Some(&4));
     ///
-    /// let mut cursor = unsafe { set.upper_bound_mut(Bound::Excluded(&3)) };
+    /// let mut cursor = set.upper_bound_mut(Bound::Excluded(&3));
     /// assert_eq!(cursor.peek_prev(), Some(&2));
     /// assert_eq!(cursor.peek_next(), Some(&3));
     ///
-    /// let mut cursor = unsafe { set.upper_bound_mut(Bound::Unbounded) };
+    /// let mut cursor = set.upper_bound_mut(Bound::Unbounded);
     /// assert_eq!(cursor.peek_prev(), Some(&4));
     /// assert_eq!(cursor.peek_next(), None);
     /// ```
     #[unstable(feature = "btree_cursors", issue = "107540")]
-    pub unsafe fn upper_bound_mut<Q: ?Sized>(&mut self, bound: Bound<&Q>) -> CursorMut<'_, T, A>
+    pub fn upper_bound_mut<Q: ?Sized>(&mut self, bound: Bound<&Q>) -> CursorMut<'_, T, A>
     where
         T: Borrow<Q> + Ord,
         Q: Ord,
@@ -1384,6 +1498,11 @@ impl<T: Ord, A: Allocator + Clone> BTreeSet<T, A> {
 impl<T: Ord, const N: usize> From<[T; N]> for BTreeSet<T> {
     /// Converts a `[T; N]` into a `BTreeSet<T>`.
     ///
+    /// If the array contains any equal values,
+    /// all but one will be dropped.
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use std::collections::BTreeSet;
     ///
@@ -1398,9 +1517,7 @@ impl<T: Ord, const N: usize> From<[T; N]> for BTreeSet<T> {
 
         // use stable sort to preserve the insertion order.
         arr.sort();
-        let iter = IntoIterator::into_iter(arr).map(|k| (k, SetValZST::default()));
-        let map = BTreeMap::bulk_build_from_sorted_iter(iter, Global);
-        BTreeSet { map }
+        BTreeSet::from_sorted_iter(IntoIterator::into_iter(arr), Global)
     }
 }
 
@@ -1442,33 +1559,35 @@ impl<'a, T, A: Allocator + Clone> IntoIterator for &'a BTreeSet<T, A> {
 pub struct ExtractIf<
     'a,
     T,
+    R,
     F,
     #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator + Clone = Global,
-> where
-    T: 'a,
-    F: 'a + FnMut(&T) -> bool,
-{
+> {
     pred: F,
-    inner: super::map::ExtractIfInner<'a, T, SetValZST>,
+    inner: super::map::ExtractIfInner<'a, T, SetValZST, R>,
     /// The BTreeMap will outlive this IntoIter so we don't care about drop order for `alloc`.
     alloc: A,
 }
 
 #[unstable(feature = "btree_extract_if", issue = "70530")]
-impl<T, F, A: Allocator + Clone> fmt::Debug for ExtractIf<'_, T, F, A>
+impl<T, R, F, A> fmt::Debug for ExtractIf<'_, T, R, F, A>
 where
     T: fmt::Debug,
-    F: FnMut(&T) -> bool,
+    A: Allocator + Clone,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("ExtractIf").field(&self.inner.peek().map(|(k, _)| k)).finish()
+        f.debug_struct("ExtractIf")
+            .field("peek", &self.inner.peek().map(|(k, _)| k))
+            .finish_non_exhaustive()
     }
 }
 
 #[unstable(feature = "btree_extract_if", issue = "70530")]
-impl<'a, T, F, A: Allocator + Clone> Iterator for ExtractIf<'_, T, F, A>
+impl<T, R, F, A: Allocator + Clone> Iterator for ExtractIf<'_, T, R, F, A>
 where
-    F: 'a + FnMut(&T) -> bool,
+    T: PartialOrd,
+    R: RangeBounds<T>,
+    F: FnMut(&T) -> bool,
 {
     type Item = T;
 
@@ -1484,7 +1603,13 @@ where
 }
 
 #[unstable(feature = "btree_extract_if", issue = "70530")]
-impl<T, F, A: Allocator + Clone> FusedIterator for ExtractIf<'_, T, F, A> where F: FnMut(&T) -> bool {}
+impl<T, R, F, A: Allocator + Clone> FusedIterator for ExtractIf<'_, T, R, F, A>
+where
+    T: PartialOrd,
+    R: RangeBounds<T>,
+    F: FnMut(&T) -> bool,
+{
+}
 
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: Ord, A: Allocator + Clone> Extend<T> for BTreeSet<T, A> {
