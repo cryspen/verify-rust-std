@@ -333,7 +333,7 @@ mod c_extern {
     }
 
     pub fn pslld(a: i32x8, count: i32x4) -> i32x8 {
-        let count = (count[1] as u64) * 4294967296 + (count[0] as u64);
+        let count = ((count[1] as u32) as u64) * 4294967296 + ((count[0] as u32) as u64);
 
         i32x8::from_fn(|i| {
             if count > 31 {
@@ -473,7 +473,7 @@ mod c_extern {
     }
 
     pub fn psrld(a: i32x8, count: i32x4) -> i32x8 {
-        let count = (count[1] as u64) * 4294967296 + (count[0] as u64);
+        let count = ((count[1] as u32) as u64) * 4294967296 + ((count[0] as u32) as u64);
 
         i32x8::from_fn(|i| {
             if count > 31 {
@@ -589,10 +589,10 @@ mod c_extern {
 
     pub fn vperm2i128(a: i64x4, b: i64x4, imm8: i8) -> i64x4 {
         let a = i128x2::from_fn(|i| {
-            ((a[2 * i] as u32 as u128) + ((a[2 * i + 1] as u32 as u128) << 64)) as i128
+            ((a[2 * i] as u64 as u128) + ((a[2 * i + 1] as u64 as u128) << 64)) as i128
         });
         let b = i128x2::from_fn(|i| {
-            ((b[2 * i] as u32 as u128) + ((b[2 * i + 1] as u32 as u128) << 64)) as i128
+            ((b[2 * i] as u64 as u128) + ((b[2 * i + 1] as u64 as u128) << 64)) as i128
         });
         let imm8 = imm8 as u8 as u32 as i32;
         let r = i128x2::from_fn(|i| {
