@@ -55,7 +55,7 @@ impl<const N: u32, T> FunArray<N, T> {
     }
 }
 
-impl<const N: u32, T:MachineInteger> FunArray<N, T> {
+impl<const N: u32, T: MachineInteger> FunArray<N, T> {
     #[allow(non_snake_case)]
     pub fn ZERO() -> Self {
         Self::from_fn(|_| T::ZEROS)

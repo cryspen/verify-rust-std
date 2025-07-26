@@ -70,7 +70,6 @@ interpretations!(512; u32x16 [u32; 16], u16x32 [u16; 32], i32x16 [i32; 16], i16x
 interpretations!(64; i64x1 [i64; 1], i32x2 [i32; 2], i16x4 [i16; 4], i8x8 [i8; 8], u64x1 [u64; 1], u32x2 [u32; 2],u16x4 [u16; 4], u8x8 [u8; 8]);
 interpretations!(32; i8x4 [i8; 4], u8x4 [u8; 4]);
 
-
 /// Inserts an element into a vector, returning the updated vector.
 ///
 /// # Safety
@@ -942,6 +941,6 @@ pub fn simd_select<const N: u32, T1: Eq + MachineInteger, T2: Copy + MachineInte
 }
 
 /// Converts one type to another
-pub fn transmute<T, U:From<T>>(a:T) -> U {
+pub fn transmute<T, U: From<T>>(a: T) -> U {
     a.into()
 }

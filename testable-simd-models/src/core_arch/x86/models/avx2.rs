@@ -318,7 +318,7 @@ mod c_extern {
     }
 
     pub fn psllw(a: i16x16, count: i16x8) -> i16x16 {
-        let count4 = (count[0] as u16) as  u64;
+        let count4 = (count[0] as u16) as u64;
         let count3 = ((count[1] as u16) as u64) * 65536;
         let count2 = ((count[2] as u16) as u64) * 4294967296;
         let count1 = ((count[3] as u16) as u64) * 281474976710656;
@@ -714,10 +714,7 @@ pub fn _mm256_add_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_adds_epi8)
 
 pub fn _mm256_adds_epi8(a: __m256i, b: __m256i) -> __m256i {
-    transmute(simd_saturating_add(
-        a.as_i8x32(),
-        b.as_i8x32(),
-    ))
+    transmute(simd_saturating_add(a.as_i8x32(), b.as_i8x32()))
 }
 
 /// Adds packed 16-bit integers in `a` and `b` using saturation.
@@ -725,10 +722,7 @@ pub fn _mm256_adds_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_adds_epi16)
 
 pub fn _mm256_adds_epi16(a: __m256i, b: __m256i) -> __m256i {
-    transmute(simd_saturating_add(
-        a.as_i16x16(),
-        b.as_i16x16(),
-    ))
+    transmute(simd_saturating_add(a.as_i16x16(), b.as_i16x16()))
 }
 
 /// Adds packed unsigned 8-bit integers in `a` and `b` using saturation.
@@ -923,11 +917,7 @@ pub fn _mm256_and_si256(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_andnot_si256(a: __m256i, b: __m256i) -> __m256i {
     let all_ones = _mm256_set1_epi8(-1);
-    simd_and(
-        simd_xor(a.as_i64x4(),all_ones.as_i64x4()),
-        b.as_i64x4(),
-    )
-    .into()
+    simd_and(simd_xor(a.as_i64x4(), all_ones.as_i64x4()), b.as_i64x4()).into()
 }
 
 /// Averages packed unsigned 16-bit integers in `a` and `b`.
@@ -2418,11 +2408,7 @@ pub fn _mm256_unpacklo_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_unpackhi_epi32)
 
 pub fn _mm256_unpackhi_epi32(a: __m256i, b: __m256i) -> __m256i {
-    let r: i32x8 = simd_shuffle(
-        a.as_i32x8(),
-        b.as_i32x8(),
-        [2, 10, 3, 11, 6, 14, 7, 15],
-    );
+    let r: i32x8 = simd_shuffle(a.as_i32x8(), b.as_i32x8(), [2, 10, 3, 11, 6, 14, 7, 15]);
     r.into()
 }
 
@@ -2431,11 +2417,7 @@ pub fn _mm256_unpackhi_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_unpacklo_epi32)
 
 pub fn _mm256_unpacklo_epi32(a: __m256i, b: __m256i) -> __m256i {
-    let r: i32x8 = simd_shuffle(
-        a.as_i32x8(),
-        b.as_i32x8(),
-        [0, 8, 1, 9, 4, 12, 5, 13],
-    );
+    let r: i32x8 = simd_shuffle(a.as_i32x8(), b.as_i32x8(), [0, 8, 1, 9, 4, 12, 5, 13]);
     r.into()
 }
 

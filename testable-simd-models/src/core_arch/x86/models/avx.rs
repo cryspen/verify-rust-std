@@ -112,7 +112,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permute2f128_si256)
 pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-   // static_assert_uimm_bits!(IMM8, 8);
+    // static_assert_uimm_bits!(IMM8, 8);
     vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8).into()
 }
 

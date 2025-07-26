@@ -815,7 +815,7 @@ pub fn _mm_cmpeq_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpeq_epi16)
 
 pub fn _mm_cmpeq_epi16(a: __m128i, b: __m128i) -> __m128i {
-    transmute (simd_eq(a.as_i16x8(), b.as_i16x8()))
+    transmute(simd_eq(a.as_i16x8(), b.as_i16x8()))
 }
 
 /// Compares packed 32-bit integers in `a` and `b` for equality.
@@ -1225,11 +1225,7 @@ pub fn _mm_unpackhi_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpackhi_epi16)
 
 pub fn _mm_unpackhi_epi16(a: __m128i, b: __m128i) -> __m128i {
-    let x = simd_shuffle(
-        a.as_i16x8(),
-        b.as_i16x8(),
-        [4, 12, 5, 13, 6, 14, 7, 15],
-    );
+    let x = simd_shuffle(a.as_i16x8(), b.as_i16x8(), [4, 12, 5, 13, 6, 14, 7, 15]);
     (x).into()
 }
 
@@ -1267,11 +1263,7 @@ pub fn _mm_unpacklo_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpacklo_epi16)
 
 pub fn _mm_unpacklo_epi16(a: __m128i, b: __m128i) -> __m128i {
-    let x = simd_shuffle(
-        a.as_i16x8(),
-        b.as_i16x8(),
-        [0, 8, 1, 9, 2, 10, 3, 11],
-    );
+    let x = simd_shuffle(a.as_i16x8(), b.as_i16x8(), [0, 8, 1, 9, 2, 10, 3, 11]);
     x.into()
 }
 
