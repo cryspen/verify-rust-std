@@ -27,6 +27,11 @@ macro_rules! interpretations {
             let vec: Vec<$ty> = bv.to_vec();
             $name::from_fn(|i| vec[i as usize])
                         }
+                        #[doc = concat!("Conversion from bit vectors of size ", stringify!($n), " to ", stringify!($ty), " vectors of size ", stringify!($m))]
+                        pub fn [< as_ $name >](self) -> $name {
+            let vec: Vec<$ty> = self.to_vec();
+            $name::from_fn(|i| vec[i as usize])
+                        }
 
 
         }
@@ -71,7 +76,6 @@ interpretations!(32; i8x4 [i8; 4], u8x4 [u8; 4]);
 /// # Safety
 ///
 /// `idx` must be in-bounds of the vector, ie. idx < N
-
 pub fn simd_insert<const N: u32, T: Copy>(x: FunArray<N, T>, idx: u32, val: T) -> FunArray<N, T> {
     FunArray::from_fn(|i| if i == idx { val } else { x[i] })
 }
@@ -935,4 +939,9 @@ pub fn simd_select<const N: u32, T1: Eq + MachineInteger, T2: Copy + MachineInte
             if_false[i]
         }
     })
+}
+
+/// Converts one type to another
+pub fn transmute<T, U:From<T>>(a:T) -> U {
+    a.into()
 }

@@ -652,9 +652,9 @@ use super::types::*;
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_abs_epi32)
 
 pub fn _mm256_abs_epi32(a: __m256i) -> __m256i {
-    let a = BitVec::to_i32x8(a);
-    let r = simd_select(simd_lt(a, i32x8::from_fn(|_| 0)), simd_neg(a), a);
-    BitVec::from_i32x8(r)
+    let a = a.as_i32x8();
+    let r = simd_select(simd_lt(a, i32x8::ZERO()), simd_neg(a), a);
+    transmute(r)
 }
 
 /// Computes the absolute values of packed 16-bit integers in `a`.
@@ -662,9 +662,9 @@ pub fn _mm256_abs_epi32(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_abs_epi16)
 
 pub fn _mm256_abs_epi16(a: __m256i) -> __m256i {
-    let a = BitVec::to_i16x16(a);
-    let r = simd_select(simd_lt(a, i16x16::from_fn(|_| 0)), simd_neg(a), a);
-    BitVec::from_i16x16(r)
+    let a = a.as_i16x16();
+    let r = simd_select(simd_lt(a, i16x16::ZERO()), simd_neg(a), a);
+    transmute(r)
 }
 
 /// Computes the absolute values of packed 8-bit integers in `a`.
@@ -672,9 +672,9 @@ pub fn _mm256_abs_epi16(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_abs_epi8)
 
 pub fn _mm256_abs_epi8(a: __m256i) -> __m256i {
-    let a = BitVec::to_i8x32(a);
-    let r = simd_select(simd_lt(a, i8x32::from_fn(|_| 0)), simd_neg(a), a);
-    BitVec::from_i8x32(r)
+    let a = a.as_i8x32();
+    let r = simd_select(simd_lt(a, i8x32::ZERO()), simd_neg(a), a);
+    transmute(r)
 }
 
 /// Adds packed 64-bit integers in `a` and `b`.
@@ -682,7 +682,7 @@ pub fn _mm256_abs_epi8(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_add_epi64)
 
 pub fn _mm256_add_epi64(a: __m256i, b: __m256i) -> __m256i {
-    BitVec::from_i64x4(simd_add(BitVec::to_i64x4(a), BitVec::to_i64x4(b)))
+    transmute(simd_add(a.as_i64x4(), b.as_i64x4()))
 }
 
 /// Adds packed 32-bit integers in `a` and `b`.
@@ -690,7 +690,7 @@ pub fn _mm256_add_epi64(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_add_epi32)
 
 pub fn _mm256_add_epi32(a: __m256i, b: __m256i) -> __m256i {
-    BitVec::from_i32x8(simd_add(BitVec::to_i32x8(a), BitVec::to_i32x8(b)))
+    transmute(simd_add(a.as_i32x8(), b.as_i32x8()))
 }
 
 /// Adds packed 16-bit integers in `a` and `b`.
@@ -698,7 +698,7 @@ pub fn _mm256_add_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_add_epi16)
 
 pub fn _mm256_add_epi16(a: __m256i, b: __m256i) -> __m256i {
-    BitVec::from_i16x16(simd_add(BitVec::to_i16x16(a), BitVec::to_i16x16(b)))
+    transmute(simd_add(a.as_i16x16(), b.as_i16x16()))
 }
 
 /// Adds packed 8-bit integers in `a` and `b`.
@@ -706,7 +706,7 @@ pub fn _mm256_add_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_add_epi8)
 
 pub fn _mm256_add_epi8(a: __m256i, b: __m256i) -> __m256i {
-    BitVec::from_i8x32(simd_add(BitVec::to_i8x32(a), BitVec::to_i8x32(b)))
+    transmute(simd_add(a.as_i8x32(), b.as_i8x32()))
 }
 
 /// Adds packed 8-bit integers in `a` and `b` using saturation.
@@ -714,9 +714,9 @@ pub fn _mm256_add_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_adds_epi8)
 
 pub fn _mm256_adds_epi8(a: __m256i, b: __m256i) -> __m256i {
-    BitVec::from_i8x32(simd_saturating_add(
-        BitVec::to_i8x32(a),
-        BitVec::to_i8x32(b),
+    transmute(simd_saturating_add(
+        a.as_i8x32(),
+        b.as_i8x32(),
     ))
 }
 
@@ -725,9 +725,9 @@ pub fn _mm256_adds_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_adds_epi16)
 
 pub fn _mm256_adds_epi16(a: __m256i, b: __m256i) -> __m256i {
-    BitVec::from_i16x16(simd_saturating_add(
-        BitVec::to_i16x16(a),
-        BitVec::to_i16x16(b),
+    transmute(simd_saturating_add(
+        a.as_i16x16(),
+        b.as_i16x16(),
     ))
 }
 
@@ -736,7 +736,7 @@ pub fn _mm256_adds_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_adds_epu8)
 
 pub fn _mm256_adds_epu8(a: __m256i, b: __m256i) -> __m256i {
-    simd_saturating_add(BitVec::to_u8x32(a), BitVec::to_u8x32(b)).into()
+    simd_saturating_add(a.as_u8x32(), b.as_u8x32()).into()
 }
 
 /// Adds packed unsigned 16-bit integers in `a` and `b` using saturation.
@@ -744,7 +744,7 @@ pub fn _mm256_adds_epu8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_adds_epu16)
 
 pub fn _mm256_adds_epu16(a: __m256i, b: __m256i) -> __m256i {
-    simd_saturating_add(BitVec::to_u16x16(a), BitVec::to_u16x16(b)).into()
+    simd_saturating_add(a.as_u16x16(), b.as_u16x16()).into()
 }
 
 /// Concatenates pairs of 16-byte blocks in `a` and `b` into a 32-byte temporary
@@ -766,8 +766,8 @@ pub fn _mm256_alignr_epi8<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
         (a, b)
     };
 
-    let a = BitVec::to_i8x32(a);
-    let b = BitVec::to_i8x32(b);
+    let a = a.as_i8x32();
+    let b = b.as_i8x32();
 
     if IMM8 == 16 {
         return a.into();
@@ -913,7 +913,7 @@ pub fn _mm256_alignr_epi8<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_and_si256)
 
 pub fn _mm256_and_si256(a: __m256i, b: __m256i) -> __m256i {
-    simd_and(BitVec::to_i64x4(a), BitVec::to_i64x4(b)).into()
+    simd_and(a.as_i64x4(), b.as_i64x4()).into()
 }
 
 /// Computes the bitwise NOT of 256 bits (representing integer data)
@@ -924,8 +924,8 @@ pub fn _mm256_and_si256(a: __m256i, b: __m256i) -> __m256i {
 pub fn _mm256_andnot_si256(a: __m256i, b: __m256i) -> __m256i {
     let all_ones = _mm256_set1_epi8(-1);
     simd_and(
-        simd_xor(BitVec::to_i64x4(a), BitVec::to_i64x4(all_ones)),
-        BitVec::to_i64x4(b),
+        simd_xor(a.as_i64x4(),all_ones.as_i64x4()),
+        b.as_i64x4(),
     )
     .into()
 }
@@ -935,8 +935,8 @@ pub fn _mm256_andnot_si256(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_avg_epu16)
 
 pub fn _mm256_avg_epu16(a: __m256i, b: __m256i) -> __m256i {
-    let a = simd_cast::<16, _, u32>(BitVec::to_u16x16(a));
-    let b = simd_cast::<16, _, u32>(BitVec::to_u16x16(b));
+    let a = simd_cast::<16, _, u32>(a.as_u16x16());
+    let b = simd_cast::<16, _, u32>(b.as_u16x16());
     let r = simd_shr(simd_add(simd_add(a, b), u32x16::splat(1)), u32x16::splat(1));
     simd_cast::<16, _, u16>(r).into()
 }
@@ -946,8 +946,8 @@ pub fn _mm256_avg_epu16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_avg_epu8)
 
 pub fn _mm256_avg_epu8(a: __m256i, b: __m256i) -> __m256i {
-    let a = simd_cast::<32, _, u16>(BitVec::to_u8x32(a));
-    let b = simd_cast::<32, _, u16>(BitVec::to_u8x32(b));
+    let a = simd_cast::<32, _, u16>(a.as_u8x32());
+    let b = simd_cast::<32, _, u16>(b.as_u8x32());
     let r = simd_shr(simd_add(simd_add(a, b), u16x32::splat(1)), u16x32::splat(1));
     simd_cast::<32, _, u8>(r).into()
 }
@@ -957,8 +957,8 @@ pub fn _mm256_avg_epu8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_blend_epi32)
 
 pub fn _mm_blend_epi32<const IMM4: i32>(a: __m128i, b: __m128i) -> __m128i {
-    let a = BitVec::to_i32x4(a);
-    let b = BitVec::to_i32x4(b);
+    let a = a.as_i32x4();
+    let b = b.as_i32x4();
     let r: i32x4 = simd_shuffle(
         a,
         b,
@@ -977,8 +977,8 @@ pub fn _mm_blend_epi32<const IMM4: i32>(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_blend_epi32)
 
 pub fn _mm256_blend_epi32<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i32x8(a);
-    let b = BitVec::to_i32x8(b);
+    let a = a.as_i32x8();
+    let b = b.as_i32x8();
     let r: i32x8 = simd_shuffle(
         a,
         b,
@@ -1000,8 +1000,8 @@ pub fn _mm256_blend_epi32<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_blend_epi16)
 pub fn _mm256_blend_epi16<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i16x16(a);
-    let b = BitVec::to_i16x16(b);
+    let a = a.as_i16x16();
+    let b = b.as_i16x16();
 
     let r: i16x16 = simd_shuffle(
         a,
@@ -1032,8 +1032,8 @@ pub fn _mm256_blend_epi16<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_blendv_epi8)
 pub fn _mm256_blendv_epi8(a: __m256i, b: __m256i, mask: __m256i) -> __m256i {
-    let mask: i8x32 = simd_lt(BitVec::to_i8x32(mask), i8x32::from_fn(|_| 0));
-    simd_select(mask, BitVec::to_i8x32(b), BitVec::to_i8x32(a)).into()
+    let mask: i8x32 = simd_lt(mask.as_i8x32(), i8x32::ZERO());
+    simd_select(mask, b.as_i8x32(), a.as_i8x32()).into()
 }
 
 /// Broadcasts the low packed 8-bit integer from `a` to all elements of
@@ -1041,7 +1041,7 @@ pub fn _mm256_blendv_epi8(a: __m256i, b: __m256i, mask: __m256i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastb_epi8)
 pub fn _mm_broadcastb_epi8(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i8x16(a), i8x16::from_fn(|_| 0), [0_u32; 16]);
+    let ret = simd_shuffle(a.as_i8x16(), i8x16::ZERO(), [0_u32; 16]);
     ret.into()
 }
 
@@ -1050,7 +1050,7 @@ pub fn _mm_broadcastb_epi8(a: __m128i) -> __m128i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastb_epi8)
 pub fn _mm256_broadcastb_epi8(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i8x16(a), i8x16::from_fn(|_| 0), [0_u32; 32]);
+    let ret = simd_shuffle(a.as_i8x16(), i8x16::ZERO(), [0_u32; 32]);
     ret.into()
 }
 
@@ -1062,7 +1062,7 @@ pub fn _mm256_broadcastb_epi8(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastd_epi32)
 
 pub fn _mm_broadcastd_epi32(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i32x4(a), i32x4::from_fn(|_| 0), [0_u32; 4]);
+    let ret = simd_shuffle(a.as_i32x4(), i32x4::ZERO(), [0_u32; 4]);
     ret.into()
 }
 
@@ -1074,7 +1074,7 @@ pub fn _mm_broadcastd_epi32(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastd_epi32)
 
 pub fn _mm256_broadcastd_epi32(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i32x4(a), i32x4::from_fn(|_| 0), [0_u32; 8]);
+    let ret = simd_shuffle(a.as_i32x4(), i32x4::ZERO(), [0_u32; 8]);
     ret.into()
 }
 
@@ -1087,7 +1087,7 @@ pub fn _mm256_broadcastd_epi32(a: __m128i) -> __m256i {
 // See https://github.com/rust-lang/stdarch/issues/791
 
 pub fn _mm_broadcastq_epi64(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(a), [0_u32; 2]);
+    let ret = simd_shuffle(a.as_i64x2(), a.as_i64x2(), [0_u32; 2]);
     ret.into()
 }
 
@@ -1097,7 +1097,7 @@ pub fn _mm_broadcastq_epi64(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastq_epi64)
 
 pub fn _mm256_broadcastq_epi64(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(a), [0_u32; 4]);
+    let ret = simd_shuffle(a.as_i64x2(), a.as_i64x2(), [0_u32; 4]);
     ret.into()
 }
 
@@ -1107,7 +1107,7 @@ pub fn _mm256_broadcastq_epi64(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastsi128_si256)
 
 pub fn _mm_broadcastsi128_si256(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i64x2(a), i64x2::from_fn(|_| 0), [0, 1, 0, 1]);
+    let ret = simd_shuffle(a.as_i64x2(), i64x2::ZERO(), [0, 1, 0, 1]);
     ret.into()
 }
 
@@ -1119,7 +1119,7 @@ pub fn _mm_broadcastsi128_si256(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastsi128_si256)
 
 pub fn _mm256_broadcastsi128_si256(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i64x2(a), i64x2::from_fn(|_| 0), [0, 1, 0, 1]);
+    let ret = simd_shuffle(a.as_i64x2(), i64x2::ZERO(), [0, 1, 0, 1]);
     ret.into()
 }
 
@@ -1129,7 +1129,7 @@ pub fn _mm256_broadcastsi128_si256(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastw_epi16)
 
 pub fn _mm_broadcastw_epi16(a: __m128i) -> __m128i {
-    let ret = simd_shuffle(BitVec::to_i16x8(a), i16x8::from_fn(|_| 0), [0_u32; 8]);
+    let ret = simd_shuffle(a.as_i16x8(), i16x8::ZERO(), [0_u32; 8]);
     ret.into()
 }
 
@@ -1139,7 +1139,7 @@ pub fn _mm_broadcastw_epi16(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastw_epi16)
 
 pub fn _mm256_broadcastw_epi16(a: __m128i) -> __m256i {
-    let ret = simd_shuffle(BitVec::to_i16x8(a), i16x8::from_fn(|_| 0), [0_u32; 16]);
+    let ret = simd_shuffle(a.as_i16x8(), i16x8::ZERO(), [0_u32; 16]);
     ret.into()
 }
 
@@ -1148,7 +1148,7 @@ pub fn _mm256_broadcastw_epi16(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpeq_epi64)
 
 pub fn _mm256_cmpeq_epi64(a: __m256i, b: __m256i) -> __m256i {
-    simd_eq(BitVec::to_i64x4(a), BitVec::to_i64x4(b)).into()
+    simd_eq(a.as_i64x4(), b.as_i64x4()).into()
 }
 
 /// Compares packed 32-bit integers in `a` and `b` for equality.
@@ -1156,7 +1156,7 @@ pub fn _mm256_cmpeq_epi64(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpeq_epi32)
 
 pub fn _mm256_cmpeq_epi32(a: __m256i, b: __m256i) -> __m256i {
-    simd_eq(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    simd_eq(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Compares packed 16-bit integers in `a` and `b` for equality.
@@ -1164,7 +1164,7 @@ pub fn _mm256_cmpeq_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpeq_epi16)
 
 pub fn _mm256_cmpeq_epi16(a: __m256i, b: __m256i) -> __m256i {
-    simd_eq(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    simd_eq(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Compares packed 8-bit integers in `a` and `b` for equality.
@@ -1172,7 +1172,7 @@ pub fn _mm256_cmpeq_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpeq_epi8)
 
 pub fn _mm256_cmpeq_epi8(a: __m256i, b: __m256i) -> __m256i {
-    simd_eq(BitVec::to_i8x32(a), BitVec::to_i8x32(b)).into()
+    simd_eq(a.as_i8x32(), b.as_i8x32()).into()
 }
 
 /// Compares packed 64-bit integers in `a` and `b` for greater-than.
@@ -1180,7 +1180,7 @@ pub fn _mm256_cmpeq_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpgt_epi64)
 
 pub fn _mm256_cmpgt_epi64(a: __m256i, b: __m256i) -> __m256i {
-    simd_gt(BitVec::to_i64x4(a), BitVec::to_i64x4(b)).into()
+    simd_gt(a.as_i64x4(), b.as_i64x4()).into()
 }
 
 /// Compares packed 32-bit integers in `a` and `b` for greater-than.
@@ -1188,7 +1188,7 @@ pub fn _mm256_cmpgt_epi64(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpgt_epi32)
 
 pub fn _mm256_cmpgt_epi32(a: __m256i, b: __m256i) -> __m256i {
-    simd_gt(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    simd_gt(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Compares packed 16-bit integers in `a` and `b` for greater-than.
@@ -1196,7 +1196,7 @@ pub fn _mm256_cmpgt_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpgt_epi16)
 
 pub fn _mm256_cmpgt_epi16(a: __m256i, b: __m256i) -> __m256i {
-    simd_gt(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    simd_gt(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Compares packed 8-bit integers in `a` and `b` for greater-than.
@@ -1204,7 +1204,7 @@ pub fn _mm256_cmpgt_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cmpgt_epi8)
 
 pub fn _mm256_cmpgt_epi8(a: __m256i, b: __m256i) -> __m256i {
-    simd_gt(BitVec::to_i8x32(a), BitVec::to_i8x32(b)).into()
+    simd_gt(a.as_i8x32(), b.as_i8x32()).into()
 }
 
 /// Sign-extend 16-bit integers to 32-bit integers.
@@ -1212,7 +1212,7 @@ pub fn _mm256_cmpgt_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepi16_epi32)
 
 pub fn _mm256_cvtepi16_epi32(a: __m128i) -> __m256i {
-    simd_cast::<8, _, i32>(BitVec::to_i16x8(a)).into()
+    simd_cast::<8, _, i32>(a.as_i16x8()).into()
 }
 
 /// Sign-extend 16-bit integers to 64-bit integers.
@@ -1220,7 +1220,7 @@ pub fn _mm256_cvtepi16_epi32(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepi16_epi64)
 
 pub fn _mm256_cvtepi16_epi64(a: __m128i) -> __m256i {
-    let a = BitVec::to_i16x8(a);
+    let a = a.as_i16x8();
     let v64: i16x4 = simd_shuffle(a, a, [0, 1, 2, 3]);
     simd_cast::<4, i16, i64>(v64).into()
 }
@@ -1230,7 +1230,7 @@ pub fn _mm256_cvtepi16_epi64(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepi32_epi64)
 
 pub fn _mm256_cvtepi32_epi64(a: __m128i) -> __m256i {
-    simd_cast::<4, i32, i64>(BitVec::to_i32x4(a)).into()
+    simd_cast::<4, i32, i64>(a.as_i32x4()).into()
 }
 
 /// Sign-extend 8-bit integers to 16-bit integers.
@@ -1238,7 +1238,7 @@ pub fn _mm256_cvtepi32_epi64(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepi8_epi16)
 
 pub fn _mm256_cvtepi8_epi16(a: __m128i) -> __m256i {
-    simd_cast::<16, i8, i16>(BitVec::to_i8x16(a)).into()
+    simd_cast::<16, i8, i16>(a.as_i8x16()).into()
 }
 
 /// Sign-extend 8-bit integers to 32-bit integers.
@@ -1246,7 +1246,7 @@ pub fn _mm256_cvtepi8_epi16(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepi8_epi32)
 
 pub fn _mm256_cvtepi8_epi32(a: __m128i) -> __m256i {
-    let a = BitVec::to_i8x16(a);
+    let a = a.as_i8x16();
     let v64: i8x8 = simd_shuffle(a, a, [0, 1, 2, 3, 4, 5, 6, 7]);
     simd_cast::<8, i8, i32>(v64).into()
 }
@@ -1255,7 +1255,7 @@ pub fn _mm256_cvtepi8_epi32(a: __m128i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepi8_epi64)
 pub fn _mm256_cvtepi8_epi64(a: __m128i) -> __m256i {
-    let a = BitVec::to_i8x16(a);
+    let a = a.as_i8x16();
     let v32: i8x4 = simd_shuffle(a, a, [0, 1, 2, 3]);
     simd_cast::<4, i8, i64>(v32).into()
 }
@@ -1266,7 +1266,7 @@ pub fn _mm256_cvtepi8_epi64(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepu16_epi32)
 
 pub fn _mm256_cvtepu16_epi32(a: __m128i) -> __m256i {
-    simd_cast::<8, u16, u32>(BitVec::to_u16x8(a)).into()
+    simd_cast::<8, u16, u32>(a.as_u16x8()).into()
 }
 
 /// Zero-extend the lower four unsigned 16-bit integers in `a` to 64-bit
@@ -1275,7 +1275,7 @@ pub fn _mm256_cvtepu16_epi32(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepu16_epi64)
 
 pub fn _mm256_cvtepu16_epi64(a: __m128i) -> __m256i {
-    let a = BitVec::to_u16x8(a);
+    let a = a.as_u16x8();
     let v64: u16x4 = simd_shuffle(a, a, [0, 1, 2, 3]);
     simd_cast::<4, u16, u64>(v64).into()
 }
@@ -1285,7 +1285,7 @@ pub fn _mm256_cvtepu16_epi64(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepu32_epi64)
 
 pub fn _mm256_cvtepu32_epi64(a: __m128i) -> __m256i {
-    simd_cast::<4, u32, u64>(BitVec::to_u32x4(a)).into()
+    simd_cast::<4, u32, u64>(a.as_u32x4()).into()
 }
 
 /// Zero-extend unsigned 8-bit integers in `a` to 16-bit integers.
@@ -1293,7 +1293,7 @@ pub fn _mm256_cvtepu32_epi64(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepu8_epi16)
 
 pub fn _mm256_cvtepu8_epi16(a: __m128i) -> __m256i {
-    simd_cast::<16, u8, u16>(BitVec::to_u8x16(a)).into()
+    simd_cast::<16, u8, u16>(a.as_u8x16()).into()
 }
 
 /// Zero-extend the lower eight unsigned 8-bit integers in `a` to 32-bit
@@ -1302,7 +1302,7 @@ pub fn _mm256_cvtepu8_epi16(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepu8_epi32)
 
 pub fn _mm256_cvtepu8_epi32(a: __m128i) -> __m256i {
-    let a = BitVec::to_u8x16(a);
+    let a = a.as_u8x16();
     let v64: u8x8 = simd_shuffle(a, a, [0, 1, 2, 3, 4, 5, 6, 7]);
     simd_cast::<8, u8, u32>(v64).into()
 }
@@ -1313,7 +1313,7 @@ pub fn _mm256_cvtepu8_epi32(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_cvtepu8_epi64)
 
 pub fn _mm256_cvtepu8_epi64(a: __m128i) -> __m256i {
-    let a = BitVec::to_u8x16(a);
+    let a = a.as_u8x16();
     let v32: u8x4 = simd_shuffle(a, a, [0, 1, 2, 3]);
     simd_cast::<4, u8, u64>(v32).into()
 }
@@ -1323,7 +1323,7 @@ pub fn _mm256_cvtepu8_epi64(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_extracti128_si256)
 
 pub fn _mm256_extracti128_si256<const IMM1: i32>(a: __m256i) -> __m128i {
-    let a = BitVec::to_i64x4(a);
+    let a = a.as_i64x4();
     let b = i64x4::from_fn(|_| 0);
     let dst: i64x2 = simd_shuffle(a, b, [[0, 1], [2, 3]][IMM1 as usize]);
     dst.into()
@@ -1334,7 +1334,7 @@ pub fn _mm256_extracti128_si256<const IMM1: i32>(a: __m256i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_hadd_epi16)
 
 pub fn _mm256_hadd_epi16(a: __m256i, b: __m256i) -> __m256i {
-    phaddw(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    phaddw(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Horizontally adds adjacent pairs of 32-bit integers in `a` and `b`.
@@ -1342,7 +1342,7 @@ pub fn _mm256_hadd_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_hadd_epi32)
 
 pub fn _mm256_hadd_epi32(a: __m256i, b: __m256i) -> __m256i {
-    phaddd(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    phaddd(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Horizontally adds adjacent pairs of 16-bit integers in `a` and `b`
@@ -1351,7 +1351,7 @@ pub fn _mm256_hadd_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_hadds_epi16)
 
 pub fn _mm256_hadds_epi16(a: __m256i, b: __m256i) -> __m256i {
-    phaddsw(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    phaddsw(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Horizontally subtract adjacent pairs of 16-bit integers in `a` and `b`.
@@ -1359,7 +1359,7 @@ pub fn _mm256_hadds_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_hsub_epi16)
 
 pub fn _mm256_hsub_epi16(a: __m256i, b: __m256i) -> __m256i {
-    phsubw(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    phsubw(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Horizontally subtract adjacent pairs of 32-bit integers in `a` and `b`.
@@ -1367,7 +1367,7 @@ pub fn _mm256_hsub_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_hsub_epi32)
 
 pub fn _mm256_hsub_epi32(a: __m256i, b: __m256i) -> __m256i {
-    phsubd(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    phsubd(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Horizontally subtract adjacent pairs of 16-bit integers in `a` and `b`
@@ -1376,7 +1376,7 @@ pub fn _mm256_hsub_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_hsubs_epi16)
 
 pub fn _mm256_hsubs_epi16(a: __m256i, b: __m256i) -> __m256i {
-    phsubsw(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    phsubsw(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Copies `a` to `dst`, then insert 128 bits (of integer data) from `b` at the
@@ -1385,8 +1385,8 @@ pub fn _mm256_hsubs_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_inserti128_si256)
 
 pub fn _mm256_inserti128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m256i {
-    let a = BitVec::to_i64x4(a);
-    let b = BitVec::to_i64x4(_mm256_castsi128_si256(b));
+    let a = a.as_i64x4();
+    let b = _mm256_castsi128_si256(b).as_i64x4();
     let dst: i64x4 = simd_shuffle(a, b, [[4, 5, 2, 3], [0, 1, 4, 5]][IMM1 as usize]);
     dst.into()
 }
@@ -1398,7 +1398,7 @@ pub fn _mm256_inserti128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m25
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_madd_epi16)
 
 pub fn _mm256_madd_epi16(a: __m256i, b: __m256i) -> __m256i {
-    pmaddwd(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    pmaddwd(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Vertically multiplies each unsigned 8-bit integer from `a` with the
@@ -1409,7 +1409,7 @@ pub fn _mm256_madd_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_maddubs_epi16)
 
 pub fn _mm256_maddubs_epi16(a: __m256i, b: __m256i) -> __m256i {
-    pmaddubsw(BitVec::to_u8x32(a), BitVec::to_u8x32(b)).into()
+    pmaddubsw(a.as_u8x32(), b.as_u8x32()).into()
 }
 
 /// Compares packed 16-bit integers in `a` and `b`, and returns the packed
@@ -1418,8 +1418,8 @@ pub fn _mm256_maddubs_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_max_epi16)
 
 pub fn _mm256_max_epi16(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i16x16(a);
-    let b = BitVec::to_i16x16(b);
+    let a = a.as_i16x16();
+    let b = b.as_i16x16();
     simd_select::<16, i16, _>(simd_gt(a, b), a, b).into()
 }
 
@@ -1429,8 +1429,8 @@ pub fn _mm256_max_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_max_epi32)
 
 pub fn _mm256_max_epi32(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i32x8(a);
-    let b = BitVec::to_i32x8(b);
+    let a = a.as_i32x8();
+    let b = b.as_i32x8();
     simd_select::<8, i32, _>(simd_gt(a, b), a, b).into()
 }
 
@@ -1440,8 +1440,8 @@ pub fn _mm256_max_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_max_epi8)
 
 pub fn _mm256_max_epi8(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i8x32(a);
-    let b = BitVec::to_i8x32(b);
+    let a = a.as_i8x32();
+    let b = b.as_i8x32();
     simd_select::<32, i8, _>(simd_gt(a, b), a, b).into()
 }
 
@@ -1451,8 +1451,8 @@ pub fn _mm256_max_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_max_epu16)
 
 pub fn _mm256_max_epu16(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_u16x16(a);
-    let b = BitVec::to_u16x16(b);
+    let a = a.as_u16x16();
+    let b = b.as_u16x16();
     simd_select::<16, _, u16>(simd_gt(a, b), a, b).into()
 }
 
@@ -1462,8 +1462,8 @@ pub fn _mm256_max_epu16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_max_epu32)
 
 pub fn _mm256_max_epu32(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_u32x8(a);
-    let b = BitVec::to_u32x8(b);
+    let a = a.as_u32x8();
+    let b = b.as_u32x8();
     simd_select::<8, _, u32>(simd_gt(a, b), a, b).into()
 }
 
@@ -1473,8 +1473,8 @@ pub fn _mm256_max_epu32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_max_epu8)
 
 pub fn _mm256_max_epu8(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_u8x32(a);
-    let b = BitVec::to_u8x32(b);
+    let a = a.as_u8x32();
+    let b = b.as_u8x32();
     simd_select::<32, _, u8>(simd_gt(a, b), a, b).into()
 }
 
@@ -1484,8 +1484,8 @@ pub fn _mm256_max_epu8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_min_epi16)
 
 pub fn _mm256_min_epi16(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i16x16(a);
-    let b = BitVec::to_i16x16(b);
+    let a = a.as_i16x16();
+    let b = b.as_i16x16();
     simd_select::<16, _, i16>(simd_lt(a, b), a, b).into()
 }
 
@@ -1495,8 +1495,8 @@ pub fn _mm256_min_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_min_epi32)
 
 pub fn _mm256_min_epi32(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i32x8(a);
-    let b = BitVec::to_i32x8(b);
+    let a = a.as_i32x8();
+    let b = b.as_i32x8();
     simd_select::<8, i32, _>(simd_lt(a, b), a, b).into()
 }
 
@@ -1506,8 +1506,8 @@ pub fn _mm256_min_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_min_epi8)
 
 pub fn _mm256_min_epi8(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_i8x32(a);
-    let b = BitVec::to_i8x32(b);
+    let a = a.as_i8x32();
+    let b = b.as_i8x32();
     simd_select::<32, i8, _>(simd_lt(a, b), a, b).into()
 }
 
@@ -1517,8 +1517,8 @@ pub fn _mm256_min_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_min_epu16)
 
 pub fn _mm256_min_epu16(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_u16x16(a);
-    let b = BitVec::to_u16x16(b);
+    let a = a.as_u16x16();
+    let b = b.as_u16x16();
     simd_select::<16, _, u16>(simd_lt(a, b), a, b).into()
 }
 
@@ -1528,8 +1528,8 @@ pub fn _mm256_min_epu16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_min_epu32)
 
 pub fn _mm256_min_epu32(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_u32x8(a);
-    let b = BitVec::to_u32x8(b);
+    let a = a.as_u32x8();
+    let b = b.as_u32x8();
     simd_select::<8, _, u32>(simd_lt(a, b), a, b).into()
 }
 
@@ -1539,8 +1539,8 @@ pub fn _mm256_min_epu32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_min_epu8)
 
 pub fn _mm256_min_epu8(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_u8x32(a);
-    let b = BitVec::to_u8x32(b);
+    let a = a.as_u8x32();
+    let b = b.as_u8x32();
     simd_select::<32, _, u8>(simd_lt(a, b), a, b).into()
 }
 
@@ -1551,7 +1551,7 @@ pub fn _mm256_min_epu8(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_movemask_epi8(a: __m256i) -> i32 {
     let z = i8x32::from_fn(|_| 0);
-    let m: i8x32 = simd_lt(BitVec::to_i8x32(a), z);
+    let m: i8x32 = simd_lt(a.as_i8x32(), z);
     let r = simd_bitmask_little!(31, m, u32);
     r as i32
 }
@@ -1567,7 +1567,7 @@ pub fn _mm256_movemask_epi8(a: __m256i) -> i32 {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mpsadbw_epu8)
 
 pub fn _mm256_mpsadbw_epu8<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-    mpsadbw(BitVec::to_u8x32(a), BitVec::to_u8x32(b), IMM8).into()
+    mpsadbw(a.as_u8x32(), b.as_u8x32(), IMM8).into()
 }
 
 /// Multiplies the low 32-bit integers from each packed 64-bit element in
@@ -1578,8 +1578,8 @@ pub fn _mm256_mpsadbw_epu8<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mul_epi32)
 
 pub fn _mm256_mul_epi32(a: __m256i, b: __m256i) -> __m256i {
-    let a = simd_cast::<4, _, i64>(simd_cast::<4, _, i32>(BitVec::to_i64x4(a)));
-    let b = simd_cast::<4, _, i64>(simd_cast::<4, _, i32>(BitVec::to_i64x4(b)));
+    let a = simd_cast::<4, _, i64>(simd_cast::<4, _, i32>(a.as_i64x4()));
+    let b = simd_cast::<4, _, i64>(simd_cast::<4, _, i32>(b.as_i64x4()));
     simd_mul(a, b).into()
 }
 
@@ -1591,8 +1591,8 @@ pub fn _mm256_mul_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mul_epu32)
 
 pub fn _mm256_mul_epu32(a: __m256i, b: __m256i) -> __m256i {
-    let a = BitVec::to_u64x4(a);
-    let b = BitVec::to_u64x4(b);
+    let a = a.as_u64x4();
+    let b = b.as_u64x4();
     let mask = u64x4::splat(u32::MAX.into());
     BitVec::from_u64x4(simd_mul(simd_and(a, mask), simd_and(b, mask)))
 }
@@ -1604,8 +1604,8 @@ pub fn _mm256_mul_epu32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mulhi_epi16)
 
 pub fn _mm256_mulhi_epi16(a: __m256i, b: __m256i) -> __m256i {
-    let a = simd_cast::<16, _, i32>(BitVec::to_i16x16(a));
-    let b = simd_cast::<16, _, i32>(BitVec::to_i16x16(b));
+    let a = simd_cast::<16, _, i32>(a.as_i16x16());
+    let b = simd_cast::<16, _, i32>(b.as_i16x16());
     let r = simd_shr(simd_mul(a, b), i32x16::splat(16));
     simd_cast::<16, i32, i16>(r).into()
 }
@@ -1617,8 +1617,8 @@ pub fn _mm256_mulhi_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mulhi_epu16)
 
 pub fn _mm256_mulhi_epu16(a: __m256i, b: __m256i) -> __m256i {
-    let a = simd_cast::<16, _, u32>(BitVec::to_u16x16(a));
-    let b = simd_cast::<16, _, u32>(BitVec::to_u16x16(b));
+    let a = simd_cast::<16, _, u32>(a.as_u16x16());
+    let b = simd_cast::<16, _, u32>(b.as_u16x16());
     let r = simd_shr(simd_mul(a, b), u32x16::splat(16));
     simd_cast::<16, u32, u16>(r).into()
 }
@@ -1630,7 +1630,7 @@ pub fn _mm256_mulhi_epu16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mullo_epi16)
 
 pub fn _mm256_mullo_epi16(a: __m256i, b: __m256i) -> __m256i {
-    simd_mul(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    simd_mul(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Multiplies the packed 32-bit integers in `a` and `b`, producing
@@ -1640,7 +1640,7 @@ pub fn _mm256_mullo_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mullo_epi32)
 
 pub fn _mm256_mullo_epi32(a: __m256i, b: __m256i) -> __m256i {
-    simd_mul(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    simd_mul(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Multiplies packed 16-bit integers in `a` and `b`, producing
@@ -1651,7 +1651,7 @@ pub fn _mm256_mullo_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_mulhrs_epi16)
 
 pub fn _mm256_mulhrs_epi16(a: __m256i, b: __m256i) -> __m256i {
-    pmulhrsw(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    pmulhrsw(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Computes the bitwise OR of 256 bits (representing integer data) in `a`
@@ -1660,7 +1660,7 @@ pub fn _mm256_mulhrs_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_or_si256)
 
 pub fn _mm256_or_si256(a: __m256i, b: __m256i) -> __m256i {
-    simd_or(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    simd_or(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Converts packed 16-bit integers from `a` and `b` to packed 8-bit integers
@@ -1669,7 +1669,7 @@ pub fn _mm256_or_si256(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_packs_epi16)
 
 pub fn _mm256_packs_epi16(a: __m256i, b: __m256i) -> __m256i {
-    packsswb(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    packsswb(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Converts packed 32-bit integers from `a` and `b` to packed 16-bit integers
@@ -1678,7 +1678,7 @@ pub fn _mm256_packs_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_packs_epi32)
 
 pub fn _mm256_packs_epi32(a: __m256i, b: __m256i) -> __m256i {
-    packssdw(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    packssdw(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Converts packed 16-bit integers from `a` and `b` to packed 8-bit integers
@@ -1687,7 +1687,7 @@ pub fn _mm256_packs_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_packus_epi16)
 
 pub fn _mm256_packus_epi16(a: __m256i, b: __m256i) -> __m256i {
-    packuswb(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    packuswb(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Converts packed 32-bit integers from `a` and `b` to packed 16-bit integers
@@ -1696,7 +1696,7 @@ pub fn _mm256_packus_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_packus_epi32)
 
 pub fn _mm256_packus_epi32(a: __m256i, b: __m256i) -> __m256i {
-    packusdw(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    packusdw(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Permutes packed 32-bit integers from `a` according to the content of `b`.
@@ -1707,7 +1707,7 @@ pub fn _mm256_packus_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permutevar8x32_epi32)
 
 pub fn _mm256_permutevar8x32_epi32(a: __m256i, b: __m256i) -> __m256i {
-    permd(BitVec::to_u32x8(a), BitVec::to_u32x8(b)).into()
+    permd(a.as_u32x8(), b.as_u32x8()).into()
 }
 
 /// Permutes 64-bit integers from `a` using control mask `imm8`.
@@ -1717,7 +1717,7 @@ pub fn _mm256_permutevar8x32_epi32(a: __m256i, b: __m256i) -> __m256i {
 pub fn _mm256_permute4x64_epi64<const IMM8: i32>(a: __m256i) -> __m256i {
     let zero = i64x4::from_fn(|_| 0);
     let r: i64x4 = simd_shuffle(
-        BitVec::to_i64x4(a),
+        a.as_i64x4(),
         zero,
         [
             IMM8 as u32 & 0b11,
@@ -1734,7 +1734,7 @@ pub fn _mm256_permute4x64_epi64<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permute2x128_si256)
 
 pub fn _mm256_permute2x128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-    vperm2i128(BitVec::to_i64x4(a), BitVec::to_i64x4(b), IMM8 as i8).into()
+    vperm2i128(a.as_i64x4(), b.as_i64x4(), IMM8 as i8).into()
 }
 
 /// Computes the absolute differences of packed unsigned 8-bit integers in `a`
@@ -1745,7 +1745,7 @@ pub fn _mm256_permute2x128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sad_epu8)
 
 pub fn _mm256_sad_epu8(a: __m256i, b: __m256i) -> __m256i {
-    psadbw(BitVec::to_u8x32(a), BitVec::to_u8x32(b)).into()
+    psadbw(a.as_u8x32(), b.as_u8x32()).into()
 }
 
 /// Shuffles bytes from `a` according to the content of `b`.
@@ -1778,7 +1778,7 @@ pub fn _mm256_sad_epu8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_shuffle_epi8)
 
 pub fn _mm256_shuffle_epi8(a: __m256i, b: __m256i) -> __m256i {
-    pshufb(BitVec::to_u8x32(a), BitVec::to_u8x32(b)).into()
+    pshufb(a.as_u8x32(), b.as_u8x32()).into()
 }
 
 /// Shuffles 32-bit integers in 128-bit lanes of `a` using the control in
@@ -1787,8 +1787,8 @@ pub fn _mm256_shuffle_epi8(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_shuffle_epi32<const MASK: i32>(a: __m256i) -> __m256i {
     let r: i32x8 = simd_shuffle(
-        BitVec::to_i32x8(a),
-        BitVec::to_i32x8(a),
+        a.as_i32x8(),
+        a.as_i32x8(),
         [
             MASK as u32 & 0b11,
             (MASK as u32 >> 2) & 0b11,
@@ -1810,7 +1810,7 @@ pub fn _mm256_shuffle_epi32<const MASK: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_shufflehi_epi16)
 
 pub fn _mm256_shufflehi_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
-    let a = BitVec::to_i16x16(a);
+    let a = a.as_i16x16();
     let r: i16x16 = simd_shuffle(
         a,
         a,
@@ -1843,7 +1843,7 @@ pub fn _mm256_shufflehi_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_shufflelo_epi16)
 
 pub fn _mm256_shufflelo_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
-    let a = BitVec::to_i16x16(a);
+    let a = a.as_i16x16();
     let r: i16x16 = simd_shuffle(
         a,
         a,
@@ -1876,7 +1876,7 @@ pub fn _mm256_shufflelo_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sign_epi16)
 
 pub fn _mm256_sign_epi16(a: __m256i, b: __m256i) -> __m256i {
-    psignw(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    psignw(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Negates packed 32-bit integers in `a` when the corresponding signed
@@ -1886,7 +1886,7 @@ pub fn _mm256_sign_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sign_epi32)
 
 pub fn _mm256_sign_epi32(a: __m256i, b: __m256i) -> __m256i {
-    psignd(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    psignd(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Negates packed 8-bit integers in `a` when the corresponding signed
@@ -1896,7 +1896,7 @@ pub fn _mm256_sign_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sign_epi8)
 
 pub fn _mm256_sign_epi8(a: __m256i, b: __m256i) -> __m256i {
-    psignb(BitVec::to_i8x32(a), BitVec::to_i8x32(b)).into()
+    psignb(a.as_i8x32(), b.as_i8x32()).into()
 }
 
 /// Shifts packed 16-bit integers in `a` left by `count` while
@@ -1905,7 +1905,7 @@ pub fn _mm256_sign_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sll_epi16)
 
 pub fn _mm256_sll_epi16(a: __m256i, count: __m128i) -> __m256i {
-    psllw(BitVec::to_i16x16(a), BitVec::to_i16x8(count)).into()
+    psllw(a.as_i16x16(), count.as_i16x8()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` left by `count` while
@@ -1914,7 +1914,7 @@ pub fn _mm256_sll_epi16(a: __m256i, count: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sll_epi32)
 
 pub fn _mm256_sll_epi32(a: __m256i, count: __m128i) -> __m256i {
-    pslld(BitVec::to_i32x8(a), BitVec::to_i32x4(count)).into()
+    pslld(a.as_i32x8(), count.as_i32x4()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` left by `count` while
@@ -1923,7 +1923,7 @@ pub fn _mm256_sll_epi32(a: __m256i, count: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sll_epi64)
 
 pub fn _mm256_sll_epi64(a: __m256i, count: __m128i) -> __m256i {
-    psllq(BitVec::to_i64x4(a), BitVec::to_i64x2(count)).into()
+    psllq(a.as_i64x4(), count.as_i64x2()).into()
 }
 
 /// Shifts packed 16-bit integers in `a` left by `IMM8` while
@@ -1935,7 +1935,7 @@ pub fn _mm256_slli_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
     if IMM8 >= 16 {
         _mm256_setzero_si256()
     } else {
-        simd_shl(BitVec::to_u16x16(a), u16x16::splat(IMM8 as u16)).into()
+        simd_shl(a.as_u16x16(), u16x16::splat(IMM8 as u16)).into()
     }
 }
 
@@ -1948,7 +1948,7 @@ pub fn _mm256_slli_epi32<const IMM8: i32>(a: __m256i) -> __m256i {
     if IMM8 >= 32 {
         _mm256_setzero_si256()
     } else {
-        simd_shl(BitVec::to_u32x8(a), u32x8::splat(IMM8 as u32)).into()
+        simd_shl(a.as_u32x8(), u32x8::splat(IMM8 as u32)).into()
     }
 }
 
@@ -1961,7 +1961,7 @@ pub fn _mm256_slli_epi64<const IMM8: i32>(a: __m256i) -> __m256i {
     if IMM8 >= 64 {
         _mm256_setzero_si256()
     } else {
-        simd_shl(BitVec::to_u64x4(a), u64x4::splat(IMM8 as u64)).into()
+        simd_shl(a.as_u64x4(), u64x4::splat(IMM8 as u64)).into()
     }
 }
 
@@ -1986,7 +1986,7 @@ pub fn _mm256_bslli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
             32 + (i - shift)
         }
     }
-    let a = BitVec::to_i8x32(a);
+    let a = a.as_i8x32();
     let r: i8x32 = simd_shuffle(
         i8x32::from_fn(|_| 0),
         a,
@@ -2035,7 +2035,7 @@ pub fn _mm256_bslli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sllv_epi32)
 
 pub fn _mm_sllv_epi32(a: __m128i, count: __m128i) -> __m128i {
-    psllvd(BitVec::to_i32x4(a), BitVec::to_i32x4(count)).into()
+    psllvd(a.as_i32x4(), count.as_i32x4()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` left by the amount
@@ -2045,7 +2045,7 @@ pub fn _mm_sllv_epi32(a: __m128i, count: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sllv_epi32)
 
 pub fn _mm256_sllv_epi32(a: __m256i, count: __m256i) -> __m256i {
-    psllvd256(BitVec::to_i32x8(a), BitVec::to_i32x8(count)).into()
+    psllvd256(a.as_i32x8(), count.as_i32x8()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` left by the amount
@@ -2055,7 +2055,7 @@ pub fn _mm256_sllv_epi32(a: __m256i, count: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sllv_epi64)
 
 pub fn _mm_sllv_epi64(a: __m128i, count: __m128i) -> __m128i {
-    psllvq(BitVec::to_i64x2(a), BitVec::to_i64x2(count)).into()
+    psllvq(a.as_i64x2(), count.as_i64x2()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` left by the amount
@@ -2065,7 +2065,7 @@ pub fn _mm_sllv_epi64(a: __m128i, count: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sllv_epi64)
 
 pub fn _mm256_sllv_epi64(a: __m256i, count: __m256i) -> __m256i {
-    psllvq256(BitVec::to_i64x4(a), BitVec::to_i64x4(count)).into()
+    psllvq256(a.as_i64x4(), count.as_i64x4()).into()
 }
 
 /// Shifts packed 16-bit integers in `a` right by `count` while
@@ -2074,7 +2074,7 @@ pub fn _mm256_sllv_epi64(a: __m256i, count: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sra_epi16)
 
 pub fn _mm256_sra_epi16(a: __m256i, count: __m128i) -> __m256i {
-    psraw(BitVec::to_i16x16(a), BitVec::to_i16x8(count)).into()
+    psraw(a.as_i16x16(), count.as_i16x8()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by `count` while
@@ -2083,7 +2083,7 @@ pub fn _mm256_sra_epi16(a: __m256i, count: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sra_epi32)
 
 pub fn _mm256_sra_epi32(a: __m256i, count: __m128i) -> __m256i {
-    psrad(BitVec::to_i32x8(a), BitVec::to_i32x4(count)).into()
+    psrad(a.as_i32x8(), count.as_i32x4()).into()
 }
 
 /// Shifts packed 16-bit integers in `a` right by `IMM8` while
@@ -2092,7 +2092,7 @@ pub fn _mm256_sra_epi32(a: __m256i, count: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srai_epi16)
 
 pub fn _mm256_srai_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
-    simd_shr(BitVec::to_i16x16(a), i16x16::splat(IMM8.min(15) as i16)).into()
+    simd_shr(a.as_i16x16(), i16x16::splat(IMM8.min(15) as i16)).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by `IMM8` while
@@ -2101,7 +2101,7 @@ pub fn _mm256_srai_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srai_epi32)
 
 pub fn _mm256_srai_epi32<const IMM8: i32>(a: __m256i) -> __m256i {
-    simd_shr(BitVec::to_i32x8(a), i32x8::splat(IMM8.min(31))).into()
+    simd_shr(a.as_i32x8(), i32x8::splat(IMM8.min(31))).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by the amount specified by the
@@ -2110,7 +2110,7 @@ pub fn _mm256_srai_epi32<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_srav_epi32)
 
 pub fn _mm_srav_epi32(a: __m128i, count: __m128i) -> __m128i {
-    psravd(BitVec::to_i32x4(a), BitVec::to_i32x4(count)).into()
+    psravd(a.as_i32x4(), count.as_i32x4()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by the amount specified by the
@@ -2119,7 +2119,7 @@ pub fn _mm_srav_epi32(a: __m128i, count: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srav_epi32)
 
 pub fn _mm256_srav_epi32(a: __m256i, count: __m256i) -> __m256i {
-    psravd256(BitVec::to_i32x8(a), BitVec::to_i32x8(count)).into()
+    psravd256(a.as_i32x8(), count.as_i32x8()).into()
 }
 
 /// Shifts 128-bit lanes in `a` right by `imm8` bytes while shifting in zeros.
@@ -2144,7 +2144,7 @@ pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
         }
     }
 
-    let a = BitVec::to_i8x32(a);
+    let a = a.as_i8x32();
     let r: i8x32 = simd_shuffle(
         i8x32::from_fn(|_| 0),
         a,
@@ -2193,7 +2193,7 @@ pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srl_epi16)
 
 pub fn _mm256_srl_epi16(a: __m256i, count: __m128i) -> __m256i {
-    psrlw(BitVec::to_i16x16(a), BitVec::to_i16x8(count)).into()
+    psrlw(a.as_i16x16(), count.as_i16x8()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by `count` while shifting in
@@ -2202,7 +2202,7 @@ pub fn _mm256_srl_epi16(a: __m256i, count: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srl_epi32)
 
 pub fn _mm256_srl_epi32(a: __m256i, count: __m128i) -> __m256i {
-    psrld(BitVec::to_i32x8(a), BitVec::to_i32x4(count)).into()
+    psrld(a.as_i32x8(), count.as_i32x4()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` right by `count` while shifting in
@@ -2211,7 +2211,7 @@ pub fn _mm256_srl_epi32(a: __m256i, count: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srl_epi64)
 
 pub fn _mm256_srl_epi64(a: __m256i, count: __m128i) -> __m256i {
-    psrlq(BitVec::to_i64x4(a), BitVec::to_i64x2(count)).into()
+    psrlq(a.as_i64x4(), count.as_i64x2()).into()
 }
 
 /// Shifts packed 16-bit integers in `a` right by `IMM8` while shifting in
@@ -2223,7 +2223,7 @@ pub fn _mm256_srli_epi16<const IMM8: i32>(a: __m256i) -> __m256i {
     if IMM8 >= 16 {
         _mm256_setzero_si256()
     } else {
-        simd_shr(BitVec::to_u16x16(a), u16x16::splat(IMM8 as u16)).into()
+        simd_shr(a.as_u16x16(), u16x16::splat(IMM8 as u16)).into()
     }
 }
 
@@ -2236,7 +2236,7 @@ pub fn _mm256_srli_epi32<const IMM8: i32>(a: __m256i) -> __m256i {
     if IMM8 >= 32 {
         _mm256_setzero_si256()
     } else {
-        simd_shr(BitVec::to_u32x8(a), u32x8::splat(IMM8 as u32)).into()
+        simd_shr(a.as_u32x8(), u32x8::splat(IMM8 as u32)).into()
     }
 }
 
@@ -2249,7 +2249,7 @@ pub fn _mm256_srli_epi64<const IMM8: i32>(a: __m256i) -> __m256i {
     if IMM8 >= 64 {
         _mm256_setzero_si256()
     } else {
-        simd_shr(BitVec::to_u64x4(a), u64x4::splat(IMM8 as u64)).into()
+        simd_shr(a.as_u64x4(), u64x4::splat(IMM8 as u64)).into()
     }
 }
 
@@ -2259,7 +2259,7 @@ pub fn _mm256_srli_epi64<const IMM8: i32>(a: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_srlv_epi32)
 
 pub fn _mm_srlv_epi32(a: __m128i, count: __m128i) -> __m128i {
-    psrlvd(BitVec::to_i32x4(a), BitVec::to_i32x4(count)).into()
+    psrlvd(a.as_i32x4(), count.as_i32x4()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by the amount specified by
@@ -2268,7 +2268,7 @@ pub fn _mm_srlv_epi32(a: __m128i, count: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srlv_epi32)
 
 pub fn _mm256_srlv_epi32(a: __m256i, count: __m256i) -> __m256i {
-    psrlvd256(BitVec::to_i32x8(a), BitVec::to_i32x8(count)).into()
+    psrlvd256(a.as_i32x8(), count.as_i32x8()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` right by the amount specified by
@@ -2277,7 +2277,7 @@ pub fn _mm256_srlv_epi32(a: __m256i, count: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_srlv_epi64)
 
 pub fn _mm_srlv_epi64(a: __m128i, count: __m128i) -> __m128i {
-    psrlvq(BitVec::to_i64x2(a), BitVec::to_i64x2(count)).into()
+    psrlvq(a.as_i64x2(), count.as_i64x2()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` right by the amount specified by
@@ -2286,7 +2286,7 @@ pub fn _mm_srlv_epi64(a: __m128i, count: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_srlv_epi64)
 
 pub fn _mm256_srlv_epi64(a: __m256i, count: __m256i) -> __m256i {
-    psrlvq256(BitVec::to_i64x4(a), BitVec::to_i64x4(count)).into()
+    psrlvq256(a.as_i64x4(), count.as_i64x4()).into()
 }
 
 /// Subtract packed 16-bit integers in `b` from packed 16-bit integers in `a`
@@ -2294,7 +2294,7 @@ pub fn _mm256_srlv_epi64(a: __m256i, count: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sub_epi16)
 
 pub fn _mm256_sub_epi16(a: __m256i, b: __m256i) -> __m256i {
-    simd_sub(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    simd_sub(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Subtract packed 32-bit integers in `b` from packed 32-bit integers in `a`
@@ -2302,7 +2302,7 @@ pub fn _mm256_sub_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sub_epi32)
 
 pub fn _mm256_sub_epi32(a: __m256i, b: __m256i) -> __m256i {
-    simd_sub(BitVec::to_i32x8(a), BitVec::to_i32x8(b)).into()
+    simd_sub(a.as_i32x8(), b.as_i32x8()).into()
 }
 
 /// Subtract packed 64-bit integers in `b` from packed 64-bit integers in `a`
@@ -2310,7 +2310,7 @@ pub fn _mm256_sub_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sub_epi64)
 
 pub fn _mm256_sub_epi64(a: __m256i, b: __m256i) -> __m256i {
-    simd_sub(BitVec::to_i64x4(a), BitVec::to_i64x4(b)).into()
+    simd_sub(a.as_i64x4(), b.as_i64x4()).into()
 }
 
 /// Subtract packed 8-bit integers in `b` from packed 8-bit integers in `a`
@@ -2318,7 +2318,7 @@ pub fn _mm256_sub_epi64(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_sub_epi8)
 
 pub fn _mm256_sub_epi8(a: __m256i, b: __m256i) -> __m256i {
-    simd_sub(BitVec::to_i8x32(a), BitVec::to_i8x32(b)).into()
+    simd_sub(a.as_i8x32(), b.as_i8x32()).into()
 }
 
 /// Subtract packed 16-bit integers in `b` from packed 16-bit integers in
@@ -2327,7 +2327,7 @@ pub fn _mm256_sub_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_subs_epi16)
 
 pub fn _mm256_subs_epi16(a: __m256i, b: __m256i) -> __m256i {
-    simd_saturating_sub(BitVec::to_i16x16(a), BitVec::to_i16x16(b)).into()
+    simd_saturating_sub(a.as_i16x16(), b.as_i16x16()).into()
 }
 
 /// Subtract packed 8-bit integers in `b` from packed 8-bit integers in
@@ -2336,7 +2336,7 @@ pub fn _mm256_subs_epi16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_subs_epi8)
 
 pub fn _mm256_subs_epi8(a: __m256i, b: __m256i) -> __m256i {
-    simd_saturating_sub(BitVec::to_i8x32(a), BitVec::to_i8x32(b)).into()
+    simd_saturating_sub(a.as_i8x32(), b.as_i8x32()).into()
 }
 
 /// Subtract packed unsigned 16-bit integers in `b` from packed 16-bit
@@ -2345,7 +2345,7 @@ pub fn _mm256_subs_epi8(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_subs_epu16)
 
 pub fn _mm256_subs_epu16(a: __m256i, b: __m256i) -> __m256i {
-    simd_saturating_sub(BitVec::to_u16x16(a), BitVec::to_u16x16(b)).into()
+    simd_saturating_sub(a.as_u16x16(), b.as_u16x16()).into()
 }
 
 /// Subtract packed unsigned 8-bit integers in `b` from packed 8-bit
@@ -2354,7 +2354,7 @@ pub fn _mm256_subs_epu16(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_subs_epu8)
 
 pub fn _mm256_subs_epu8(a: __m256i, b: __m256i) -> __m256i {
-    simd_saturating_sub(BitVec::to_u8x32(a), BitVec::to_u8x32(b)).into()
+    simd_saturating_sub(a.as_u8x32(), b.as_u8x32()).into()
 }
 
 /// Unpacks and interleave 8-bit integers from the high half of each
@@ -2363,7 +2363,7 @@ pub fn _mm256_subs_epu8(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_unpackhi_epi8(a: __m256i, b: __m256i) -> __m256i {
     #[rustfmt::skip]
-    let r: i8x32 = simd_shuffle(BitVec::to_i8x32(a), BitVec::to_i8x32(b), [
+    let r: i8x32 = simd_shuffle(a.as_i8x32(), b.as_i8x32(), [
             8, 40, 9, 41, 10, 42, 11, 43,
             12, 44, 13, 45, 14, 46, 15, 47,
             24, 56, 25, 57, 26, 58, 27, 59,
@@ -2378,7 +2378,7 @@ pub fn _mm256_unpackhi_epi8(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_unpacklo_epi8(a: __m256i, b: __m256i) -> __m256i {
     #[rustfmt::skip]
-    let r: i8x32 = simd_shuffle(BitVec::to_i8x32(a), BitVec::to_i8x32(b), [
+    let r: i8x32 = simd_shuffle(a.as_i8x32(), b.as_i8x32(), [
         0, 32, 1, 33, 2, 34, 3, 35,
         4, 36, 5, 37, 6, 38, 7, 39,
         16, 48, 17, 49, 18, 50, 19, 51,
@@ -2393,8 +2393,8 @@ pub fn _mm256_unpacklo_epi8(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_unpackhi_epi16(a: __m256i, b: __m256i) -> __m256i {
     let r: i16x16 = simd_shuffle(
-        BitVec::to_i16x16(a),
-        BitVec::to_i16x16(b),
+        a.as_i16x16(),
+        b.as_i16x16(),
         [4, 20, 5, 21, 6, 22, 7, 23, 12, 28, 13, 29, 14, 30, 15, 31],
     );
     r.into()
@@ -2406,8 +2406,8 @@ pub fn _mm256_unpackhi_epi16(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_unpacklo_epi16(a: __m256i, b: __m256i) -> __m256i {
     let r: i16x16 = simd_shuffle(
-        BitVec::to_i16x16(a),
-        BitVec::to_i16x16(b),
+        a.as_i16x16(),
+        b.as_i16x16(),
         [0, 16, 1, 17, 2, 18, 3, 19, 8, 24, 9, 25, 10, 26, 11, 27],
     );
     r.into()
@@ -2419,8 +2419,8 @@ pub fn _mm256_unpacklo_epi16(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_unpackhi_epi32(a: __m256i, b: __m256i) -> __m256i {
     let r: i32x8 = simd_shuffle(
-        BitVec::to_i32x8(a),
-        BitVec::to_i32x8(b),
+        a.as_i32x8(),
+        b.as_i32x8(),
         [2, 10, 3, 11, 6, 14, 7, 15],
     );
     r.into()
@@ -2432,8 +2432,8 @@ pub fn _mm256_unpackhi_epi32(a: __m256i, b: __m256i) -> __m256i {
 
 pub fn _mm256_unpacklo_epi32(a: __m256i, b: __m256i) -> __m256i {
     let r: i32x8 = simd_shuffle(
-        BitVec::to_i32x8(a),
-        BitVec::to_i32x8(b),
+        a.as_i32x8(),
+        b.as_i32x8(),
         [0, 8, 1, 9, 4, 12, 5, 13],
     );
     r.into()
@@ -2444,7 +2444,7 @@ pub fn _mm256_unpacklo_epi32(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_unpackhi_epi64)
 
 pub fn _mm256_unpackhi_epi64(a: __m256i, b: __m256i) -> __m256i {
-    let r: i64x4 = simd_shuffle(BitVec::to_i64x4(a), BitVec::to_i64x4(b), [1, 5, 3, 7]);
+    let r: i64x4 = simd_shuffle(a.as_i64x4(), b.as_i64x4(), [1, 5, 3, 7]);
     r.into()
 }
 
@@ -2453,7 +2453,7 @@ pub fn _mm256_unpackhi_epi64(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_unpacklo_epi64)
 
 pub fn _mm256_unpacklo_epi64(a: __m256i, b: __m256i) -> __m256i {
-    let r: i64x4 = simd_shuffle(BitVec::to_i64x4(a), BitVec::to_i64x4(b), [0, 4, 2, 6]);
+    let r: i64x4 = simd_shuffle(a.as_i64x4(), b.as_i64x4(), [0, 4, 2, 6]);
     r.into()
 }
 
@@ -2463,7 +2463,7 @@ pub fn _mm256_unpacklo_epi64(a: __m256i, b: __m256i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_xor_si256)
 
 pub fn _mm256_xor_si256(a: __m256i, b: __m256i) -> __m256i {
-    simd_xor(BitVec::to_i64x4(a), BitVec::to_i64x4(b)).into()
+    simd_xor(a.as_i64x4(), b.as_i64x4()).into()
 }
 
 /// Extracts an 8-bit integer from `a`, selected with `INDEX`. Returns a 32-bit
@@ -2476,7 +2476,7 @@ pub fn _mm256_xor_si256(a: __m256i, b: __m256i) -> __m256i {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_extract_epi8<const INDEX: i32>(a: __m256i) -> i32 {
-    simd_extract(BitVec::to_u8x32(a), INDEX as u32) as u32 as i32
+    simd_extract(a.as_u8x32(), INDEX as u32) as u32 as i32
 }
 
 /// Extracts a 16-bit integer from `a`, selected with `INDEX`. Returns a 32-bit
@@ -2489,5 +2489,5 @@ pub fn _mm256_extract_epi8<const INDEX: i32>(a: __m256i) -> i32 {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_extract_epi16<const INDEX: i32>(a: __m256i) -> i32 {
-    simd_extract(BitVec::to_u16x16(a), INDEX as u32) as u32 as i32
+    simd_extract(a.as_u16x16(), INDEX as u32) as u32 as i32
 }

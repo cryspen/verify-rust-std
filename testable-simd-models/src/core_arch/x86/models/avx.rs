@@ -38,110 +38,82 @@ use c_extern::*;
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_blendv_ps)
 pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
-    let mask: i32x8 = simd_lt(BitVec::to_i32x8(c), i32x8::from_fn(|_| 0));
-    BitVec::from_i32x8(simd_select(mask, BitVec::to_i32x8(b), BitVec::to_i32x8(a)))
+    let mask: i32x8 = simd_lt(c.as_i32x8(), i32x8::ZERO());
+    transmute(simd_select(mask, b.as_i32x8(), a.as_i32x8()))
 }
 
 /// Equal (ordered, non-signaling)
-
 pub const _CMP_EQ_OQ: i32 = 0x00;
 /// Less-than (ordered, signaling)
-
 pub const _CMP_LT_OS: i32 = 0x01;
 /// Less-than-or-equal (ordered, signaling)
-
 pub const _CMP_LE_OS: i32 = 0x02;
 /// Unordered (non-signaling)
-
 pub const _CMP_UNORD_Q: i32 = 0x03;
 /// Not-equal (unordered, non-signaling)
-
 pub const _CMP_NEQ_UQ: i32 = 0x04;
 /// Not-less-than (unordered, signaling)
-
 pub const _CMP_NLT_US: i32 = 0x05;
 /// Not-less-than-or-equal (unordered, signaling)
-
 pub const _CMP_NLE_US: i32 = 0x06;
 /// Ordered (non-signaling)
-
 pub const _CMP_ORD_Q: i32 = 0x07;
 /// Equal (unordered, non-signaling)
-
 pub const _CMP_EQ_UQ: i32 = 0x08;
 /// Not-greater-than-or-equal (unordered, signaling)
-
 pub const _CMP_NGE_US: i32 = 0x09;
 /// Not-greater-than (unordered, signaling)
-
 pub const _CMP_NGT_US: i32 = 0x0a;
 /// False (ordered, non-signaling)
-
 pub const _CMP_FALSE_OQ: i32 = 0x0b;
 /// Not-equal (ordered, non-signaling)
-
 pub const _CMP_NEQ_OQ: i32 = 0x0c;
 /// Greater-than-or-equal (ordered, signaling)
-
 pub const _CMP_GE_OS: i32 = 0x0d;
 /// Greater-than (ordered, signaling)
-
 pub const _CMP_GT_OS: i32 = 0x0e;
 /// True (unordered, non-signaling)
-
 pub const _CMP_TRUE_UQ: i32 = 0x0f;
 /// Equal (ordered, signaling)
-
 pub const _CMP_EQ_OS: i32 = 0x10;
 /// Less-than (ordered, non-signaling)
-
 pub const _CMP_LT_OQ: i32 = 0x11;
 /// Less-than-or-equal (ordered, non-signaling)
-
 pub const _CMP_LE_OQ: i32 = 0x12;
 /// Unordered (signaling)
-
 pub const _CMP_UNORD_S: i32 = 0x13;
 /// Not-equal (unordered, signaling)
-
 pub const _CMP_NEQ_US: i32 = 0x14;
 /// Not-less-than (unordered, non-signaling)
-
 pub const _CMP_NLT_UQ: i32 = 0x15;
 /// Not-less-than-or-equal (unordered, non-signaling)
-
 pub const _CMP_NLE_UQ: i32 = 0x16;
 /// Ordered (signaling)
-
 pub const _CMP_ORD_S: i32 = 0x17;
 /// Equal (unordered, signaling)
-
 pub const _CMP_EQ_US: i32 = 0x18;
 /// Not-greater-than-or-equal (unordered, non-signaling)
-
 pub const _CMP_NGE_UQ: i32 = 0x19;
 /// Not-greater-than (unordered, non-signaling)
-
 pub const _CMP_NGT_UQ: i32 = 0x1a;
 /// False (ordered, signaling)
-
 pub const _CMP_FALSE_OS: i32 = 0x1b;
 /// Not-equal (ordered, signaling)
-
 pub const _CMP_NEQ_OS: i32 = 0x1c;
 /// Greater-than-or-equal (ordered, non-signaling)
-
 pub const _CMP_GE_OQ: i32 = 0x1d;
 /// Greater-than (ordered, non-signaling)
-
 pub const _CMP_GT_OQ: i32 = 0x1e;
 /// True (unordered, signaling)
-
 pub const _CMP_TRUE_US: i32 = 0x1f;
 
+/// Shuffles 128-bits (composed of integer data) selected by `imm8`
+/// from `a` and `b`.
+///
+/// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permute2f128_si256)
 pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-    // // static_assert_uimm_bits!(IMM8, 8);
-    vperm2f128si256(BitVec::to_i32x8(a), BitVec::to_i32x8(b), IMM8 as i8).into()
+   // static_assert_uimm_bits!(IMM8, 8);
+    vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8).into()
 }
 
 /// Copies `a` to result, then inserts 128 bits from `b` into result
@@ -153,8 +125,8 @@ pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m25
     // // static_assert_uimm_bits!(IMM1, 1);
 
     let dst: i64x4 = simd_shuffle(
-        BitVec::to_i64x4(a),
-        BitVec::to_i64x4(_mm256_castsi128_si256(b)),
+        a.as_i64x4(),
+        _mm256_castsi128_si256(b).as_i64x4(),
         [[4, 5, 2, 3], [0, 1, 4, 5]][IMM1 as usize],
     );
     dst.into()
@@ -169,7 +141,7 @@ pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m25
 
 pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
     // // static_assert_uimm_bits!(INDEX, 5);
-    simd_insert(BitVec::to_i8x32(a), INDEX as u32, i).into()
+    simd_insert(a.as_i8x32(), INDEX as u32, i).into()
 }
 
 /// Copies `a` to result, and inserts the 16-bit integer `i` into result
@@ -181,7 +153,7 @@ pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
 
 pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
     // // static_assert_uimm_bits!(INDEX, 4);
-    simd_insert(BitVec::to_i16x16(a), INDEX as u32, i).into()
+    simd_insert(a.as_i16x16(), INDEX as u32, i).into()
 }
 
 /// Computes the bitwise AND of 256 bits (representing integer data) in `a` and
@@ -211,7 +183,7 @@ pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
 pub fn _mm256_movemask_ps(a: __m256) -> i32 {
     // Propagate the highest bit to the rest, because simd_bitmask
     // requires all-1 or all-0.
-    let mask: i32x8 = simd_lt(BitVec::to_i32x8(a), i32x8::from_fn(|_| 0));
+    let mask: i32x8 = simd_lt(a.as_i32x8(), i32x8::ZERO());
     let r = simd_bitmask_little!(7, mask, u8);
     r as u32 as i32
 }
@@ -221,7 +193,7 @@ pub fn _mm256_movemask_ps(a: __m256) -> i32 {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_setzero_ps)
 
 pub fn _mm256_setzero_ps() -> __m256 {
-    BitVec::from_fn(|_| Bit::Zero)
+    __m256::ZERO()
 }
 
 /// Returns vector of type __m256i with all elements set to zero.
@@ -229,7 +201,7 @@ pub fn _mm256_setzero_ps() -> __m256 {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_setzero_si256)
 
 pub fn _mm256_setzero_si256() -> __m256i {
-    BitVec::from_fn(|_| Bit::Zero)
+    __m256i::ZERO()
 }
 
 /// Sets packed 8-bit integers in returned vector with the supplied values.
@@ -276,7 +248,7 @@ pub fn _mm256_set_epi8(
         e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17,
         e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,
     ];
-    BitVec::from_i8x32(i8x32::from_fn(|i| vec[(31 - i) as usize]))
+    transmute(i8x32::from_fn(|i| vec[(31 - i) as usize]))
 }
 
 /// Sets packed 16-bit integers in returned vector with the supplied values.
@@ -306,7 +278,7 @@ pub fn _mm256_set_epi16(
     let vec = [
         e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
     ];
-    BitVec::from_i16x16(i16x16::from_fn(|i| vec[(15 - i) as usize]))
+    transmute(i16x16::from_fn(|i| vec[(15 - i) as usize]))
 }
 
 /// Sets packed 32-bit integers in returned vector with the supplied values.
@@ -326,7 +298,7 @@ pub fn _mm256_set_epi32(
     e7: i32,
 ) -> __m256i {
     let vec = [e0, e1, e2, e3, e4, e5, e6, e7];
-    BitVec::from_i32x8(i32x8::from_fn(|i| vec[(7 - i) as usize]))
+    transmute(i32x8::from_fn(|i| vec[(7 - i) as usize]))
 }
 
 /// Sets packed 64-bit integers in returned vector with the supplied values.
@@ -335,7 +307,7 @@ pub fn _mm256_set_epi32(
 // This intrinsic has no corresponding instruction.
 pub fn _mm256_set_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
     let vec = [d, c, b, a];
-    BitVec::from_i64x4(i64x4::from_fn(|i| vec[i as usize]))
+    transmute(i64x4::from_fn(|i| vec[i as usize]))
 }
 
 /// Broadcasts 8-bit integer `a` to all elements of returned vector.
@@ -348,7 +320,7 @@ pub fn _mm256_set_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_set1_epi8(val: i8) -> BitVec<256> {
-    BitVec::from_i8x32(i8x32::from_fn(|_| val))
+    transmute(i8x32::from_fn(|_| val))
 }
 
 /// Broadcasts 16-bit integer `a` to all elements of returned vector.
@@ -361,7 +333,7 @@ pub fn _mm256_set1_epi8(val: i8) -> BitVec<256> {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_set1_epi16(a: i16) -> __m256i {
-    BitVec::from_i16x16(i16x16::from_fn(|_| a))
+    transmute(i16x16::from_fn(|_| a))
 }
 
 /// Broadcasts 32-bit integer `a` to all elements of returned vector.
@@ -372,7 +344,7 @@ pub fn _mm256_set1_epi16(a: i16) -> __m256i {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_set1_epi32(a: i32) -> __m256i {
-    BitVec::from_i32x8(i32x8::from_fn(|_| a))
+    transmute(i32x8::from_fn(|_| a))
 }
 
 /// Broadcasts 64-bit integer `a` to all elements of returned vector.
@@ -381,7 +353,7 @@ pub fn _mm256_set1_epi32(a: i32) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_set1_epi64x)
 // This intrinsic has no corresponding instruction.
 pub fn _mm256_set1_epi64x(a: i64) -> __m256i {
-    BitVec::from_i64x4(i64x4::from_fn(|_| a))
+    transmute(i64x4::from_fn(|_| a))
 }
 
 pub fn _mm256_castps_si256(a: __m256) -> __m256i {
@@ -417,10 +389,10 @@ pub fn _mm256_castsi256_si128(a: __m256i) -> __m128i {
 // instructions, thus it has zero latency.
 
 pub fn _mm256_castsi128_si256(a: __m128i) -> __m256i {
-    let a = BitVec::to_i64x2(a);
+    let a = a.as_i64x2();
     let undefined = i64x2::from_fn(|_| 0);
     let dst: i64x4 = simd_shuffle(a, undefined, [0, 1, 2, 2]);
-    BitVec::from_i64x4(dst)
+    transmute(dst)
 }
 
 /// Sets packed __m256i returned vector with the supplied values.

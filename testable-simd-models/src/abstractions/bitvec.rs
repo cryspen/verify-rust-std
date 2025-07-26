@@ -17,6 +17,13 @@ use std::fmt::Formatter;
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct BitVec<const N: u32>(FunArray<N, Bit>);
 
+impl<const N: u32> BitVec<N> {
+    #[allow(non_snake_case)]
+    pub fn ZERO() -> Self {
+        Self::from_fn(|_| Bit::Zero)
+    }
+}
+
 /// Pretty prints a bit slice by group of 8
 fn bit_slice_to_string(bits: &[Bit]) -> String {
     bits.iter()
