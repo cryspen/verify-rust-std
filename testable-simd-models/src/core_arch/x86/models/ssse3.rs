@@ -1,6 +1,6 @@
 //! Supplemental Streaming SIMD Extensions 3 (SSSE3)
 
-use crate::abstractions::{bitvec::BitVec, simd::*};
+use crate::abstractions::simd::*;
 
 use super::types::*;
 
@@ -141,10 +141,10 @@ use c_extern::*;
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_abs_epi8)
 pub fn _mm_abs_epi8(a: __m128i) -> __m128i {
-    let a = BitVec::to_i8x16(a);
+    let a = a.as_i8x16();
     let zero = i8x16::from_fn(|_| 0);
     let r = simd_select(simd_lt(a, zero), simd_neg(a), a);
-    BitVec::from_i8x16(r)
+    transmute(r)
 }
 
 /// Computes the absolute value of each of the packed 16-bit signed integers in
@@ -153,10 +153,10 @@ pub fn _mm_abs_epi8(a: __m128i) -> __m128i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_abs_epi16)
 pub fn _mm_abs_epi16(a: __m128i) -> __m128i {
-    let a = BitVec::to_i16x8(a);
+    let a = a.as_i16x8();
     let zero = i16x8::from_fn(|_| 0);
     let r = simd_select(simd_lt(a, zero), simd_neg(a), a);
-    BitVec::from_i16x8(r)
+    transmute(r)
 }
 
 /// Computes the absolute value of each of the packed 32-bit signed integers in
@@ -165,10 +165,10 @@ pub fn _mm_abs_epi16(a: __m128i) -> __m128i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_abs_epi32)
 pub fn _mm_abs_epi32(a: __m128i) -> __m128i {
-    let a = BitVec::to_i32x4(a);
+    let a = a.as_i32x4();
     let zero = i32x4::from_fn(|_| 0);
     let r = simd_select(simd_lt(a, zero), simd_neg(a), a);
-    BitVec::from_i32x4(r)
+    transmute(r)
 }
 
 /// Shuffles bytes from `a` according to the content of `b`.
@@ -198,7 +198,7 @@ pub fn _mm_abs_epi32(a: __m128i) -> __m128i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_shuffle_epi8)
 pub fn _mm_shuffle_epi8(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_u8x16(pshufb128(BitVec::to_u8x16(a), BitVec::to_u8x16(b)))
+    transmute(pshufb128(a.as_u8x16(), b.as_u8x16()))
 }
 
 /// Concatenate 16-byte blocks in `a` and `b` into a 32-byte temporary result,
@@ -232,8 +232,8 @@ pub fn _mm_alignr_epi8<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i {
     }
 
     let r: i8x16 = simd_shuffle(
-        BitVec::to_i8x16(b),
-        BitVec::to_i8x16(a),
+        b.as_i8x16(),
+        a.as_i8x16(),
         [
             mask(IMM8 as u32, 0),
             mask(IMM8 as u32, 1),
@@ -262,7 +262,7 @@ pub fn _mm_alignr_epi8<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_hadd_epi16)
 
 pub fn _mm_hadd_epi16(a: __m128i, b: __m128i) -> __m128i {
-    phaddw128(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    phaddw128(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Horizontally adds the adjacent pairs of values contained in 2 packed
@@ -272,7 +272,7 @@ pub fn _mm_hadd_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_hadds_epi16)
 
 pub fn _mm_hadds_epi16(a: __m128i, b: __m128i) -> __m128i {
-    phaddsw128(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    phaddsw128(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Horizontally adds the adjacent pairs of values contained in 2 packed
@@ -281,7 +281,7 @@ pub fn _mm_hadds_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_hadd_epi32)
 
 pub fn _mm_hadd_epi32(a: __m128i, b: __m128i) -> __m128i {
-    phaddd128(BitVec::to_i32x4(a), BitVec::to_i32x4(b)).into()
+    phaddd128(a.as_i32x4(), b.as_i32x4()).into()
 }
 
 /// Horizontally subtract the adjacent pairs of values contained in 2
@@ -290,7 +290,7 @@ pub fn _mm_hadd_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_hsub_epi16)
 
 pub fn _mm_hsub_epi16(a: __m128i, b: __m128i) -> __m128i {
-    phsubw128(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    phsubw128(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Horizontally subtract the adjacent pairs of values contained in 2
@@ -301,7 +301,7 @@ pub fn _mm_hsub_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_hsubs_epi16)
 
 pub fn _mm_hsubs_epi16(a: __m128i, b: __m128i) -> __m128i {
-    phsubsw128(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    phsubsw128(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Horizontally subtract the adjacent pairs of values contained in 2
@@ -310,7 +310,7 @@ pub fn _mm_hsubs_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_hsub_epi32)
 
 pub fn _mm_hsub_epi32(a: __m128i, b: __m128i) -> __m128i {
-    phsubd128(BitVec::to_i32x4(a), BitVec::to_i32x4(b)).into()
+    phsubd128(a.as_i32x4(), b.as_i32x4()).into()
 }
 
 /// Multiplies corresponding pairs of packed 8-bit unsigned integer
@@ -322,7 +322,7 @@ pub fn _mm_hsub_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_maddubs_epi16)
 
 pub fn _mm_maddubs_epi16(a: __m128i, b: __m128i) -> __m128i {
-    pmaddubsw128(BitVec::to_u8x16(a), BitVec::to_i8x16(b)).into()
+    pmaddubsw128(a.as_u8x16(), b.as_i8x16()).into()
 }
 
 /// Multiplies packed 16-bit signed integer values, truncate the 32-bit
@@ -332,7 +332,7 @@ pub fn _mm_maddubs_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mulhrs_epi16)
 
 pub fn _mm_mulhrs_epi16(a: __m128i, b: __m128i) -> __m128i {
-    pmulhrsw128(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    pmulhrsw128(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Negates packed 8-bit integers in `a` when the corresponding signed 8-bit
@@ -343,7 +343,7 @@ pub fn _mm_mulhrs_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sign_epi8)
 
 pub fn _mm_sign_epi8(a: __m128i, b: __m128i) -> __m128i {
-    psignb128(BitVec::to_i8x16(a), BitVec::to_i8x16(b)).into()
+    psignb128(a.as_i8x16(), b.as_i8x16()).into()
 }
 
 /// Negates packed 16-bit integers in `a` when the corresponding signed 16-bit
@@ -354,7 +354,7 @@ pub fn _mm_sign_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sign_epi16)
 
 pub fn _mm_sign_epi16(a: __m128i, b: __m128i) -> __m128i {
-    psignw128(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    psignw128(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Negates packed 32-bit integers in `a` when the corresponding signed 32-bit
@@ -365,5 +365,5 @@ pub fn _mm_sign_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sign_epi32)
 
 pub fn _mm_sign_epi32(a: __m128i, b: __m128i) -> __m128i {
-    psignd128(BitVec::to_i32x4(a), BitVec::to_i32x4(b)).into()
+    psignd128(a.as_i32x4(), b.as_i32x4()).into()
 }

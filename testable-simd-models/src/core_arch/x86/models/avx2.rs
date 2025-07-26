@@ -19,7 +19,7 @@
 //! [amd64_ref]: http://support.amd.com/TechDocs/24594.pdf
 //! [wiki_avx]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 //! [wiki_fma]: https://en.wikipedia.org/wiki/Fused_multiply-accumulate
-use crate::abstractions::{bitvec::BitVec, simd::*};
+use crate::abstractions::simd::*;
 
 mod c_extern {
     use crate::abstractions::{bit::MachineInteger, simd::*};
@@ -1594,7 +1594,7 @@ pub fn _mm256_mul_epu32(a: __m256i, b: __m256i) -> __m256i {
     let a = a.as_u64x4();
     let b = b.as_u64x4();
     let mask = u64x4::splat(u32::MAX.into());
-    BitVec::from_u64x4(simd_mul(simd_and(a, mask), simd_and(b, mask)))
+    __m256i::from_u64x4(simd_mul(simd_and(a, mask), simd_and(b, mask)))
 }
 
 /// Multiplies the packed 16-bit integers in `a` and `b`, producing

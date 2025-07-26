@@ -1,6 +1,6 @@
 //! Streaming SIMD Extensions 2 (SSE2)
 use super::types::*;
-use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::*};
+use crate::abstractions::simd::*;
 mod c_extern {
     use crate::abstractions::{bit::MachineInteger, simd::*};
     pub fn packsswb(a: i16x8, b: i16x8) -> i8x16 {
@@ -207,7 +207,7 @@ use c_extern::*;
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_epi8)
 
 pub fn _mm_add_epi8(a: __m128i, b: __m128i) -> __m128i {
-    simd_add(BitVec::to_i8x16(a), BitVec::to_i8x16(b)).into()
+    simd_add(a.as_i8x16(), b.as_i8x16()).into()
 }
 
 /// Adds packed 16-bit integers in `a` and `b`.
@@ -215,7 +215,7 @@ pub fn _mm_add_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_epi16)
 
 pub fn _mm_add_epi16(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_i16x8(simd_add(BitVec::to_i16x8(a), BitVec::to_i16x8(b)))
+    transmute(simd_add(b.as_i16x8(), a.as_i16x8()))
 }
 
 /// Adds packed 32-bit integers in `a` and `b`.
@@ -223,7 +223,7 @@ pub fn _mm_add_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_epi32)
 
 pub fn _mm_add_epi32(a: __m128i, b: __m128i) -> __m128i {
-    simd_add(BitVec::to_i32x4(a), BitVec::to_i32x4(b)).into()
+    simd_add(b.as_i32x4(), a.as_i32x4()).into()
 }
 
 /// Adds packed 64-bit integers in `a` and `b`.
@@ -231,7 +231,7 @@ pub fn _mm_add_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_epi64)
 
 pub fn _mm_add_epi64(a: __m128i, b: __m128i) -> __m128i {
-    simd_add(BitVec::to_i64x2(a), BitVec::to_i64x2(b)).into()
+    simd_add(b.as_i64x2(), a.as_i64x2()).into()
 }
 
 /// Adds packed 8-bit integers in `a` and `b` using saturation.
@@ -239,7 +239,7 @@ pub fn _mm_add_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epi8)
 
 pub fn _mm_adds_epi8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(BitVec::to_i8x16(a), BitVec::to_i8x16(b)).into()
+    simd_saturating_add(b.as_i8x16(), a.as_i8x16()).into()
 }
 
 /// Adds packed 16-bit integers in `a` and `b` using saturation.
@@ -247,7 +247,7 @@ pub fn _mm_adds_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epi16)
 
 pub fn _mm_adds_epi16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    simd_saturating_add(b.as_i16x8(), a.as_i16x8()).into()
 }
 
 /// Adds packed unsigned 8-bit integers in `a` and `b` using saturation.
@@ -255,7 +255,7 @@ pub fn _mm_adds_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epu8)
 
 pub fn _mm_adds_epu8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(BitVec::to_u8x16(a), BitVec::to_u8x16(b)).into()
+    simd_saturating_add(b.as_u8x16(), a.as_u8x16()).into()
 }
 
 /// Adds packed unsigned 16-bit integers in `a` and `b` using saturation.
@@ -263,7 +263,7 @@ pub fn _mm_adds_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epu16)
 
 pub fn _mm_adds_epu16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(BitVec::to_u16x8(a), BitVec::to_u16x8(b)).into()
+    simd_saturating_add(b.as_u16x8(), a.as_u16x8()).into()
 }
 
 /// Averages packed unsigned 8-bit integers in `a` and `b`.
@@ -271,8 +271,8 @@ pub fn _mm_adds_epu16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_avg_epu8)
 
 pub fn _mm_avg_epu8(a: __m128i, b: __m128i) -> __m128i {
-    let a = simd_cast::<16, _, u16>(BitVec::to_u8x16(a));
-    let b = simd_cast::<16, _, u16>(BitVec::to_u8x16(b));
+    let a = simd_cast::<16, _, u16>(a.as_u8x16());
+    let b = simd_cast::<16, _, u16>(b.as_u8x16());
     let r = simd_shr(simd_add(simd_add(a, b), u16x16::splat(1)), u16x16::splat(1));
     simd_cast::<16, _, u8>(r).into()
 }
@@ -282,8 +282,8 @@ pub fn _mm_avg_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_avg_epu16)
 
 pub fn _mm_avg_epu16(a: __m128i, b: __m128i) -> __m128i {
-    let a = simd_cast::<8, _, u32>(BitVec::to_u16x8(a));
-    let b = simd_cast::<8, _, u32>(BitVec::to_u16x8(b));
+    let a = simd_cast::<8, _, u32>(a.as_u16x8());
+    let b = simd_cast::<8, _, u32>(b.as_u16x8());
     let r = simd_shr(simd_add(simd_add(a, b), u32x8::splat(1)), u32x8::splat(1));
     simd_cast::<8, _, u16>(r).into()
 }
@@ -297,7 +297,7 @@ pub fn _mm_avg_epu16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_madd_epi16)
 
 pub fn _mm_madd_epi16(a: __m128i, b: __m128i) -> __m128i {
-    pmaddwd(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    pmaddwd(b.as_i16x8(), a.as_i16x8()).into()
 }
 
 /// Compares packed 16-bit integers in `a` and `b`, and returns the packed
@@ -306,8 +306,8 @@ pub fn _mm_madd_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_max_epi16)
 
 pub fn _mm_max_epi16(a: __m128i, b: __m128i) -> __m128i {
-    let a = BitVec::to_i16x8(a);
-    let b = BitVec::to_i16x8(b);
+    let a = a.as_i16x8();
+    let b = b.as_i16x8();
     simd_select(simd_gt(a, b), a, b).into()
 }
 
@@ -317,8 +317,8 @@ pub fn _mm_max_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_max_epu8)
 
 pub fn _mm_max_epu8(a: __m128i, b: __m128i) -> __m128i {
-    let a = BitVec::to_u8x16(a);
-    let b = BitVec::to_u8x16(b);
+    let a = a.as_u8x16();
+    let b = b.as_u8x16();
     simd_select(simd_gt(a, b), a, b).into()
 }
 
@@ -328,8 +328,8 @@ pub fn _mm_max_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_min_epi16)
 
 pub fn _mm_min_epi16(a: __m128i, b: __m128i) -> __m128i {
-    let a = BitVec::to_i16x8(a);
-    let b = BitVec::to_i16x8(b);
+    let a = a.as_i16x8();
+    let b = b.as_i16x8();
     simd_select(simd_lt(a, b), a, b).into()
 }
 
@@ -339,8 +339,8 @@ pub fn _mm_min_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_min_epu8)
 
 pub fn _mm_min_epu8(a: __m128i, b: __m128i) -> __m128i {
-    let a = BitVec::to_u8x16(a);
-    let b = BitVec::to_u8x16(b);
+    let a = a.as_u8x16();
+    let b = b.as_u8x16();
     simd_select(simd_lt(a, b), a, b).into()
 }
 
@@ -352,10 +352,10 @@ pub fn _mm_min_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mulhi_epi16)
 
 pub fn _mm_mulhi_epi16(a: __m128i, b: __m128i) -> __m128i {
-    let a = simd_cast::<8, i16, i32>(BitVec::to_i16x8(a));
-    let b = simd_cast::<8, i16, i32>(BitVec::to_i16x8(b));
+    let a = simd_cast::<8, i16, i32>(a.as_i16x8());
+    let b = simd_cast::<8, i16, i32>(b.as_i16x8());
     let r = simd_shr(simd_mul(a, b), i32x8::splat(16));
-    BitVec::from_i16x8(simd_cast::<8, i32, i16>(r))
+    transmute(simd_cast::<8, i32, i16>(r))
 }
 
 /// Multiplies the packed unsigned 16-bit integers in `a` and `b`.
@@ -366,8 +366,8 @@ pub fn _mm_mulhi_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mulhi_epu16)
 
 pub fn _mm_mulhi_epu16(a: __m128i, b: __m128i) -> __m128i {
-    let a = simd_cast::<8, _, u32>(BitVec::to_u16x8(a));
-    let b = simd_cast::<8, _, u32>(BitVec::to_u16x8(b));
+    let a = simd_cast::<8, _, u32>(a.as_u16x8());
+    let b = simd_cast::<8, _, u32>(b.as_u16x8());
     let r = simd_shr(simd_mul(a, b), u32x8::splat(16));
     simd_cast::<8, u32, u16>(r).into()
 }
@@ -380,7 +380,7 @@ pub fn _mm_mulhi_epu16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mullo_epi16)
 
 pub fn _mm_mullo_epi16(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_i16x8(simd_mul(BitVec::to_i16x8(a), BitVec::to_i16x8(b)))
+    transmute(simd_mul(b.as_i16x8(), a.as_i16x8()))
 }
 
 /// Multiplies the low unsigned 32-bit integers from each packed 64-bit element
@@ -391,8 +391,8 @@ pub fn _mm_mullo_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mul_epu32)
 
 pub fn _mm_mul_epu32(a: __m128i, b: __m128i) -> __m128i {
-    let a = BitVec::to_u64x2(a);
-    let b = BitVec::to_u64x2(b);
+    let a = a.as_u64x2();
+    let b = b.as_u64x2();
     let mask = u64x2::splat(u32::MAX.into());
     simd_mul(simd_and(a, mask), simd_and(b, mask)).into()
 }
@@ -407,7 +407,7 @@ pub fn _mm_mul_epu32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sad_epu8)
 
 pub fn _mm_sad_epu8(a: __m128i, b: __m128i) -> __m128i {
-    psadbw(BitVec::to_u8x16(a), BitVec::to_u8x16(b)).into()
+    psadbw(b.as_u8x16(), a.as_u8x16()).into()
 }
 
 /// Subtracts packed 8-bit integers in `b` from packed 8-bit integers in `a`.
@@ -415,7 +415,7 @@ pub fn _mm_sad_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi8)
 
 pub fn _mm_sub_epi8(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_i8x16(simd_sub(BitVec::to_i8x16(a), BitVec::to_i8x16(b)))
+    transmute(simd_sub(b.as_i8x16(), a.as_i8x16()))
 }
 
 /// Subtracts packed 16-bit integers in `b` from packed 16-bit integers in `a`.
@@ -423,7 +423,7 @@ pub fn _mm_sub_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi16)
 
 pub fn _mm_sub_epi16(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_i16x8(simd_sub(BitVec::to_i16x8(a), BitVec::to_i16x8(b)))
+    transmute(simd_sub(b.as_i16x8(), a.as_i16x8()))
 }
 
 /// Subtract packed 32-bit integers in `b` from packed 32-bit integers in `a`.
@@ -431,7 +431,7 @@ pub fn _mm_sub_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi32)
 
 pub fn _mm_sub_epi32(a: __m128i, b: __m128i) -> __m128i {
-    simd_sub(BitVec::to_i32x4(a), BitVec::to_i32x4(b)).into()
+    simd_sub(b.as_i32x4(), a.as_i32x4()).into()
 }
 
 /// Subtract packed 64-bit integers in `b` from packed 64-bit integers in `a`.
@@ -439,7 +439,7 @@ pub fn _mm_sub_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi64)
 
 pub fn _mm_sub_epi64(a: __m128i, b: __m128i) -> __m128i {
-    simd_sub(BitVec::to_i64x2(a), BitVec::to_i64x2(b)).into()
+    simd_sub(b.as_i64x2(), a.as_i64x2()).into()
 }
 
 /// Subtract packed 8-bit integers in `b` from packed 8-bit integers in `a`
@@ -448,7 +448,7 @@ pub fn _mm_sub_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epi8)
 
 pub fn _mm_subs_epi8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(BitVec::to_i8x16(a), BitVec::to_i8x16(b)).into()
+    simd_saturating_sub(b.as_i8x16(), a.as_i8x16()).into()
 }
 
 /// Subtract packed 16-bit integers in `b` from packed 16-bit integers in `a`
@@ -457,7 +457,7 @@ pub fn _mm_subs_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epi16)
 
 pub fn _mm_subs_epi16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    simd_saturating_sub(b.as_i16x8(), a.as_i16x8()).into()
 }
 
 /// Subtract packed unsigned 8-bit integers in `b` from packed unsigned 8-bit
@@ -466,7 +466,7 @@ pub fn _mm_subs_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epu8)
 
 pub fn _mm_subs_epu8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(BitVec::to_u8x16(a), BitVec::to_u8x16(b)).into()
+    simd_saturating_sub(b.as_u8x16(), a.as_u8x16()).into()
 }
 
 /// Subtract packed unsigned 16-bit integers in `b` from packed unsigned 16-bit
@@ -475,7 +475,7 @@ pub fn _mm_subs_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epu16)
 
 pub fn _mm_subs_epu16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(BitVec::to_u16x8(a), BitVec::to_u16x8(b)).into()
+    simd_saturating_sub(b.as_u16x8(), a.as_u16x8()).into()
 }
 
 /// Shifts `a` left by `IMM8` bytes while shifting in zeros.
@@ -501,7 +501,7 @@ fn _mm_slli_si128_impl<const IMM8: i32>(a: __m128i) -> __m128i {
     }
     (simd_shuffle(
         i8x16::from_fn(|_| 0),
-        BitVec::to_i8x16(a),
+        a.as_i8x16(),
         [
             mask(IMM8, 0),
             mask(IMM8, 1),
@@ -552,7 +552,7 @@ pub fn _mm_slli_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
     if IMM8 >= 16 {
         _mm_setzero_si128()
     } else {
-        simd_shl(BitVec::to_u16x8(a), u16x8::splat(IMM8 as u16)).into()
+        simd_shl(a.as_u16x8(), u16x8::splat(IMM8 as u16)).into()
     }
 }
 
@@ -562,7 +562,7 @@ pub fn _mm_slli_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sll_epi16)
 
 pub fn _mm_sll_epi16(a: __m128i, count: __m128i) -> __m128i {
-    psllw(BitVec::to_i16x8(a), BitVec::to_i16x8(count)).into()
+    psllw(count.as_i16x8(), a.as_i16x8()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` left by `IMM8` while shifting in zeros.
@@ -575,7 +575,7 @@ pub fn _mm_slli_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
     if IMM8 >= 32 {
         _mm_setzero_si128()
     } else {
-        simd_shl(BitVec::to_u32x4(a), u32x4::splat(IMM8 as u32)).into()
+        simd_shl(a.as_u32x4(), u32x4::splat(IMM8 as u32)).into()
     }
 }
 
@@ -585,7 +585,7 @@ pub fn _mm_slli_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sll_epi32)
 
 pub fn _mm_sll_epi32(a: __m128i, count: __m128i) -> __m128i {
-    pslld(BitVec::to_i32x4(a), BitVec::to_i32x4(count)).into()
+    pslld(count.as_i32x4(), a.as_i32x4()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` left by `IMM8` while shifting in zeros.
@@ -598,7 +598,7 @@ pub fn _mm_slli_epi64<const IMM8: i32>(a: __m128i) -> __m128i {
     if IMM8 >= 64 {
         _mm_setzero_si128()
     } else {
-        simd_shl(BitVec::to_u64x2(a), u64x2::splat(IMM8 as u64)).into()
+        simd_shl(a.as_u64x2(), u64x2::splat(IMM8 as u64)).into()
     }
 }
 
@@ -608,7 +608,7 @@ pub fn _mm_slli_epi64<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sll_epi64)
 
 pub fn _mm_sll_epi64(a: __m128i, count: __m128i) -> __m128i {
-    psllq(BitVec::to_i64x2(a), BitVec::to_i64x2(count)).into()
+    psllq(count.as_i64x2(), a.as_i64x2()).into()
 }
 
 /// Shifts packed 16-bit integers in `a` right by `IMM8` while shifting in sign
@@ -618,7 +618,7 @@ pub fn _mm_sll_epi64(a: __m128i, count: __m128i) -> __m128i {
 
 pub fn _mm_srai_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
     // static_assert_uimm_bits!(IMM8, 8);
-    simd_shr(BitVec::to_i16x8(a), i16x8::splat(IMM8.min(15) as i16)).into()
+    simd_shr(a.as_i16x8(), i16x8::splat(IMM8.min(15) as i16)).into()
 }
 
 /// Shifts packed 16-bit integers in `a` right by `count` while shifting in sign
@@ -627,7 +627,7 @@ pub fn _mm_srai_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sra_epi16)
 
 pub fn _mm_sra_epi16(a: __m128i, count: __m128i) -> __m128i {
-    psraw(BitVec::to_i16x8(a), BitVec::to_i16x8(count)).into()
+    psraw(count.as_i16x8(), a.as_i16x8()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by `IMM8` while shifting in sign
@@ -637,7 +637,7 @@ pub fn _mm_sra_epi16(a: __m128i, count: __m128i) -> __m128i {
 
 pub fn _mm_srai_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
     // static_assert_uimm_bits!(IMM8, 8);
-    simd_shr(BitVec::to_i32x4(a), i32x4::splat(IMM8.min(31))).into()
+    simd_shr(a.as_i32x4(), i32x4::splat(IMM8.min(31))).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by `count` while shifting in sign
@@ -646,7 +646,7 @@ pub fn _mm_srai_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sra_epi32)
 
 pub fn _mm_sra_epi32(a: __m128i, count: __m128i) -> __m128i {
-    psrad(BitVec::to_i32x4(a), BitVec::to_i32x4(count)).into()
+    psrad(count.as_i32x4(), a.as_i32x4()).into()
 }
 
 /// Shifts `a` right by `IMM8` bytes while shifting in zeros.
@@ -670,7 +670,7 @@ fn _mm_srli_si128_impl<const IMM8: i32>(a: __m128i) -> __m128i {
         }
     }
     let x: i8x16 = simd_shuffle(
-        BitVec::to_i8x16(a),
+        a.as_i8x16(),
         i8x16::from_fn(|_| 0),
         [
             mask(IMM8, 0),
@@ -705,7 +705,7 @@ pub fn _mm_srli_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
     if IMM8 >= 16 {
         _mm_setzero_si128()
     } else {
-        simd_shr(BitVec::to_u16x8(a), u16x8::splat(IMM8 as u16)).into()
+        simd_shr(a.as_u16x8(), u16x8::splat(IMM8 as u16)).into()
     }
 }
 
@@ -715,7 +715,7 @@ pub fn _mm_srli_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_srl_epi16)
 
 pub fn _mm_srl_epi16(a: __m128i, count: __m128i) -> __m128i {
-    psrlw(BitVec::to_i16x8(a), BitVec::to_i16x8(count)).into()
+    psrlw(a.as_i16x8(), count.as_i16x8()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by `IMM8` while shifting in
@@ -729,7 +729,7 @@ pub fn _mm_srli_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
     if IMM8 >= 32 {
         _mm_setzero_si128()
     } else {
-        simd_shr(BitVec::to_u32x4(a), u32x4::splat(IMM8 as u32)).into()
+        simd_shr(a.as_u32x4(), u32x4::splat(IMM8 as u32)).into()
     }
 }
 
@@ -739,7 +739,7 @@ pub fn _mm_srli_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_srl_epi32)
 
 pub fn _mm_srl_epi32(a: __m128i, count: __m128i) -> __m128i {
-    psrld(BitVec::to_i32x4(a), BitVec::to_i32x4(count)).into()
+    psrld(count.as_i32x4(), a.as_i32x4()).into()
 }
 
 /// Shifts packed 64-bit integers in `a` right by `IMM8` while shifting in
@@ -751,9 +751,9 @@ pub fn _mm_srli_epi64<const IMM8: i32>(a: __m128i) -> __m128i {
     // TODO    // static_assert_uimm_bits!(IMM8, 8);
 
     if IMM8 >= 64 {
-        BitVec::from_fn(|_| Bit::Zero)
+        __m128i::ZERO()
     } else {
-        BitVec::from_u64x2(simd_shr(BitVec::to_u64x2(a), u64x2::splat(IMM8 as u64)))
+        __m128i::from_u64x2(simd_shr(a.as_u64x2(), u64x2::splat(IMM8 as u64)))
     }
 }
 
@@ -763,7 +763,7 @@ pub fn _mm_srli_epi64<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_srl_epi64)
 
 pub fn _mm_srl_epi64(a: __m128i, count: __m128i) -> __m128i {
-    psrlq(BitVec::to_i64x2(a), BitVec::to_i64x2(count)).into()
+    psrlq(count.as_i64x2(), a.as_i64x2()).into()
 }
 
 /// Computes the bitwise AND of 128 bits (representing integer data) in `a` and
@@ -772,7 +772,7 @@ pub fn _mm_srl_epi64(a: __m128i, count: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_and_si128)
 
 pub fn _mm_and_si128(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_fn(|i| a[i] & b[i])
+    __m128i::from_fn(|i| a[i] & b[i])
 }
 
 /// Computes the bitwise NOT of 128 bits (representing integer data) in `a` and
@@ -781,7 +781,7 @@ pub fn _mm_and_si128(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_andnot_si128)
 
 pub fn _mm_andnot_si128(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_fn(|i| (!a[i]) & b[i])
+    __m128i::from_fn(|i| (!a[i]) & b[i])
 }
 
 /// Computes the bitwise OR of 128 bits (representing integer data) in `a` and
@@ -790,7 +790,7 @@ pub fn _mm_andnot_si128(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_or_si128)
 
 pub fn _mm_or_si128(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_fn(|i| a[i] | b[i])
+    __m128i::from_fn(|i| a[i] | b[i])
 }
 
 /// Computes the bitwise XOR of 128 bits (representing integer data) in `a` and
@@ -799,7 +799,7 @@ pub fn _mm_or_si128(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_xor_si128)
 
 pub fn _mm_xor_si128(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_fn(|i| a[i] ^ b[i])
+    __m128i::from_fn(|i| a[i] ^ b[i])
 }
 
 /// Compares packed 8-bit integers in `a` and `b` for equality.
@@ -807,7 +807,7 @@ pub fn _mm_xor_si128(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpeq_epi8)
 
 pub fn _mm_cmpeq_epi8(a: __m128i, b: __m128i) -> __m128i {
-    (simd_eq(BitVec::to_i8x16(a), BitVec::to_i8x16(b))).into()
+    transmute(simd_eq(a.as_i8x16(), b.as_i8x16()))
 }
 
 /// Compares packed 16-bit integers in `a` and `b` for equality.
@@ -815,7 +815,7 @@ pub fn _mm_cmpeq_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpeq_epi16)
 
 pub fn _mm_cmpeq_epi16(a: __m128i, b: __m128i) -> __m128i {
-    (simd_eq(BitVec::to_i16x8(a), BitVec::to_i16x8(b))).into()
+    transmute (simd_eq(a.as_i16x8(), b.as_i16x8()))
 }
 
 /// Compares packed 32-bit integers in `a` and `b` for equality.
@@ -823,7 +823,7 @@ pub fn _mm_cmpeq_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpeq_epi32)
 
 pub fn _mm_cmpeq_epi32(a: __m128i, b: __m128i) -> __m128i {
-    (simd_eq(BitVec::to_i32x4(a), BitVec::to_i32x4(b))).into()
+    transmute(simd_eq(a.as_i32x4(), b.as_i32x4()))
 }
 
 /// Compares packed 8-bit integers in `a` and `b` for greater-than.
@@ -831,7 +831,7 @@ pub fn _mm_cmpeq_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpgt_epi8)
 
 pub fn _mm_cmpgt_epi8(a: __m128i, b: __m128i) -> __m128i {
-    (simd_gt(BitVec::to_i8x16(a), BitVec::to_i8x16(b))).into()
+    transmute(simd_gt(a.as_i8x16(), b.as_i8x16()))
 }
 
 /// Compares packed 16-bit integers in `a` and `b` for greater-than.
@@ -839,7 +839,7 @@ pub fn _mm_cmpgt_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpgt_epi16)
 
 pub fn _mm_cmpgt_epi16(a: __m128i, b: __m128i) -> __m128i {
-    (simd_gt(BitVec::to_i16x8(a), BitVec::to_i16x8(b))).into()
+    transmute(simd_gt(a.as_i16x8(), b.as_i16x8()))
 }
 
 /// Compares packed 32-bit integers in `a` and `b` for greater-than.
@@ -847,7 +847,7 @@ pub fn _mm_cmpgt_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpgt_epi32)
 
 pub fn _mm_cmpgt_epi32(a: __m128i, b: __m128i) -> __m128i {
-    (simd_gt(BitVec::to_i32x4(a), BitVec::to_i32x4(b))).into()
+    transmute(simd_gt(a.as_i32x4(), b.as_i32x4()))
 }
 
 /// Compares packed 8-bit integers in `a` and `b` for less-than.
@@ -855,7 +855,7 @@ pub fn _mm_cmpgt_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmplt_epi8)
 
 pub fn _mm_cmplt_epi8(a: __m128i, b: __m128i) -> __m128i {
-    (simd_lt(BitVec::to_i8x16(a), BitVec::to_i8x16(b))).into()
+    transmute(simd_lt(a.as_i8x16(), b.as_i8x16()))
 }
 
 /// Compares packed 16-bit integers in `a` and `b` for less-than.
@@ -863,7 +863,7 @@ pub fn _mm_cmplt_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmplt_epi16)
 
 pub fn _mm_cmplt_epi16(a: __m128i, b: __m128i) -> __m128i {
-    (simd_lt(BitVec::to_i16x8(a), BitVec::to_i16x8(b))).into()
+    transmute(simd_lt(a.as_i16x8(), b.as_i16x8()))
 }
 
 /// Compares packed 32-bit integers in `a` and `b` for less-than.
@@ -871,7 +871,7 @@ pub fn _mm_cmplt_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmplt_epi32)
 
 pub fn _mm_cmplt_epi32(a: __m128i, b: __m128i) -> __m128i {
-    (simd_lt(BitVec::to_i32x4(a), BitVec::to_i32x4(b))).into()
+    transmute(simd_lt(a.as_i32x4(), b.as_i32x4()))
 }
 
 pub fn _mm_cvtsi32_si128(a: i32) -> __m128i {
@@ -883,7 +883,7 @@ pub fn _mm_cvtsi32_si128(a: i32) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtsi128_si32)
 
 pub fn _mm_cvtsi128_si32(a: __m128i) -> i32 {
-    simd_extract(BitVec::to_i32x4(a), 0)
+    simd_extract(a.as_i32x4(), 0)
 }
 
 /// Sets packed 64-bit integers with the supplied values, from highest to
@@ -903,7 +903,7 @@ pub fn _mm_set_epi64x(e1: i64, e0: i64) -> __m128i {
 // no particular instruction to test
 pub fn _mm_set_epi32(e3: i32, e2: i32, e1: i32, e0: i32) -> __m128i {
     let vec = [e0, e1, e2, e3];
-    BitVec::from_i32x4(i32x4::from_fn(|i| vec[i as usize]))
+    transmute(i32x4::from_fn(|i| vec[i as usize]))
 }
 
 /// Sets packed 16-bit integers with the supplied values.
@@ -923,7 +923,7 @@ pub fn _mm_set_epi16(
     e0: i16,
 ) -> __m128i {
     let vec = [e0, e1, e2, e3, e4, e5, e6, e7];
-    BitVec::from_i16x8(i16x8::from_fn(|i| vec[i as usize]))
+    transmute(i16x8::from_fn(|i| vec[i as usize]))
 }
 
 /// Sets packed 8-bit integers with the supplied values.
@@ -951,7 +951,7 @@ pub fn _mm_set_epi8(
     let vec = [
         e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15,
     ];
-    BitVec::from_i8x16(i8x16::from_fn(|i| vec[i as usize]))
+    transmute(i8x16::from_fn(|i| vec[i as usize]))
 }
 
 /// Broadcasts 64-bit integer `a` to all elements.
@@ -981,7 +981,7 @@ pub fn _mm_set1_epi32(a: i32) -> __m128i {
 // no particular instruction to test
 
 pub fn _mm_set1_epi16(a: i16) -> __m128i {
-    BitVec::from_i16x8(i16x8::from_fn(|_| a))
+    transmute(i16x8::from_fn(|_| a))
 }
 
 /// Broadcasts 8-bit integer `a` to all elements.
@@ -1057,7 +1057,7 @@ pub fn _mm_setr_epi8(
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_setzero_si128)
 
 pub fn _mm_setzero_si128() -> __m128i {
-    BitVec::from_fn(|_| Bit::Zero)
+    __m128i::ZERO()
 }
 
 /// Returns a vector where the low element is extracted from `a` and its upper
@@ -1068,7 +1068,7 @@ pub fn _mm_setzero_si128() -> __m128i {
 // FIXME movd on msvc, movd on i686
 
 pub fn _mm_move_epi64(a: __m128i) -> __m128i {
-    let r: i64x2 = simd_shuffle(BitVec::to_i64x2(a), i64x2::from_fn(|_| 0), [0, 2]);
+    let r: i64x2 = simd_shuffle(a.as_i64x2(), i64x2::from_fn(|_| 0), [0, 2]);
     r.into()
 }
 
@@ -1078,7 +1078,7 @@ pub fn _mm_move_epi64(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_packs_epi16)
 
 pub fn _mm_packs_epi16(a: __m128i, b: __m128i) -> __m128i {
-    packsswb(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    packsswb(b.as_i16x8(), a.as_i16x8()).into()
 }
 
 /// Converts packed 32-bit integers from `a` and `b` to packed 16-bit integers
@@ -1087,7 +1087,7 @@ pub fn _mm_packs_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_packs_epi32)
 
 pub fn _mm_packs_epi32(a: __m128i, b: __m128i) -> __m128i {
-    packssdw(BitVec::to_i32x4(a), BitVec::to_i32x4(b)).into()
+    packssdw(b.as_i32x4(), a.as_i32x4()).into()
 }
 
 /// Converts packed 16-bit integers from `a` and `b` to packed 8-bit integers
@@ -1096,7 +1096,7 @@ pub fn _mm_packs_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_packus_epi16)
 
 pub fn _mm_packus_epi16(a: __m128i, b: __m128i) -> __m128i {
-    packuswb(BitVec::to_i16x8(a), BitVec::to_i16x8(b)).into()
+    packuswb(b.as_i16x8(), a.as_i16x8()).into()
 }
 
 /// Returns the `imm8` element of `a`.
@@ -1105,7 +1105,7 @@ pub fn _mm_packus_epi16(a: __m128i, b: __m128i) -> __m128i {
 
 pub fn _mm_extract_epi16<const IMM8: i32>(a: __m128i) -> i32 {
     // static_assert_uimm_bits!(IMM8, 3);
-    simd_extract(BitVec::to_u16x8(a), IMM8 as u32) as i32
+    simd_extract(a.as_u16x8(), IMM8 as u32) as i32
 }
 
 /// Returns a new vector where the `imm8` element of `a` is replaced with `i`.
@@ -1114,7 +1114,7 @@ pub fn _mm_extract_epi16<const IMM8: i32>(a: __m128i) -> i32 {
 
 pub fn _mm_insert_epi16<const IMM8: i32>(a: __m128i, i: i32) -> __m128i {
     // static_assert_uimm_bits!(IMM8, 3);
-    simd_insert(BitVec::to_i16x8(a), IMM8 as u32, i as i16).into()
+    simd_insert(a.as_i16x8(), IMM8 as u32, i as i16).into()
 }
 
 /// Returns a mask of the most significant bit of each element in `a`.
@@ -1123,7 +1123,7 @@ pub fn _mm_insert_epi16<const IMM8: i32>(a: __m128i, i: i32) -> __m128i {
 
 pub fn _mm_movemask_epi8(a: __m128i) -> i32 {
     let z = i8x16::from_fn(|_| 0);
-    let m: i8x16 = simd_lt(BitVec::to_i8x16(a), z);
+    let m: i8x16 = simd_lt(a.as_i8x16(), z);
     let r = simd_bitmask_little!(15, m, u16);
     r as u32 as i32
 }
@@ -1135,7 +1135,7 @@ pub fn _mm_movemask_epi8(a: __m128i) -> i32 {
 pub fn _mm_shuffle_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
     // static_assert_uimm_bits!(IMM8, 8);
 
-    let a = BitVec::to_i32x4(a);
+    let a = a.as_i32x4();
     let x: i32x4 = simd_shuffle(
         a,
         a,
@@ -1160,7 +1160,7 @@ pub fn _mm_shuffle_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
 pub fn _mm_shufflehi_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
     // static_assert_uimm_bits!(IMM8, 8);
 
-    let a = BitVec::to_i16x8(a);
+    let a = a.as_i16x8();
     let x: i16x8 = simd_shuffle(
         a,
         a,
@@ -1189,7 +1189,7 @@ pub fn _mm_shufflehi_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
 pub fn _mm_shufflelo_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
     // static_assert_uimm_bits!(IMM8, 8);
 
-    let a = BitVec::to_i16x8(a);
+    let a = a.as_i16x8();
     let x: i16x8 = simd_shuffle(
         a,
         a,
@@ -1213,8 +1213,8 @@ pub fn _mm_shufflelo_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
 
 pub fn _mm_unpackhi_epi8(a: __m128i, b: __m128i) -> __m128i {
     (simd_shuffle(
-        BitVec::to_i8x16(a),
-        BitVec::to_i8x16(b),
+        a.as_i8x16(),
+        b.as_i8x16(),
         [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31],
     ))
     .into()
@@ -1226,8 +1226,8 @@ pub fn _mm_unpackhi_epi8(a: __m128i, b: __m128i) -> __m128i {
 
 pub fn _mm_unpackhi_epi16(a: __m128i, b: __m128i) -> __m128i {
     let x = simd_shuffle(
-        BitVec::to_i16x8(a),
-        BitVec::to_i16x8(b),
+        a.as_i16x8(),
+        b.as_i16x8(),
         [4, 12, 5, 13, 6, 14, 7, 15],
     );
     (x).into()
@@ -1238,7 +1238,7 @@ pub fn _mm_unpackhi_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpackhi_epi32)
 
 pub fn _mm_unpackhi_epi32(a: __m128i, b: __m128i) -> __m128i {
-    (simd_shuffle(BitVec::to_i32x4(a), BitVec::to_i32x4(b), [2, 6, 3, 7])).into()
+    (simd_shuffle(b.as_i32x4(), a.as_i32x4(), [2, 6, 3, 7])).into()
 }
 
 /// Unpacks and interleave 64-bit integers from the high half of `a` and `b`.
@@ -1246,7 +1246,7 @@ pub fn _mm_unpackhi_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpackhi_epi64)
 
 pub fn _mm_unpackhi_epi64(a: __m128i, b: __m128i) -> __m128i {
-    (simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(b), [1, 3])).into()
+    (simd_shuffle(b.as_i64x2(), a.as_i64x2(), [1, 3])).into()
 }
 
 /// Unpacks and interleave 8-bit integers from the low half of `a` and `b`.
@@ -1255,8 +1255,8 @@ pub fn _mm_unpackhi_epi64(a: __m128i, b: __m128i) -> __m128i {
 
 pub fn _mm_unpacklo_epi8(a: __m128i, b: __m128i) -> __m128i {
     (simd_shuffle(
-        BitVec::to_i8x16(a),
-        BitVec::to_i8x16(b),
+        a.as_i8x16(),
+        b.as_i8x16(),
         [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23],
     ))
     .into()
@@ -1268,8 +1268,8 @@ pub fn _mm_unpacklo_epi8(a: __m128i, b: __m128i) -> __m128i {
 
 pub fn _mm_unpacklo_epi16(a: __m128i, b: __m128i) -> __m128i {
     let x = simd_shuffle(
-        BitVec::to_i16x8(a),
-        BitVec::to_i16x8(b),
+        a.as_i16x8(),
+        b.as_i16x8(),
         [0, 8, 1, 9, 2, 10, 3, 11],
     );
     x.into()
@@ -1280,7 +1280,7 @@ pub fn _mm_unpacklo_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpacklo_epi32)
 
 pub fn _mm_unpacklo_epi32(a: __m128i, b: __m128i) -> __m128i {
-    simd_shuffle(BitVec::to_i32x4(a), BitVec::to_i32x4(b), [0, 4, 1, 5]).into()
+    simd_shuffle(b.as_i32x4(), a.as_i32x4(), [0, 4, 1, 5]).into()
 }
 
 /// Unpacks and interleave 64-bit integers from the low half of `a` and `b`.
@@ -1288,7 +1288,7 @@ pub fn _mm_unpacklo_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpacklo_epi64)
 
 pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
-    simd_shuffle(BitVec::to_i64x2(a), BitVec::to_i64x2(b), [0, 2]).into()
+    simd_shuffle(b.as_i64x2(), a.as_i64x2(), [0, 2]).into()
 }
 
 /// Returns vector of type __m128i with indeterminate elements.with indetermination elements.
@@ -1299,5 +1299,5 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_undefined_si128)
 
 pub fn _mm_undefined_si128() -> __m128i {
-    BitVec::from_fn(|_| Bit::Zero)
+    __m128i::ZERO()
 }

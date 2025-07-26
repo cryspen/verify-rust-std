@@ -14,7 +14,7 @@
 //! [wiki]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 
 use super::types::*;
-use crate::abstractions::{bit::Bit, bitvec::BitVec, simd::*};
+use crate::abstractions::simd::*;
 
 mod c_extern {
     use crate::abstractions::simd::*;
@@ -163,12 +163,8 @@ pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_testz_si256)
 pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
-    let c = BitVec::<256>::from_fn(|i| match (a[i], b[i]) {
-        (Bit::One, Bit::One) => Bit::One,
-        _ => Bit::Zero,
-    });
-    let all_zero = c.fold(true, |acc, bit| acc && bit == Bit::Zero);
-    if all_zero {
+    let c = __m256i::from_fn(|i| a[i] & b[i]);
+    if c == __m256i::ZERO() {
         1
     } else {
         0
@@ -319,7 +315,7 @@ pub fn _mm256_set_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
 
 // This intrinsic has no corresponding instruction.
 
-pub fn _mm256_set1_epi8(val: i8) -> BitVec<256> {
+pub fn _mm256_set1_epi8(val: i8) -> __m256i {
     transmute(i8x32::from_fn(|_| val))
 }
 
@@ -377,7 +373,7 @@ pub fn _mm256_castsi256_ps(a: __m256i) -> __m256 {
 // instructions, thus it has zero latency.
 
 pub fn _mm256_castsi256_si128(a: __m256i) -> __m128i {
-    BitVec::from_fn(|i| a[i])
+    __m128i::from_fn(|i| a[i])
 }
 
 /// Casts vector of type __m128i to type __m256i;
@@ -400,5 +396,5 @@ pub fn _mm256_castsi128_si256(a: __m128i) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_set_m128i)
 
 pub fn _mm256_set_m128i(hi: __m128i, lo: __m128i) -> __m256i {
-    BitVec::from_fn(|i| if i < 128 { lo[i] } else { hi[i - 128] })
+    __m256i::from_fn(|i| if i < 128 { lo[i] } else { hi[i - 128] })
 }
