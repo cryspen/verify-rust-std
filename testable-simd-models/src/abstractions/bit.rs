@@ -68,6 +68,17 @@ impl std::ops::BitXor for Bit {
     }
 }
 
+impl std::ops::Not for Bit {
+    type Output = Self;
+     fn not(self) -> Self {
+        match self {
+            Bit::One => Bit::Zero,
+            Bit::Zero => Bit::One,
+        }
+    }
+}
+
+
 impl std::ops::Neg for Bit {
     type Output = Self;
     fn neg(self) -> Self {

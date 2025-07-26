@@ -781,7 +781,7 @@ pub fn _mm_and_si128(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_andnot_si128)
 
 pub fn _mm_andnot_si128(a: __m128i, b: __m128i) -> __m128i {
-    BitVec::from_fn(|i| BitVec::<128>::from_fn(|i| _mm_set1_epi8(-1)[i] ^ a[i])[i] & b[i])
+    BitVec::from_fn(|i| (!a[i]) & b[i])
 }
 
 /// Computes the bitwise OR of 128 bits (representing integer data) in `a` and

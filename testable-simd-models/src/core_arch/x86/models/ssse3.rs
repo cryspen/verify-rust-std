@@ -236,10 +236,6 @@ pub fn _mm_alignr_epi8<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i {
         BitVec::to_i8x16(a),
         [
             mask(IMM8 as u32, 0),
-            mask(IMM8 as u32, 0),
-            mask(IMM8 as u32, 0),
-            mask(IMM8 as u32, 0),
-            mask(IMM8 as u32, 0),
             mask(IMM8 as u32, 1),
             mask(IMM8 as u32, 2),
             mask(IMM8 as u32, 3),
