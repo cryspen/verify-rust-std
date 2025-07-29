@@ -13,9 +13,9 @@
 //! [amd64_ref]: http://support.amd.com/TechDocs/24594.pdf
 //! [wiki]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 
-use super::avx_handwritten::*;
 use super::types::*;
 use crate::abstractions::simd::*;
+use super::avx_handwritten::*;
 
 /// Blends packed single-precision (32-bit) floating-point elements from
 /// `a` and `b` using `c` as a mask.
@@ -147,7 +147,7 @@ pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_testz_si256)
 pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
-    ptestz256(a.as_i64x4(), b.as_i64x4())
+    ptestz256(a.as_i64x4(), b.as_i64x4()) 
 }
 
 /// Sets each bit of the returned mask based on the most significant bit of the
@@ -219,10 +219,8 @@ pub fn _mm256_set_epi8(
     e30: i8,
     e31: i8,
 ) -> __m256i {
-    transmute(i8x32::new(
-        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17,
-        e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,
-    ))
+    transmute(i8x32::new(e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17,
+        e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,))
 }
 
 /// Sets packed 16-bit integers in returned vector with the supplied values.
@@ -249,9 +247,7 @@ pub fn _mm256_set_epi16(
     e14: i16,
     e15: i16,
 ) -> __m256i {
-    transmute(i16x16::new(
-        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
-    ))
+    transmute(i16x16::new(e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15))
 }
 
 /// Sets packed 32-bit integers in returned vector with the supplied values.

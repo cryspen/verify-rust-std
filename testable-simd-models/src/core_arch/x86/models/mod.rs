@@ -28,11 +28,14 @@ pub mod ssse3;
 
 pub(crate) mod types {
     use crate::abstractions::bitvec::*;
+    use crate::abstractions::simd::*;
 
     #[allow(non_camel_case_types)]
     pub type __m256i = BitVec<256>;
     #[allow(non_camel_case_types)]
-    pub type __m256 = BitVec<256>;
+    pub type __m256d = f64x4;
+    #[allow(non_camel_case_types)]
+    pub type __m256 = f32x8;
     #[allow(non_camel_case_types)]
     pub type __m128i = BitVec<128>;
 }
