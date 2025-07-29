@@ -15,9 +15,9 @@ use std::fmt::Formatter;
 /// making the bit pattern more human-readable. The type also implements indexing,
 /// allowing for easy access to individual bits.
 #[derive(Copy, Clone, Eq, PartialEq)]
-pub struct BitVec<const N: u32>(FunArray<N, Bit>);
+pub struct BitVec<const N: usize>(FunArray<N, Bit>);
 
-impl<const N: u32> BitVec<N> {
+impl<const N: usize> BitVec<N> {
     #[allow(non_snake_case)]
     pub fn ZERO() -> Self {
         Self::from_fn(|_| Bit::Zero)
@@ -40,15 +40,15 @@ fn bit_slice_to_string(bits: &[Bit]) -> String {
         .into()
 }
 
-impl<const N: u32> core::fmt::Debug for BitVec<N> {
+impl<const N: usize> core::fmt::Debug for BitVec<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", bit_slice_to_string(&self.0.as_vec()))
     }
 }
 
-impl<const N: u32> core::ops::Index<u32> for BitVec<N> {
+impl<const N: usize> core::ops::Index<usize> for BitVec<N> {
     type Output = Bit;
-    fn index(&self, index: u32) -> &Self::Output {
+    fn index(&self, index: usize) -> &Self::Output {
         self.0.get(index)
     }
 }
@@ -82,19 +82,19 @@ fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) ->
     };
     n
 }
-impl<const N: u32> BitVec<N> {
+impl<const N: usize> BitVec<N> {
     /// Constructor for BitVec. `BitVec::<N>::from_fn` constructs a bitvector out of a function that takes usizes smaller than `N` and produces bits.
-    pub fn from_fn<F: Fn(u32) -> Bit>(f: F) -> Self {
+    pub fn from_fn<F: Fn(usize) -> Bit>(f: F) -> Self {
         Self(FunArray::from_fn(f))
     }
     /// Convert a slice of machine integers where only the `d` least significant bits are relevant.
-    pub fn from_slice<T: Into<i128> + MachineInteger + Copy>(x: &[T], d: u32) -> Self {
+    pub fn from_slice<T: Into<i128> + MachineInteger + Copy>(x: &[T], d: usize) -> Self {
         Self::from_fn(|i| Bit::of_int::<T>(x[(i / d) as usize], (i % d) as u32))
     }
 
     /// Construct a BitVec out of a machine integer.
     pub fn from_int<T: Into<i128> + MachineInteger + Copy>(n: T) -> Self {
-        Self::from_slice::<T>(&[n], T::bits() as u32)
+        Self::from_slice::<T>(&[n], T::bits() as usize)
     }
 
     /// Convert a BitVec into a machine integer of type `T`.
@@ -122,34 +122,34 @@ impl<const N: u32> BitVec<N> {
     }
 }
 
-impl<const N: u32> BitVec<N> {
-    pub fn chunked_shift<const CHUNK: u32, const SHIFTS: u32>(
-        self,
-        shl: FunArray<SHIFTS, i128>,
-    ) -> BitVec<N> {
-        fn chunked_shift<const N: u32, const CHUNK: u32, const SHIFTS: u32>(
-            bitvec: BitVec<N>,
-            shl: FunArray<SHIFTS, i128>,
-        ) -> BitVec<N> {
-            BitVec::from_fn(|i| {
-                let nth_bit = i % CHUNK;
-                let nth_chunk = i / CHUNK;
-                let shift: i128 = if nth_chunk < SHIFTS {
-                    shl[nth_chunk]
-                } else {
-                    0
-                };
-                let local_index = (nth_bit as i128).wrapping_sub(shift);
-                if local_index < CHUNK as i128 && local_index >= 0 {
-                    let local_index = local_index as u32;
-                    bitvec[nth_chunk * CHUNK + local_index]
-                } else {
-                    Bit::Zero
-                }
-            })
-        }
-        chunked_shift::<N, CHUNK, SHIFTS>(self, shl)
-    }
+impl<const N: usize> BitVec<N> {
+    // pub fn chunked_shift<const CHUNK: u32, const SHIFTS: usize>(
+    //     self,
+    //     shl: FunArray<SHIFTS, i128>,
+    // ) -> BitVec<N> {
+    //     fn chunked_shift<const N: usize, const CHUNK: usize, const SHIFTS: usize>(
+    //         bitvec: BitVec<N>,
+    //         shl: FunArray<SHIFTS, i128>,
+    //     ) -> BitVec<N> {
+    //         BitVec::from_fn(|i| {
+    //             let nth_bit = i % CHUNK;
+    //             let nth_chunk = i / CHUNK;
+    //             let shift: i128 = if nth_chunk < SHIFTS {
+    //                 shl[nth_chunk]
+    //             } else {
+    //                 0
+    //             };
+    //             let local_index = (nth_bit as i128).wrapping_sub(shift);
+    //             if local_index < CHUNK && local_index >= 0 {
+    //                 let local_index = local_index as u32;
+    //                 bitvec[nth_chunk * CHUNK + local_index]
+    //             } else {
+    //                 Bit::Zero
+    //             }
+    //         })
+    //     }
+    //     chunked_shift::<N, CHUNK, SHIFTS>(self, shl)
+    // }
 
     /// Folds over the array, accumulating a result.
     ///

@@ -208,7 +208,7 @@ impl Bit {
         if x >= 0 {
             Self::of_raw_int(x as u128, nth)
         } else {
-            Self::of_raw_int((2i128.pow(T::bits()) + x) as u128, nth)
+            Self::of_raw_int((2i128.pow(T::bits() as u32) + x) as u128, nth)
         }
     }
 }
