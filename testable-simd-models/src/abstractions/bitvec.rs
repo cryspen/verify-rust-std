@@ -63,7 +63,7 @@ fn u128_int_from_bit_slice(bits: &[Bit]) -> u128 {
 }
 
 /// Convert a bit slice into a machine integer of type `T`.
-fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) -> T {
+fn int_from_bit_slice<T: MachineInteger + Copy>(bits: &[Bit]) -> T {
     debug_assert!(bits.len() <= T::BITS as usize);
     let result = if T::SIGNED {
         let is_negative = matches!(bits[T::BITS as usize - 1], Bit::One);
@@ -76,11 +76,7 @@ fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) ->
     } else {
         u128_int_from_bit_slice(bits) as i128
     };
-    let Ok(n) = result.try_into() else {
-        // Conversion must succeed as `result` is guaranteed to be in range due to the bit-length check.
-        unreachable!()
-    };
-    n
+    T::from_u128(result as u128)
 }
 impl<const N: u32> BitVec<N> {
     /// Constructor for BitVec. `BitVec::<N>::from_fn` constructs a bitvector out of a function that takes usizes smaller than `N` and produces bits.
@@ -88,22 +84,22 @@ impl<const N: u32> BitVec<N> {
         Self(FunArray::from_fn(f))
     }
     /// Convert a slice of machine integers where only the `d` least significant bits are relevant.
-    pub fn from_slice<T: Into<i128> + MachineInteger + Copy>(x: &[T], d: u32) -> Self {
-        Self::from_fn(|i| Bit::of_int::<T>(x[(i / d) as usize], (i % d) as u32))
+    pub fn from_slice<T: MachineInteger + Copy>(x: &[T], d: u32) -> Self {
+        Self::from_fn(|i| Bit::nth_bit::<T>(x[(i / d) as usize], (i % d) as usize))
     }
 
     /// Construct a BitVec out of a machine integer.
-    pub fn from_int<T: Into<i128> + MachineInteger + Copy>(n: T) -> Self {
+    pub fn from_int<T: MachineInteger + Copy>(n: T) -> Self {
         Self::from_slice::<T>(&[n], T::BITS as u32)
     }
 
     /// Convert a BitVec into a machine integer of type `T`.
-    pub fn to_int<T: TryFrom<i128> + MachineInteger + Copy>(self) -> T {
+    pub fn to_int<T: MachineInteger + Copy>(self) -> T {
         int_from_bit_slice(&self.0.as_vec())
     }
 
     /// Convert a BitVec into a vector of machine integers of type `T`.
-    pub fn to_vec<T: TryFrom<i128> + MachineInteger + Copy>(&self) -> Vec<T> {
+    pub fn to_vec<T: MachineInteger + Copy>(&self) -> Vec<T> {
         self.0
             .as_vec()
             .chunks(T::BITS as usize)

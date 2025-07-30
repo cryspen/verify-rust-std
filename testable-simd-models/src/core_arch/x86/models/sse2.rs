@@ -30,7 +30,7 @@ mod c_extern {
         })
     }
     pub fn psadbw(a: u8x16, b: u8x16) -> u64x2 {
-        let tmp = u8x16::from_fn(|i| a[i].absolute_diff(b[i]));
+        let tmp = u8x16::from_fn(|i| a[i].wrapping_abs_diff(b[i]));
         u64x2::from_fn(|i| {
             (tmp[i * 8] as u16)
                 .wrapping_add(tmp[i * 8 + 1] as u16)

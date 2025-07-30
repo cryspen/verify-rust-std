@@ -568,10 +568,10 @@ mod c_extern {
                 let b_offset = ((imm8 & 3) * 4) as u32;
                 let k = a_offset + i;
                 let l = b_offset;
-                ((a[k].absolute_diff(b[l]) as i8) as u8 as u16)
-                    + ((a[k + 1].absolute_diff(b[l + 1]) as i8) as u8 as u16)
-                    + ((a[k + 2].absolute_diff(b[l + 2]) as i8) as u8 as u16)
-                    + ((a[k + 3].absolute_diff(b[l + 3]) as i8) as u8 as u16)
+                ((a[k].wrapping_abs_diff(b[l]) as i8) as u8 as u16)
+                    + ((a[k + 1].wrapping_abs_diff(b[l + 1]) as i8) as u8 as u16)
+                    + ((a[k + 2].wrapping_abs_diff(b[l + 2]) as i8) as u8 as u16)
+                    + ((a[k + 3].wrapping_abs_diff(b[l + 3]) as i8) as u8 as u16)
             } else {
                 let i = i - 8;
                 let imm8 = imm8 >> 3;
@@ -579,10 +579,10 @@ mod c_extern {
                 let b_offset = ((imm8 & 3) * 4) as u32;
                 let k = a_offset + i;
                 let l = b_offset;
-                ((a[16 + k].absolute_diff(b[16 + l]) as i8) as u8 as u16)
-                    + ((a[16 + k + 1].absolute_diff(b[16 + l + 1]) as i8) as u8 as u16)
-                    + ((a[16 + k + 2].absolute_diff(b[16 + l + 2]) as i8) as u8 as u16)
-                    + ((a[16 + k + 3].absolute_diff(b[16 + l + 3]) as i8) as u8 as u16)
+                ((a[16 + k].wrapping_abs_diff(b[16 + l]) as i8) as u8 as u16)
+                    + ((a[16 + k + 1].wrapping_abs_diff(b[16 + l + 1]) as i8) as u8 as u16)
+                    + ((a[16 + k + 2].wrapping_abs_diff(b[16 + l + 2]) as i8) as u8 as u16)
+                    + ((a[16 + k + 3].wrapping_abs_diff(b[16 + l + 3]) as i8) as u8 as u16)
             }
         })
     }
@@ -629,7 +629,7 @@ mod c_extern {
     }
 
     pub fn psadbw(a: u8x32, b: u8x32) -> u64x4 {
-        let tmp = u8x32::from_fn(|i| a[i].absolute_diff(b[i]));
+        let tmp = u8x32::from_fn(|i| a[i].wrapping_abs_diff(b[i]));
         u64x4::from_fn(|i| {
             (tmp[i * 8] as u16)
                 .wrapping_add(tmp[i * 8 + 1] as u16)

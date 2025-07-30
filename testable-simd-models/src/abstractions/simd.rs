@@ -126,7 +126,7 @@ pub fn simd_abs_diff<const N: u32, T: MachineInteger + Copy>(
     x: FunArray<N, T>,
     y: FunArray<N, T>,
 ) -> FunArray<N, T> {
-    FunArray::from_fn(|i| x[i].absolute_diff(y[i]))
+    FunArray::from_fn(|i| x[i].wrapping_abs_diff(y[i]))
 }
 
 /// Shifts vector left elementwise, with UB on overflow.

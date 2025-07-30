@@ -20,7 +20,7 @@
 //! use testable_simd_models::abstractions::bit::{Bit, MachineInteger};
 //!
 //! // Extract the 3rd bit (0-indexed) from an integer.
-//! let bit = Bit::of_int(42, 2);
+//! let bit = Bit::nth_bit(42, 2);
 //! println!("The extracted bit is: {:?}", bit);
 //!
 //! // Convert Bit to a primitive integer type.
@@ -131,6 +131,10 @@ pub trait MachineNumeric {
     const MIN: Self;
     /// Maximum value of the integer type.
     const MAX: Self;
+    /// Raw transmutation of bits to u128
+    fn to_u128(self) -> u128;
+    /// Raw transmutation of bits from u128
+    fn from_u128(x:u128) -> Self;
 }
 
 /// A trait for types that represent machine integers.
@@ -146,7 +150,7 @@ pub trait MachineInteger : MachineNumeric {
     /// Implements functionality for `simd_saturating_sub` in `crate::abstractions::simd`.
     fn saturating_sub(self, rhs: Self) -> Self;
     /// Implements functionality for `simd_abs_diff` in `crate::abstractions::simd`.
-    fn absolute_diff(self, rhs: Self) -> Self;
+    fn wrapping_abs_diff(self, rhs: Self) -> Self;
     /// Implements functionality for `simd_abs` in `crate::abstractions::simd`.
     fn wrapping_abs(self) -> Self;
 }
@@ -161,6 +165,8 @@ macro_rules! generate_imachine_integer_impls {
 		const ONES: $ty = -1;
 		const MIN: $ty = $ty::MIN;
 		const MAX: $ty = $ty::MAX;
+        fn to_u128(self) -> u128 {self as u128}
+        fn from_u128(x:u128) -> Self {x as $ty}
         }
 	    impl MachineInteger for $ty {
 		fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
@@ -168,7 +174,7 @@ macro_rules! generate_imachine_integer_impls {
 		fn overflowing_mul(self, rhs: Self) -> Self { self.overflowing_mul(rhs).0 }
 		fn saturating_add(self, rhs: Self) -> Self { self.saturating_add(rhs)}
 		fn saturating_sub(self, rhs: Self) -> Self { self.saturating_sub(rhs) }
-		fn absolute_diff(self, rhs: Self) -> Self {if self > rhs {$ty::wrapping_sub(self, rhs)} else {$ty::wrapping_sub(rhs, self)}}
+		fn wrapping_abs_diff(self, rhs: Self) -> Self {if self > rhs {$ty::wrapping_sub(self, rhs)} else {$ty::wrapping_sub(rhs, self)}}
 		fn wrapping_abs(self) -> Self {if self == $ty::MIN {self} else {self.abs()}}
             })*
     };
@@ -184,6 +190,8 @@ macro_rules! generate_umachine_integer_impls {
 		const ONES: $ty = $ty::MAX;
 		const MIN: $ty = $ty::MIN;
 		const MAX: $ty = $ty::MAX;
+        fn to_u128(self) -> u128 {self as u128}
+        fn from_u128(x:u128) -> Self {x as $ty}
         }
 	    impl MachineInteger for $ty {
 		fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
@@ -191,7 +199,7 @@ macro_rules! generate_umachine_integer_impls {
 		fn overflowing_mul(self, rhs: Self) -> Self { self.overflowing_mul(rhs).0 }
 		fn saturating_add(self, rhs: Self) -> Self { self.saturating_add(rhs)}
 		fn saturating_sub(self, rhs: Self) -> Self { self.saturating_sub(rhs)}
-		fn absolute_diff(self, rhs: Self) -> Self {if self > rhs {self - rhs} else {rhs - self}}
+		fn wrapping_abs_diff(self, rhs: Self) -> Self {if self > rhs {self - rhs} else {rhs - self}}
 		fn wrapping_abs(self) -> Self {self}
         })*
     };
@@ -200,20 +208,29 @@ generate_imachine_integer_impls!(i8, i16, i32, i64, i128);
 generate_umachine_integer_impls!(u8, u16, u32, u64, u128);
 
 impl Bit {
-    fn of_raw_int(x: u128, nth: u32) -> Self {
-        if x / 2u128.pow(nth) % 2 == 1 {
+    pub fn nth_bit<T: MachineInteger>(x: T, nth: usize) -> Self {
+        if (x.to_u128() >> nth) % 2 == 1 {
             Self::One
         } else {
             Self::Zero
         }
     }
-
-    pub fn of_int<T: Into<i128> + MachineInteger>(x: T, nth: u32) -> Bit {
-        let x: i128 = x.into();
-        if x >= 0 {
-            Self::of_raw_int(x as u128, nth)
-        } else {
-            Self::of_raw_int((2i128.pow(T::BITS) + x) as u128, nth)
-        }
-    }
 }
+
+// impl Bit {
+//     fn of_raw_int(x: u128, nth: u32) -> Self {
+//         if x / 2u128.pow(nth) % 2 == 1 {
+//             Self::One
+//         } else {
+//             Self::Zero
+//         }
+//     }
+
+//     pub fn of_int<T: MachineInteger + PartialOrd>(x: T, nth: u32) -> Bit {
+//         if x >= T::ZEROS {
+//             Self::of_raw_int(x.to_u128()    , nth)
+//         } else {
+//             Self::of_raw_int((2i128.pow(T::BITS) + x) as u128, nth)
+//         }
+//     }
+// }
