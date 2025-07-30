@@ -14,25 +14,10 @@
 //! [wiki]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 
 use super::types::*;
+use crate::abstractions::utilities::*;
 use crate::abstractions::simd::*;
+use super::avx_handwritten::*;
 
-mod c_extern {
-    use crate::abstractions::simd::*;
-
-    pub fn vperm2f128si256(a: i32x8, b: i32x8, imm8: i8) -> i32x8 {
-        let temp = i128x2::from_fn(|i| match (imm8 as u8) >> (i * 4) {
-            0 => (a[4 * i] as i128) + 16 * (a[4 * i + 1] as i128),
-            1 => (a[4 * i + 2] as i128) + 16 * (a[4 * i + 3] as i128),
-            2 => (b[4 * i] as i128) + 16 * (b[4 * i + 1] as i128),
-            3 => (b[4 * i + 2] as i128) + 16 * (b[4 * i + 3] as i128),
-            _ => unreachable!(),
-        });
-
-        i32x8::from_fn(|i| (temp[if i < 4 { 0 } else { 1 }] >> (i % 4)) as i32)
-    }
-}
-
-use c_extern::*;
 /// Blends packed single-precision (32-bit) floating-point elements from
 /// `a` and `b` using `c` as a mask.
 ///
@@ -112,7 +97,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permute2f128_si256)
 pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-    // static_assert_uimm_bits!(IMM8, 8);
+    static_assert_uimm_bits!(IMM8, 8);
     vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8).into()
 }
 
@@ -122,7 +107,7 @@ pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_insertf128_si256)
 
 pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m256i {
-    // // static_assert_uimm_bits!(IMM1, 1);
+    static_assert_uimm_bits!(IMM1, 1);
 
     let dst: i64x4 = simd_shuffle(
         a.as_i64x4(),
@@ -140,7 +125,7 @@ pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m25
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
-    // // static_assert_uimm_bits!(INDEX, 5);
+    static_assert_uimm_bits!(INDEX, 5);
     simd_insert(a.as_i8x32(), INDEX as u32, i).into()
 }
 
@@ -152,7 +137,7 @@ pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
 // This intrinsic has no corresponding instruction.
 
 pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
-    // // static_assert_uimm_bits!(INDEX, 4);
+    static_assert_uimm_bits!(INDEX, 4);
     simd_insert(a.as_i16x16(), INDEX as u32, i).into()
 }
 

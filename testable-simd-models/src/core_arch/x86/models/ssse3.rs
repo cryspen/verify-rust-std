@@ -1,5 +1,5 @@
 //! Supplemental Streaming SIMD Extensions 3 (SSSE3)
-
+use crate::abstractions::utilities::*;
 use crate::abstractions::simd::*;
 
 use super::types::*;

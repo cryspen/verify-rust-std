@@ -940,7 +940,3 @@ pub fn simd_select<const N: u32, T1: Eq + MachineInteger, T2: Copy + MachineInte
     })
 }
 
-/// Converts one type to another
-pub fn transmute<T, U: From<T>>(a: T) -> U {
-    a.into()
-}

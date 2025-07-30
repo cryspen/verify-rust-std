@@ -1,5 +1,6 @@
 //! Streaming SIMD Extensions 2 (SSE2)
 use super::types::*;
+use crate::abstractions::utilities::*;
 use crate::abstractions::simd::*;
 mod c_extern {
     use crate::abstractions::{bit::MachineInteger, simd::*};

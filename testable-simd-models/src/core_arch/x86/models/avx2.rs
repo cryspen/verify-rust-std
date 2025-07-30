@@ -19,6 +19,7 @@
 //! [amd64_ref]: http://support.amd.com/TechDocs/24594.pdf
 //! [wiki_avx]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 //! [wiki_fma]: https://en.wikipedia.org/wiki/Fused_multiply-accumulate
+use crate::abstractions::utilities::*;
 use crate::abstractions::simd::*;
 
 mod c_extern {
