@@ -215,7 +215,7 @@ pub fn _mm_add_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_epi16)
 
 pub fn _mm_add_epi16(a: __m128i, b: __m128i) -> __m128i {
-    transmute(simd_add(b.as_i16x8(), a.as_i16x8()))
+    transmute(simd_add(a.as_i16x8(), b.as_i16x8()))
 }
 
 /// Adds packed 32-bit integers in `a` and `b`.
@@ -223,7 +223,7 @@ pub fn _mm_add_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_epi32)
 
 pub fn _mm_add_epi32(a: __m128i, b: __m128i) -> __m128i {
-    simd_add(b.as_i32x4(), a.as_i32x4()).into()
+    simd_add(a.as_i32x4(), b.as_i32x4()).into()
 }
 
 /// Adds packed 64-bit integers in `a` and `b`.
@@ -231,7 +231,7 @@ pub fn _mm_add_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_epi64)
 
 pub fn _mm_add_epi64(a: __m128i, b: __m128i) -> __m128i {
-    simd_add(b.as_i64x2(), a.as_i64x2()).into()
+    simd_add(a.as_i64x2(), b.as_i64x2()).into()
 }
 
 /// Adds packed 8-bit integers in `a` and `b` using saturation.
@@ -239,7 +239,7 @@ pub fn _mm_add_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epi8)
 
 pub fn _mm_adds_epi8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(b.as_i8x16(), a.as_i8x16()).into()
+    simd_saturating_add(a.as_i8x16(), b.as_i8x16()).into()
 }
 
 /// Adds packed 16-bit integers in `a` and `b` using saturation.
@@ -247,7 +247,7 @@ pub fn _mm_adds_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epi16)
 
 pub fn _mm_adds_epi16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(b.as_i16x8(), a.as_i16x8()).into()
+    simd_saturating_add(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Adds packed unsigned 8-bit integers in `a` and `b` using saturation.
@@ -255,7 +255,7 @@ pub fn _mm_adds_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epu8)
 
 pub fn _mm_adds_epu8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(b.as_u8x16(), a.as_u8x16()).into()
+    simd_saturating_add(a.as_u8x16(), b.as_u8x16()).into()
 }
 
 /// Adds packed unsigned 16-bit integers in `a` and `b` using saturation.
@@ -263,7 +263,7 @@ pub fn _mm_adds_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_adds_epu16)
 
 pub fn _mm_adds_epu16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_add(b.as_u16x8(), a.as_u16x8()).into()
+    simd_saturating_add(a.as_u16x8(), b.as_u16x8()).into()
 }
 
 /// Averages packed unsigned 8-bit integers in `a` and `b`.
@@ -297,7 +297,7 @@ pub fn _mm_avg_epu16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_madd_epi16)
 
 pub fn _mm_madd_epi16(a: __m128i, b: __m128i) -> __m128i {
-    pmaddwd(b.as_i16x8(), a.as_i16x8()).into()
+    pmaddwd(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Compares packed 16-bit integers in `a` and `b`, and returns the packed
@@ -380,7 +380,7 @@ pub fn _mm_mulhi_epu16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mullo_epi16)
 
 pub fn _mm_mullo_epi16(a: __m128i, b: __m128i) -> __m128i {
-    transmute(simd_mul(b.as_i16x8(), a.as_i16x8()))
+    transmute(simd_mul(a.as_i16x8(), b.as_i16x8()))
 }
 
 /// Multiplies the low unsigned 32-bit integers from each packed 64-bit element
@@ -407,7 +407,7 @@ pub fn _mm_mul_epu32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sad_epu8)
 
 pub fn _mm_sad_epu8(a: __m128i, b: __m128i) -> __m128i {
-    psadbw(b.as_u8x16(), a.as_u8x16()).into()
+    psadbw(a.as_u8x16(), b.as_u8x16()).into()
 }
 
 /// Subtracts packed 8-bit integers in `b` from packed 8-bit integers in `a`.
@@ -415,7 +415,7 @@ pub fn _mm_sad_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi8)
 
 pub fn _mm_sub_epi8(a: __m128i, b: __m128i) -> __m128i {
-    transmute(simd_sub(b.as_i8x16(), a.as_i8x16()))
+    transmute(simd_sub(a.as_i8x16(), b.as_i8x16()))
 }
 
 /// Subtracts packed 16-bit integers in `b` from packed 16-bit integers in `a`.
@@ -423,7 +423,7 @@ pub fn _mm_sub_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi16)
 
 pub fn _mm_sub_epi16(a: __m128i, b: __m128i) -> __m128i {
-    transmute(simd_sub(b.as_i16x8(), a.as_i16x8()))
+    transmute(simd_sub(a.as_i16x8(), b.as_i16x8()))
 }
 
 /// Subtract packed 32-bit integers in `b` from packed 32-bit integers in `a`.
@@ -431,7 +431,7 @@ pub fn _mm_sub_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi32)
 
 pub fn _mm_sub_epi32(a: __m128i, b: __m128i) -> __m128i {
-    simd_sub(b.as_i32x4(), a.as_i32x4()).into()
+    simd_sub(a.as_i32x4(), b.as_i32x4()).into()
 }
 
 /// Subtract packed 64-bit integers in `b` from packed 64-bit integers in `a`.
@@ -439,7 +439,7 @@ pub fn _mm_sub_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_epi64)
 
 pub fn _mm_sub_epi64(a: __m128i, b: __m128i) -> __m128i {
-    simd_sub(b.as_i64x2(), a.as_i64x2()).into()
+    simd_sub(a.as_i64x2(), b.as_i64x2()).into()
 }
 
 /// Subtract packed 8-bit integers in `b` from packed 8-bit integers in `a`
@@ -448,7 +448,7 @@ pub fn _mm_sub_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epi8)
 
 pub fn _mm_subs_epi8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(b.as_i8x16(), a.as_i8x16()).into()
+    simd_saturating_sub(a.as_i8x16(), b.as_i8x16()).into()
 }
 
 /// Subtract packed 16-bit integers in `b` from packed 16-bit integers in `a`
@@ -457,7 +457,7 @@ pub fn _mm_subs_epi8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epi16)
 
 pub fn _mm_subs_epi16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(b.as_i16x8(), a.as_i16x8()).into()
+    simd_saturating_sub(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Subtract packed unsigned 8-bit integers in `b` from packed unsigned 8-bit
@@ -466,7 +466,7 @@ pub fn _mm_subs_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epu8)
 
 pub fn _mm_subs_epu8(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(b.as_u8x16(), a.as_u8x16()).into()
+    simd_saturating_sub(a.as_u8x16(), b.as_u8x16()).into()
 }
 
 /// Subtract packed unsigned 16-bit integers in `b` from packed unsigned 16-bit
@@ -475,7 +475,7 @@ pub fn _mm_subs_epu8(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_subs_epu16)
 
 pub fn _mm_subs_epu16(a: __m128i, b: __m128i) -> __m128i {
-    simd_saturating_sub(b.as_u16x8(), a.as_u16x8()).into()
+    simd_saturating_sub(a.as_u16x8(), b.as_u16x8()).into()
 }
 
 /// Shifts `a` left by `IMM8` bytes while shifting in zeros.
@@ -627,7 +627,7 @@ pub fn _mm_srai_epi16<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sra_epi16)
 
 pub fn _mm_sra_epi16(a: __m128i, count: __m128i) -> __m128i {
-    psraw(count.as_i16x8(), a.as_i16x8()).into()
+    psraw(a.as_i16x8(), count.as_i16x8()).into()
 }
 
 /// Shifts packed 32-bit integers in `a` right by `IMM8` while shifting in sign
@@ -646,7 +646,7 @@ pub fn _mm_srai_epi32<const IMM8: i32>(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sra_epi32)
 
 pub fn _mm_sra_epi32(a: __m128i, count: __m128i) -> __m128i {
-    psrad(count.as_i32x4(), a.as_i32x4()).into()
+    psrad(a.as_i32x4(), count.as_i32x4()).into()
 }
 
 /// Shifts `a` right by `IMM8` bytes while shifting in zeros.
@@ -1078,7 +1078,7 @@ pub fn _mm_move_epi64(a: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_packs_epi16)
 
 pub fn _mm_packs_epi16(a: __m128i, b: __m128i) -> __m128i {
-    packsswb(b.as_i16x8(), a.as_i16x8()).into()
+    packsswb(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Converts packed 32-bit integers from `a` and `b` to packed 16-bit integers
@@ -1087,7 +1087,7 @@ pub fn _mm_packs_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_packs_epi32)
 
 pub fn _mm_packs_epi32(a: __m128i, b: __m128i) -> __m128i {
-    packssdw(b.as_i32x4(), a.as_i32x4()).into()
+    packssdw(a.as_i32x4(), b.as_i32x4()).into()
 }
 
 /// Converts packed 16-bit integers from `a` and `b` to packed 8-bit integers
@@ -1096,7 +1096,7 @@ pub fn _mm_packs_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_packus_epi16)
 
 pub fn _mm_packus_epi16(a: __m128i, b: __m128i) -> __m128i {
-    packuswb(b.as_i16x8(), a.as_i16x8()).into()
+    packuswb(a.as_i16x8(), b.as_i16x8()).into()
 }
 
 /// Returns the `imm8` element of `a`.
@@ -1234,7 +1234,7 @@ pub fn _mm_unpackhi_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpackhi_epi32)
 
 pub fn _mm_unpackhi_epi32(a: __m128i, b: __m128i) -> __m128i {
-    (simd_shuffle(b.as_i32x4(), a.as_i32x4(), [2, 6, 3, 7])).into()
+    (simd_shuffle(a.as_i32x4(), b.as_i32x4(), [2, 6, 3, 7])).into()
 }
 
 /// Unpacks and interleave 64-bit integers from the high half of `a` and `b`.
@@ -1242,7 +1242,7 @@ pub fn _mm_unpackhi_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpackhi_epi64)
 
 pub fn _mm_unpackhi_epi64(a: __m128i, b: __m128i) -> __m128i {
-    (simd_shuffle(b.as_i64x2(), a.as_i64x2(), [1, 3])).into()
+    (simd_shuffle(a.as_i64x2(), b.as_i64x2(), [1, 3])).into()
 }
 
 /// Unpacks and interleave 8-bit integers from the low half of `a` and `b`.
@@ -1272,7 +1272,7 @@ pub fn _mm_unpacklo_epi16(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpacklo_epi32)
 
 pub fn _mm_unpacklo_epi32(a: __m128i, b: __m128i) -> __m128i {
-    simd_shuffle(b.as_i32x4(), a.as_i32x4(), [0, 4, 1, 5]).into()
+    simd_shuffle(a.as_i32x4(), b.as_i32x4(), [0, 4, 1, 5]).into()
 }
 
 /// Unpacks and interleave 64-bit integers from the low half of `a` and `b`.
@@ -1280,7 +1280,7 @@ pub fn _mm_unpacklo_epi32(a: __m128i, b: __m128i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_unpacklo_epi64)
 
 pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
-    simd_shuffle(b.as_i64x2(), a.as_i64x2(), [0, 2]).into()
+    simd_shuffle(a.as_i64x2(), b.as_i64x2(), [0, 2]).into()
 }
 
 /// Returns vector of type __m128i with indeterminate elements.with indetermination elements.
