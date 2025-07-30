@@ -27,6 +27,15 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
     transmute(simd_select(mask, b.as_i32x8(), a.as_i32x8()))
 }
 
+/// Blends packed double-precision (64-bit) floating-point elements from
+/// `a` and `b` using `c` as a mask.
+///
+/// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_blendv_pd)
+pub fn _mm256_blendv_pd(a: __m256d, b: __m256d, c: __m256d) -> __m256d {
+    let mask: i64x4 = simd_lt(c.as_i64x4(), i64x4::ZERO());
+    transmute(simd_select(mask, b.as_f64x4(), a.as_f64x4()))
+}
+
 /// Equal (ordered, non-signaling)
 pub const _CMP_EQ_OQ: i32 = 0x00;
 /// Less-than (ordered, signaling)
@@ -98,23 +107,20 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permute2f128_si256)
 pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
     static_assert_uimm_bits!(IMM8, 8);
-    vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8).into()
+    transmute(vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8))
 }
 
 /// Copies `a` to result, then inserts 128 bits from `b` into result
 /// at the location specified by `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_insertf128_si256)
-
 pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m256i {
     static_assert_uimm_bits!(IMM1, 1);
-
     let dst: i64x4 = simd_shuffle(
-        a.as_i64x4(),
-        _mm256_castsi128_si256(b).as_i64x4(),
-        [[4, 5, 2, 3], [0, 1, 4, 5]][IMM1 as usize],
+        a.as_i64x4(), _mm256_castsi128_si256(b).as_i64x4(), [[4, 5, 2, 3], [0, 1, 4,
+        5]] [IMM1 as usize],
     );
-    dst.into()
+    transmute(dst)
 }
 
 /// Copies `a` to result, and inserts the 8-bit integer `i` into result
@@ -148,12 +154,7 @@ pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_testz_si256)
 pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
-    let c = __m256i::from_fn(|i| a[i] & b[i]);
-    if c == __m256i::ZERO() {
-        1
-    } else {
-        0
-    }
+    ptestz256(a.as_i64x4(), b.as_i64x4())
 }
 
 /// Sets each bit of the returned mask based on the most significant bit of the
@@ -183,6 +184,149 @@ pub fn _mm256_setzero_ps() -> __m256 {
 
 pub fn _mm256_setzero_si256() -> __m256i {
     __m256i::ZERO()
+}
+
+/// Sets packed 8-bit integers in returned vector with the supplied values in
+/// reverse order.
+///
+/// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_setr_epi8)
+pub fn _mm256_setr_epi8(
+    e00: i8,
+    e01: i8,
+    e02: i8,
+    e03: i8,
+    e04: i8,
+    e05: i8,
+    e06: i8,
+    e07: i8,
+    e08: i8,
+    e09: i8,
+    e10: i8,
+    e11: i8,
+    e12: i8,
+    e13: i8,
+    e14: i8,
+    e15: i8,
+    e16: i8,
+    e17: i8,
+    e18: i8,
+    e19: i8,
+    e20: i8,
+    e21: i8,
+    e22: i8,
+    e23: i8,
+    e24: i8,
+    e25: i8,
+    e26: i8,
+    e27: i8,
+    e28: i8,
+    e29: i8,
+    e30: i8,
+    e31: i8,
+) -> __m256i {
+        transmute(
+            i8x32::new(
+                e00,
+                e01,
+                e02,
+                e03,
+                e04,
+                e05,
+                e06,
+                e07,
+                e08,
+                e09,
+                e10,
+                e11,
+                e12,
+                e13,
+                e14,
+                e15,
+                e16,
+                e17,
+                e18,
+                e19,
+                e20,
+                e21,
+                e22,
+                e23,
+                e24,
+                e25,
+                e26,
+                e27,
+                e28,
+                e29,
+                e30,
+                e31,
+            ),
+        )
+}
+/// Sets packed 16-bit integers in returned vector with the supplied values in
+/// reverse order.
+///
+/// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_setr_epi16)
+pub fn _mm256_setr_epi16(
+    e00: i16,
+    e01: i16,
+    e02: i16,
+    e03: i16,
+    e04: i16,
+    e05: i16,
+    e06: i16,
+    e07: i16,
+    e08: i16,
+    e09: i16,
+    e10: i16,
+    e11: i16,
+    e12: i16,
+    e13: i16,
+    e14: i16,
+    e15: i16,
+) -> __m256i {
+    
+        transmute(
+            i16x16::new(
+                e00,
+                e01,
+                e02,
+                e03,
+                e04,
+                e05,
+                e06,
+                e07,
+                e08,
+                e09,
+                e10,
+                e11,
+                e12,
+                e13,
+                e14,
+                e15,
+            ),
+        )
+}
+/// Sets packed 32-bit integers in returned vector with the supplied values in
+/// reverse order.
+///
+/// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_setr_epi32)
+pub fn _mm256_setr_epi32(
+    e0: i32,
+    e1: i32,
+    e2: i32,
+    e3: i32,
+    e4: i32,
+    e5: i32,
+    e6: i32,
+    e7: i32,
+) -> __m256i {
+    transmute(i32x8::new(e0, e1, e2, e3, e4, e5, e6, e7)) 
+}
+/// Sets packed 64-bit integers in returned vector with the supplied values in
+/// reverse order.
+///
+/// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_setr_epi64x)
+pub fn _mm256_setr_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
+    transmute(i64x4::new(a, b, c, d)) 
 }
 
 /// Sets packed 8-bit integers in returned vector with the supplied values.
@@ -225,12 +369,42 @@ pub fn _mm256_set_epi8(
     e30: i8,
     e31: i8,
 ) -> __m256i {
-    let vec = [
-        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17,
-        e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,
-    ];
-    transmute(i8x32::from_fn(|i| vec[(31 - i) as usize]))
+    _mm256_setr_epi8(
+        e31,
+        e30,
+        e29,
+        e28,
+        e27,
+        e26,
+        e25,
+        e24,
+        e23,
+        e22,
+        e21,
+        e20,
+        e19,
+        e18,
+        e17,
+        e16,
+        e15,
+        e14,
+        e13,
+        e12,
+        e11,
+        e10,
+        e09,
+        e08,
+        e07,
+        e06,
+        e05,
+        e04,
+        e03,
+        e02,
+        e01,
+        e00,
+    )
 }
+
 
 /// Sets packed 16-bit integers in returned vector with the supplied values.
 ///
@@ -256,10 +430,24 @@ pub fn _mm256_set_epi16(
     e14: i16,
     e15: i16,
 ) -> __m256i {
-    let vec = [
-        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
-    ];
-    transmute(i16x16::from_fn(|i| vec[(15 - i) as usize]))
+    _mm256_setr_epi16(
+        e15,
+        e14,
+        e13,
+        e12,
+        e11,
+        e10,
+        e09,
+        e08,
+        e07,
+        e06,
+        e05,
+        e04,
+        e03,
+        e02,
+        e01,
+        e00,
+    )
 }
 
 /// Sets packed 32-bit integers in returned vector with the supplied values.
@@ -278,8 +466,7 @@ pub fn _mm256_set_epi32(
     e6: i32,
     e7: i32,
 ) -> __m256i {
-    let vec = [e0, e1, e2, e3, e4, e5, e6, e7];
-    transmute(i32x8::from_fn(|i| vec[(7 - i) as usize]))
+    _mm256_setr_epi32(e7, e6, e5, e4, e3, e2, e1, e0)
 }
 
 /// Sets packed 64-bit integers in returned vector with the supplied values.
@@ -287,8 +474,7 @@ pub fn _mm256_set_epi32(
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_set_epi64x)
 // This intrinsic has no corresponding instruction.
 pub fn _mm256_set_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
-    let vec = [d, c, b, a];
-    transmute(i64x4::from_fn(|i| vec[i as usize]))
+    _mm256_setr_epi64x(d, c, b, a)
 }
 
 /// Broadcasts 8-bit integer `a` to all elements of returned vector.

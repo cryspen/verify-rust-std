@@ -34,5 +34,7 @@ pub(crate) mod types {
     #[allow(non_camel_case_types)]
     pub type __m256 = BitVec<256>;
     #[allow(non_camel_case_types)]
+    pub type __m256d = BitVec<256>;
+    #[allow(non_camel_case_types)]
     pub type __m128i = BitVec<128>;
 }
