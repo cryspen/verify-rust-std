@@ -256,8 +256,11 @@ impl Bit {
         }
     }
 
-    pub fn of_int<T: MachineInteger>(x: T, nth: u32) -> Bit {
-        let x: u128 = x.to_u128();
-        Self::of_raw_int(x, nth)
+    pub fn of_int<T: MachineInteger + Ord>(x: T, nth: u32) -> Bit {
+        if x >= T::ZEROS {
+            Self::of_raw_int(x.to_u128(), nth)
+        } else {
+            Self::of_raw_int((2u128.pow(T::bits() as u32) + x.to_u128()) as u128, nth)
+        }
     }
 }
