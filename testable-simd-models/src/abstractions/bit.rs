@@ -207,8 +207,31 @@ macro_rules! generate_umachine_integer_impls {
 generate_imachine_integer_impls!(i8, i16, i32, i64, i128);
 generate_umachine_integer_impls!(u8, u16, u32, u64, u128);
 
+impl MachineNumeric for f32 {
+    const BITS: u32 = 32;
+    const SIGNED: bool = false;
+    const ZEROS: f32 = 0.0;
+    const ONES: f32 = f32::from_bits(0xffffffffu32);
+    const MIN: f32 = f32::MIN;
+    const MAX: f32 = f32::MAX;
+    fn to_u128(self) -> u128 {self.to_bits() as u128}
+    fn from_u128(x:u128) -> Self {f32::from_bits(x as u32)}
+}
+
+impl MachineNumeric for f64 {
+    const BITS: u32 = 64;
+    const SIGNED: bool = false;
+    const ZEROS: f64 = 0.0;
+    const ONES: f64 = f64::from_bits(0xffffffffffffffffu64);
+    const MIN: f64 = f64::MIN;
+    const MAX: f64 = f64::MAX;
+    fn to_u128(self) -> u128 {self.to_bits() as u128}
+    fn from_u128(x:u128) -> Self {f64::from_bits(x as u64)}
+}
+
+
 impl Bit {
-    pub fn nth_bit<T: MachineInteger>(x: T, nth: usize) -> Self {
+    pub fn nth_bit<T: MachineNumeric>(x: T, nth: usize) -> Self {
         if (x.to_u128() >> nth) % 2 == 1 {
             Self::One
         } else {
