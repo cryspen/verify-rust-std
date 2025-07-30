@@ -20,7 +20,7 @@ macro_rules! interpretations {
                         #[doc = concat!("Conversion from ", stringify!($ty), " vectors of size ", stringify!($m), "to  bit vectors of size ", stringify!($n))]
                         pub fn [< from_ $name >](iv: $name) -> BitVec<$n> {
             let vec: Vec<$ty> = iv.as_vec();
-            Self::from_slice(&vec[..], <$ty>::BITS as u32) 
+            Self::from_slice(&vec[..], <$ty>::BITS as u32)
                         }
                         #[doc = concat!("Conversion from bit vectors of size ", stringify!($n), " to ", stringify!($ty), " vectors of size ", stringify!($m))]
                         pub fn [< to_ $name >](bv: BitVec<$n>) -> $name {

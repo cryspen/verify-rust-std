@@ -1,5 +1,5 @@
 //! This module provides a specification-friendly bit vector type.
-use super::bit::{Bit, MachineInteger, MachineNumeric};
+use super::bit::{Bit, MachineInteger};
 use super::funarr::*;
 
 use std::fmt::Formatter;

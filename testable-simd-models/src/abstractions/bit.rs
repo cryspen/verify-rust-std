@@ -134,11 +134,11 @@ pub trait MachineNumeric {
     /// Raw transmutation of bits to u128
     fn to_u128(self) -> u128;
     /// Raw transmutation of bits from u128
-    fn from_u128(x:u128) -> Self;
+    fn from_u128(x: u128) -> Self;
 }
 
 /// A trait for types that represent machine integers.
-pub trait MachineInteger : MachineNumeric {
+pub trait MachineInteger: MachineNumeric {
     /// Implements functionality for `simd_add` in `crate::abstractions::simd`.
     fn wrapping_add(self, rhs: Self) -> Self;
     /// Implements functionality for `simd_sub` in `crate::abstractions::simd`.
@@ -216,21 +216,3 @@ impl Bit {
         }
     }
 }
-
-// impl Bit {
-//     fn of_raw_int(x: u128, nth: u32) -> Self {
-//         if x / 2u128.pow(nth) % 2 == 1 {
-//             Self::One
-//         } else {
-//             Self::Zero
-//         }
-//     }
-
-//     pub fn of_int<T: MachineInteger + PartialOrd>(x: T, nth: u32) -> Bit {
-//         if x >= T::ZEROS {
-//             Self::of_raw_int(x.to_u128()    , nth)
-//         } else {
-//             Self::of_raw_int((2i128.pow(T::BITS) + x) as u128, nth)
-//         }
-//     }
-// }
