@@ -7,13 +7,7 @@ use super::types::*;
 mod c_extern {
     use crate::abstractions::simd::*;
     pub fn pshufb128(a: u8x16, b: u8x16) -> u8x16 {
-        u8x16::from_fn(|i| {
-            if b[i] > 127 {
-                0
-            } else {
-                a[(b[i] % 16) as usize]
-            }
-        })
+        u8x16::from_fn(|i| if b[i] > 127 { 0 } else { a[(b[i] % 16) as u32] })
     }
 
     pub fn phaddw128(a: i16x8, b: i16x8) -> i16x8 {

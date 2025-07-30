@@ -1,8 +1,0 @@
-[package]
-name = "modelize"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-prettyplease = "0.2.36"
-syn = { version = "2", features = ["full"] }

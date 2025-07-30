@@ -132,10 +132,6 @@ pub trait MachineInteger {
     /// Maximum value of the integer type.
     const MAX: Self;
 
-    /// Casts integer to u128 
-    fn to_u128(self) -> u128;
-    /// Casts u128 to integer 
-    fn from_u128(x:u128) -> Self;
     /// Implements functionality for `simd_add` in `crate::abstractions::simd`.
     fn wrapping_add(self, rhs: Self) -> Self;
     /// Implements functionality for `simd_sub` in `crate::abstractions::simd`.
@@ -162,8 +158,6 @@ macro_rules! generate_imachine_integer_impls {
 		const MIN: $ty = $ty::MIN;
 		const MAX: $ty = $ty::MAX;
 		fn bits() -> u32 { $ty::BITS }
-        fn to_u128(self) -> u128 {self as u128}
-        fn from_u128(x:u128) -> Self {x as $ty}
 		fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
 		fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
 		fn overflowing_mul(self, rhs: Self) -> Self { self.overflowing_mul(rhs).0 }
@@ -187,8 +181,6 @@ macro_rules! generate_umachine_integer_impls {
 
 
 		fn bits() -> u32 { $ty::BITS }
-        fn to_u128(self) -> u128 {self as u128}
-        fn from_u128(x:u128) -> Self {x as $ty}
 		fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
 		fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
 		fn overflowing_mul(self, rhs: Self) -> Self { self.overflowing_mul(rhs).0 }
@@ -202,51 +194,6 @@ macro_rules! generate_umachine_integer_impls {
 generate_imachine_integer_impls!(i8, i16, i32, i64, i128);
 generate_umachine_integer_impls!(u8, u16, u32, u64, u128);
 
-macro_rules! unsupported_op {
-    () => { panic!("unsupported operation")}
-}
-
-impl MachineInteger for f32 {
-		const SIGNED: bool = true;
-		const ZEROS: f32 = 0.0;
-		const ONES: f32 = !0u32 as f32;
-		const MIN: f32 = f32::MIN;
-		const MAX: f32 = f32::MAX;
-
-
-		fn bits() -> u32 { 32 }
-        fn to_u128(self) -> u128 {self as u128}
-        fn from_u128(x:u128) -> Self {x as f32}
-		fn wrapping_add(self, _rhs: Self) -> Self { unsupported_op!() }
-		fn wrapping_sub(self, _rhs: Self) -> Self { unsupported_op!() }
-		fn overflowing_mul(self, _rhs: Self) -> Self { unsupported_op!() }
-		fn saturating_add(self, _rhs: Self) -> Self { unsupported_op!()}
-		fn saturating_sub(self, _rhs: Self) -> Self { unsupported_op!()}
-		fn absolute_diff(self, rhs: Self) -> Self {if self > rhs {self - rhs} else {rhs - self}}
-		fn absolute_val(self) -> Self {self.abs()}
-}
-
-impl MachineInteger for f64 {
-		const SIGNED: bool = true;
-		const ZEROS: f64 = 0.0;
-		const ONES: f64 = !0u64 as f64;
-		const MIN: f64 = f64::MIN;
-		const MAX: f64 = f64::MAX;
-
-
-		fn bits() -> u32 { 32 }
-        fn to_u128(self) -> u128 {self as u128}
-        fn from_u128(x:u128) -> Self {x as f64}
-		fn wrapping_add(self, _rhs: Self) -> Self { unsupported_op!() }
-		fn wrapping_sub(self, _rhs: Self) -> Self { unsupported_op!() }
-		fn overflowing_mul(self, _rhs: Self) -> Self { unsupported_op!() }
-		fn saturating_add(self, _rhs: Self) -> Self { unsupported_op!()}
-		fn saturating_sub(self, _rhs: Self) -> Self { unsupported_op!()}
-		fn absolute_diff(self, rhs: Self) -> Self {if self > rhs {self - rhs} else {rhs - self}}
-		fn absolute_val(self) -> Self {self.abs()}
-}
-
-
 impl Bit {
     fn of_raw_int(x: u128, nth: u32) -> Self {
         if x / 2u128.pow(nth) % 2 == 1 {
@@ -256,11 +203,12 @@ impl Bit {
         }
     }
 
-    pub fn of_int<T: MachineInteger + Ord>(x: T, nth: u32) -> Bit {
-        if x >= T::ZEROS {
-            Self::of_raw_int(x.to_u128(), nth)
+    pub fn of_int<T: Into<i128> + MachineInteger>(x: T, nth: u32) -> Bit {
+        let x: i128 = x.into();
+        if x >= 0 {
+            Self::of_raw_int(x as u128, nth)
         } else {
-            Self::of_raw_int((2u128.pow(T::bits() as u32) + x.to_u128()) as u128, nth)
+            Self::of_raw_int((2i128.pow(T::bits()) + x) as u128, nth)
         }
     }
 }

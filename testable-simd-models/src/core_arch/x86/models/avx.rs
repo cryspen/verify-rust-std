@@ -15,8 +15,24 @@
 
 use super::types::*;
 use crate::abstractions::simd::*;
-use super::avx_handwritten::*;
 
+mod c_extern {
+    use crate::abstractions::simd::*;
+
+    pub fn vperm2f128si256(a: i32x8, b: i32x8, imm8: i8) -> i32x8 {
+        let temp = i128x2::from_fn(|i| match (imm8 as u8) >> (i * 4) {
+            0 => (a[4 * i] as i128) + 16 * (a[4 * i + 1] as i128),
+            1 => (a[4 * i + 2] as i128) + 16 * (a[4 * i + 3] as i128),
+            2 => (b[4 * i] as i128) + 16 * (b[4 * i + 1] as i128),
+            3 => (b[4 * i + 2] as i128) + 16 * (b[4 * i + 3] as i128),
+            _ => unreachable!(),
+        });
+
+        i32x8::from_fn(|i| (temp[if i < 4 { 0 } else { 1 }] >> (i % 4)) as i32)
+    }
+}
+
+use c_extern::*;
 /// Blends packed single-precision (32-bit) floating-point elements from
 /// `a` and `b` using `c` as a mask.
 ///
@@ -96,7 +112,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permute2f128_si256)
 pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
-    static_assert_uimm_bits!(IMM8, 8);
+    // static_assert_uimm_bits!(IMM8, 8);
     vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8).into()
 }
 
@@ -147,7 +163,12 @@ pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_testz_si256)
 pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
-    ptestz256(a.as_i64x4(), b.as_i64x4()) 
+    let c = __m256i::from_fn(|i| a[i] & b[i]);
+    if c == __m256i::ZERO() {
+        1
+    } else {
+        0
+    }
 }
 
 /// Sets each bit of the returned mask based on the most significant bit of the
@@ -219,8 +240,11 @@ pub fn _mm256_set_epi8(
     e30: i8,
     e31: i8,
 ) -> __m256i {
-    transmute(i8x32::new(e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17,
-        e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,))
+    let vec = [
+        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17,
+        e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,
+    ];
+    transmute(i8x32::from_fn(|i| vec[(31 - i) as usize]))
 }
 
 /// Sets packed 16-bit integers in returned vector with the supplied values.
@@ -247,7 +271,10 @@ pub fn _mm256_set_epi16(
     e14: i16,
     e15: i16,
 ) -> __m256i {
-    transmute(i16x16::new(e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15))
+    let vec = [
+        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
+    ];
+    transmute(i16x16::from_fn(|i| vec[(15 - i) as usize]))
 }
 
 /// Sets packed 32-bit integers in returned vector with the supplied values.
@@ -266,7 +293,8 @@ pub fn _mm256_set_epi32(
     e6: i32,
     e7: i32,
 ) -> __m256i {
-    transmute(i32x8::new(e0, e1, e2, e3, e4, e5, e6, e7))
+    let vec = [e0, e1, e2, e3, e4, e5, e6, e7];
+    transmute(i32x8::from_fn(|i| vec[(7 - i) as usize]))
 }
 
 /// Sets packed 64-bit integers in returned vector with the supplied values.
@@ -274,7 +302,8 @@ pub fn _mm256_set_epi32(
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_set_epi64x)
 // This intrinsic has no corresponding instruction.
 pub fn _mm256_set_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
-    transmute(i64x4::new(d, c, b, a))
+    let vec = [d, c, b, a];
+    transmute(i64x4::from_fn(|i| vec[i as usize]))
 }
 
 /// Broadcasts 8-bit integer `a` to all elements of returned vector.

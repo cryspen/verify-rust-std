@@ -540,14 +540,14 @@ mod c_extern {
                 if b[i] > 127 {
                     0
                 } else {
-                    let index = (b[i] % 16) as usize;
+                    let index = (b[i] % 16) as u32;
                     a[index]
                 }
             } else {
                 if b[i] > 127 {
                     0
                 } else {
-                    let index = (b[i] % 16) as usize;
+                    let index = (b[i] % 16) as u32;
                     a[index + 16]
                 }
             }
@@ -556,7 +556,7 @@ mod c_extern {
 
     pub fn permd(a: u32x8, b: u32x8) -> u32x8 {
         u32x8::from_fn(|i| {
-            let id = (b[i] % 8) as usize;
+            let id = b[i] % 8;
             a[id]
         })
     }
@@ -564,8 +564,8 @@ mod c_extern {
     pub fn mpsadbw(a: u8x32, b: u8x32, imm8: i32) -> u16x16 {
         u16x16::from_fn(|i| {
             if i < 8 {
-                let a_offset = (((imm8 & 4) >> 2) * 4) as usize;
-                let b_offset = ((imm8 & 3) * 4) as usize;
+                let a_offset = (((imm8 & 4) >> 2) * 4) as u32;
+                let b_offset = ((imm8 & 3) * 4) as u32;
                 let k = a_offset + i;
                 let l = b_offset;
                 ((a[k].absolute_diff(b[l]) as i8) as u8 as u16)
@@ -575,8 +575,8 @@ mod c_extern {
             } else {
                 let i = i - 8;
                 let imm8 = imm8 >> 3;
-                let a_offset = (((imm8 & 4) >> 2) * 4) as usize;
-                let b_offset = ((imm8 & 3) * 4) as usize;
+                let a_offset = (((imm8 & 4) >> 2) * 4) as u32;
+                let b_offset = ((imm8 & 3) * 4) as u32;
                 let k = a_offset + i;
                 let l = b_offset;
                 ((a[16 + k].absolute_diff(b[16 + l]) as i8) as u8 as u16)

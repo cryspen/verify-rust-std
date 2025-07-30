@@ -23,5 +23,4 @@
 pub mod bit;
 pub mod bitvec;
 pub mod funarr;
-#[macro_use]
 pub mod simd;

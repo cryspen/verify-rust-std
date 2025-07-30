@@ -22,7 +22,6 @@
 
 pub mod avx;
 pub mod avx2;
-pub mod avx_handwritten;
 pub mod sse2;
 pub mod ssse3;
 
@@ -31,8 +30,6 @@ pub(crate) mod types {
 
     #[allow(non_camel_case_types)]
     pub type __m256i = BitVec<256>;
-    #[allow(non_camel_case_types)]
-    pub type __m256d = BitVec<256>;
     #[allow(non_camel_case_types)]
     pub type __m256 = BitVec<256>;
     #[allow(non_camel_case_types)]
