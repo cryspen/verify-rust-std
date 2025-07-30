@@ -63,7 +63,7 @@ fn u128_int_from_bit_slice(bits: &[Bit]) -> u128 {
 }
 
 /// Convert a bit slice into a machine integer of type `T`.
-fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) -> T {
+fn int_from_bit_slice<T: MachineInteger + Copy>(bits: &[Bit]) -> T {
     debug_assert!(bits.len() <= T::bits() as usize);
     let result = if T::SIGNED {
         let is_negative = matches!(bits[T::bits() as usize - 1], Bit::One);
@@ -76,10 +76,7 @@ fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) ->
     } else {
         u128_int_from_bit_slice(bits) as i128
     };
-    let Ok(n) = result.try_into() else {
-        // Conversion must succeed as `result` is guaranteed to be in range due to the bit-length check.
-        unreachable!()
-    };
+    let n = T::from_u128(result as u128);
     n
 }
 impl<const N: usize> BitVec<N> {
@@ -88,22 +85,22 @@ impl<const N: usize> BitVec<N> {
         Self(FunArray::from_fn(f))
     }
     /// Convert a slice of machine integers where only the `d` least significant bits are relevant.
-    pub fn from_slice<T: Into<i128> + MachineInteger + Copy>(x: &[T], d: usize) -> Self {
+    pub fn from_slice<T: MachineInteger + Copy>(x: &[T], d: usize) -> Self {
         Self::from_fn(|i| Bit::of_int::<T>(x[(i / d) as usize], (i % d) as u32))
     }
 
     /// Construct a BitVec out of a machine integer.
-    pub fn from_int<T: Into<i128> + MachineInteger + Copy>(n: T) -> Self {
+    pub fn from_int<T: MachineInteger + Copy>(n: T) -> Self {
         Self::from_slice::<T>(&[n], T::bits() as usize)
     }
 
     /// Convert a BitVec into a machine integer of type `T`.
-    pub fn to_int<T: TryFrom<i128> + MachineInteger + Copy>(self) -> T {
+    pub fn to_int<T: MachineInteger + Copy>(self) -> T {
         int_from_bit_slice(&self.0.as_vec())
     }
 
     /// Convert a BitVec into a vector of machine integers of type `T`.
-    pub fn to_vec<T: TryFrom<i128> + MachineInteger + Copy>(&self) -> Vec<T> {
+    pub fn to_vec<T: MachineInteger + Copy>(&self) -> Vec<T> {
         self.0
             .as_vec()
             .chunks(T::bits() as usize)
@@ -123,34 +120,6 @@ impl<const N: usize> BitVec<N> {
 }
 
 impl<const N: usize> BitVec<N> {
-    // pub fn chunked_shift<const CHUNK: u32, const SHIFTS: usize>(
-    //     self,
-    //     shl: FunArray<SHIFTS, i128>,
-    // ) -> BitVec<N> {
-    //     fn chunked_shift<const N: usize, const CHUNK: usize, const SHIFTS: usize>(
-    //         bitvec: BitVec<N>,
-    //         shl: FunArray<SHIFTS, i128>,
-    //     ) -> BitVec<N> {
-    //         BitVec::from_fn(|i| {
-    //             let nth_bit = i % CHUNK;
-    //             let nth_chunk = i / CHUNK;
-    //             let shift: i128 = if nth_chunk < SHIFTS {
-    //                 shl[nth_chunk]
-    //             } else {
-    //                 0
-    //             };
-    //             let local_index = (nth_bit as i128).wrapping_sub(shift);
-    //             if local_index < CHUNK && local_index >= 0 {
-    //                 let local_index = local_index as u32;
-    //                 bitvec[nth_chunk * CHUNK + local_index]
-    //             } else {
-    //                 Bit::Zero
-    //             }
-    //         })
-    //     }
-    //     chunked_shift::<N, CHUNK, SHIFTS>(self, shl)
-    // }
-
     /// Folds over the array, accumulating a result.
     ///
     /// # Arguments

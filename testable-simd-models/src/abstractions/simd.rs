@@ -928,7 +928,7 @@ pub(crate) use simd_bitmask_big;
 /// # Safety
 /// `mask` must only contain `0` and `!0`.
 
-pub fn simd_select<const N: usize, T1: Eq + MachineInteger, T2: Copy + MachineInteger>(
+pub fn simd_select<const N: usize, T1: Eq + MachineInteger, T2: Copy>(
     mask: FunArray<N, T1>,
     if_true: FunArray<N, T2>,
     if_false: FunArray<N, T2>,
