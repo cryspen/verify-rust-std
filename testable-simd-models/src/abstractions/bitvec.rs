@@ -1,5 +1,5 @@
 //! This module provides a specification-friendly bit vector type.
-use super::bit::{Bit, MachineInteger};
+use super::bit::{Bit, MachineInteger, MachineNumeric};
 use super::funarr::*;
 
 use std::fmt::Formatter;
@@ -64,12 +64,12 @@ fn u128_int_from_bit_slice(bits: &[Bit]) -> u128 {
 
 /// Convert a bit slice into a machine integer of type `T`.
 fn int_from_bit_slice<T: TryFrom<i128> + MachineInteger + Copy>(bits: &[Bit]) -> T {
-    debug_assert!(bits.len() <= T::bits() as usize);
+    debug_assert!(bits.len() <= T::BITS as usize);
     let result = if T::SIGNED {
-        let is_negative = matches!(bits[T::bits() as usize - 1], Bit::One);
-        let s = u128_int_from_bit_slice(&bits[0..T::bits() as usize - 1]) as i128;
+        let is_negative = matches!(bits[T::BITS as usize - 1], Bit::One);
+        let s = u128_int_from_bit_slice(&bits[0..T::BITS as usize - 1]) as i128;
         if is_negative {
-            s + (-2i128).pow(T::bits() - 1)
+            s + (-2i128).pow(T::BITS - 1)
         } else {
             s
         }
@@ -94,7 +94,7 @@ impl<const N: u32> BitVec<N> {
 
     /// Construct a BitVec out of a machine integer.
     pub fn from_int<T: Into<i128> + MachineInteger + Copy>(n: T) -> Self {
-        Self::from_slice::<T>(&[n], T::bits() as u32)
+        Self::from_slice::<T>(&[n], T::BITS as u32)
     }
 
     /// Convert a BitVec into a machine integer of type `T`.
@@ -106,7 +106,7 @@ impl<const N: u32> BitVec<N> {
     pub fn to_vec<T: TryFrom<i128> + MachineInteger + Copy>(&self) -> Vec<T> {
         self.0
             .as_vec()
-            .chunks(T::bits() as usize)
+            .chunks(T::BITS as usize)
             .map(int_from_bit_slice)
             .collect()
     }

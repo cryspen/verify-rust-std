@@ -116,11 +116,11 @@ impl From<bool> for Bit {
     }
 }
 
-/// A trait for types that represent machine integers.
-pub trait MachineInteger {
-    /// The size of this integer type in bits.
-    fn bits() -> u32;
+/// A trait for integers and floats
 
+pub trait MachineNumeric {
+    /// The size of this integer type in bits.
+    const BITS: u32;
     /// The signedness of this integer type.
     const SIGNED: bool;
     /// Element of the integer type with every bit as 0.
@@ -131,7 +131,10 @@ pub trait MachineInteger {
     const MIN: Self;
     /// Maximum value of the integer type.
     const MAX: Self;
+}
 
+/// A trait for types that represent machine integers.
+pub trait MachineInteger : MachineNumeric {
     /// Implements functionality for `simd_add` in `crate::abstractions::simd`.
     fn wrapping_add(self, rhs: Self) -> Self;
     /// Implements functionality for `simd_sub` in `crate::abstractions::simd`.
@@ -145,26 +148,28 @@ pub trait MachineInteger {
     /// Implements functionality for `simd_abs_diff` in `crate::abstractions::simd`.
     fn absolute_diff(self, rhs: Self) -> Self;
     /// Implements functionality for `simd_abs` in `crate::abstractions::simd`.
-    fn absolute_val(self) -> Self;
+    fn wrapping_abs(self) -> Self;
 }
 
 macro_rules! generate_imachine_integer_impls {
     ($($ty:ident),*) => {
         $(
-	    impl MachineInteger for $ty {
+        impl MachineNumeric for $ty {
+        const BITS: u32 = $ty::BITS;
 		const SIGNED: bool = true;
 		const ZEROS: $ty = 0;
 		const ONES: $ty = -1;
 		const MIN: $ty = $ty::MIN;
 		const MAX: $ty = $ty::MAX;
-		fn bits() -> u32 { $ty::BITS }
+        }
+	    impl MachineInteger for $ty {
 		fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
 		fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
 		fn overflowing_mul(self, rhs: Self) -> Self { self.overflowing_mul(rhs).0 }
 		fn saturating_add(self, rhs: Self) -> Self { self.saturating_add(rhs)}
 		fn saturating_sub(self, rhs: Self) -> Self { self.saturating_sub(rhs) }
 		fn absolute_diff(self, rhs: Self) -> Self {if self > rhs {$ty::wrapping_sub(self, rhs)} else {$ty::wrapping_sub(rhs, self)}}
-		fn absolute_val(self) -> Self {if self == $ty::MIN {self} else {self.abs()}}
+		fn wrapping_abs(self) -> Self {if self == $ty::MIN {self} else {self.abs()}}
             })*
     };
 }
@@ -172,22 +177,22 @@ macro_rules! generate_imachine_integer_impls {
 macro_rules! generate_umachine_integer_impls {
     ($($ty:ident),*) => {
         $(
-	    impl MachineInteger for $ty {
+        impl MachineNumeric for $ty {
+        const BITS: u32 = $ty::BITS;
 		const SIGNED: bool = false;
 		const ZEROS: $ty = 0;
 		const ONES: $ty = $ty::MAX;
 		const MIN: $ty = $ty::MIN;
 		const MAX: $ty = $ty::MAX;
-
-
-		fn bits() -> u32 { $ty::BITS }
+        }
+	    impl MachineInteger for $ty {
 		fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
 		fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
 		fn overflowing_mul(self, rhs: Self) -> Self { self.overflowing_mul(rhs).0 }
 		fn saturating_add(self, rhs: Self) -> Self { self.saturating_add(rhs)}
 		fn saturating_sub(self, rhs: Self) -> Self { self.saturating_sub(rhs)}
 		fn absolute_diff(self, rhs: Self) -> Self {if self > rhs {self - rhs} else {rhs - self}}
-		fn absolute_val(self) -> Self {self}
+		fn wrapping_abs(self) -> Self {self}
         })*
     };
 }
@@ -208,7 +213,7 @@ impl Bit {
         if x >= 0 {
             Self::of_raw_int(x as u128, nth)
         } else {
-            Self::of_raw_int((2i128.pow(T::bits()) + x) as u128, nth)
+            Self::of_raw_int((2i128.pow(T::BITS) + x) as u128, nth)
         }
     }
 }

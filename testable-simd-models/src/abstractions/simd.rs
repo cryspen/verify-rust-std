@@ -2,7 +2,7 @@
 //!
 //! Operations are defined on FunArrs.
 
-use crate::abstractions::{bit::MachineInteger, bitvec::*, funarr::*};
+use crate::abstractions::{bit::*, bitvec::*, funarr::*};
 use std::convert::*;
 use std::ops::*;
 
@@ -20,7 +20,7 @@ macro_rules! interpretations {
                         #[doc = concat!("Conversion from ", stringify!($ty), " vectors of size ", stringify!($m), "to  bit vectors of size ", stringify!($n))]
                         pub fn [< from_ $name >](iv: $name) -> BitVec<$n> {
             let vec: Vec<$ty> = iv.as_vec();
-            Self::from_slice(&vec[..], <$ty>::bits() as u32)
+            Self::from_slice(&vec[..], <$ty>::BITS as u32) 
                         }
                         #[doc = concat!("Conversion from bit vectors of size ", stringify!($n), " to ", stringify!($ty), " vectors of size ", stringify!($m))]
                         pub fn [< to_ $name >](bv: BitVec<$n>) -> $name {
@@ -116,7 +116,7 @@ pub fn simd_mul<const N: u32, T: MachineInteger + Copy>(
 /// For vectors of unsigned integers it returns the vector untouched.
 /// If the element is the minimum value of a signed integer, it returns the element as is.
 pub fn simd_abs<const N: u32, T: MachineInteger + Copy>(x: FunArray<N, T>) -> FunArray<N, T> {
-    FunArray::from_fn(|i| x[i].absolute_val())
+    FunArray::from_fn(|i| x[i].wrapping_abs())
 }
 
 /// Produces the elementwise absolute difference of two vectors.
