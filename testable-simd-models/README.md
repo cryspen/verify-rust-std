@@ -192,7 +192,7 @@ similar to the upstream code in `core::arch`.
 	   mk!([100]_mm256_bsrli_epi128{<0>,<1>,<2>,<3>,...,<255>}(a: BitVec));
    ```
    ```
-	     (1)          (2)                   (3)                 (4)
+	     i.          ii.                   iii.                 iv.
    ```
    The macro invocation has four parts. 
    1. By default the macro tests for a thousand randomly generated inputs. If needed, this can be modified, such as here, where the `[100]` is used so that
