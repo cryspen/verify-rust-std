@@ -1,7 +1,7 @@
 //! This module implements a fixed-size array wrapper with functional semantics
 //! which are used in formulating abstractions.
 
-use crate::abstractions::bit::MachineInteger;
+use crate::abstractions::bit::MachineNumeric;
 
 /// `FunArray<N, T>` represents an array of `T` values of length `N`, where `N` is a compile-time constant.
 /// Internally, it uses a fixed-length array of `Option<T>` with a maximum capacity of 512 elements.
@@ -55,7 +55,7 @@ impl<const N: u32, T> FunArray<N, T> {
     }
 }
 
-impl<const N: u32, T: MachineInteger> FunArray<N, T> {
+impl<const N: u32, T: MachineNumeric> FunArray<N, T> {
     #[allow(non_snake_case)]
     pub fn ZERO() -> Self {
         Self::from_fn(|_| T::ZEROS)

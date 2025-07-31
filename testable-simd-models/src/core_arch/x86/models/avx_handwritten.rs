@@ -20,3 +20,12 @@ pub fn ptestz256(a: i64x4, b: i64x4) -> i32 {
         0
     }
 }
+
+pub fn ptestc256(a: i64x4, b: i64x4) -> i32 {
+    let c = i64x4::from_fn(|i| !a[i] & b[i]);
+    if c == i64x4::ZERO() {
+        1
+    } else {
+        0
+    }
+}

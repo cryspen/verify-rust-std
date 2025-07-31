@@ -196,7 +196,7 @@ macro_rules! from_impls{
         $(
 	    impl CastsFrom<$ty2> for $ty1 {
 		fn cast(a: $ty2) -> $ty1 {
-		    <$ty1>::from(a)
+		    a as $ty1
 		}
 	    }
 	)*
@@ -278,7 +278,13 @@ from_impls!(
     [i128, i8],
     [i128, i16],
     [i128, i32],
-    [i128, i64]
+    [i128, i64],
+    [f64, u32],
+    [f64, i32],
+    [f32, u32],
+    [f32, i32],
+    [f32, f64],
+    [f64, f32]
 );
 truncate_from_impls!(
     [u8, u16],
