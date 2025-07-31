@@ -1,6 +1,7 @@
 use super::upstream;
 use crate::abstractions::bitvec::BitVec;
 use crate::helpers::test::HasRandom;
+use super::types::*;
 
 /// Derives tests for a given intrinsics. Test that a given intrinsics and its model compute the same thing over random values (1000 by default).
 macro_rules! mk {
