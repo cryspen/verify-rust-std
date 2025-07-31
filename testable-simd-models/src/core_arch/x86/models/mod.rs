@@ -24,7 +24,9 @@ pub mod avx_handwritten;
 pub mod avx;
 pub mod avx2_handwritten;
 pub mod avx2;
+pub mod sse2_handwritten;
 pub mod sse2;
+pub mod ssse3_handwritten;
 pub mod ssse3;
 
 pub(crate) mod types {
