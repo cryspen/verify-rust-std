@@ -22,10 +22,10 @@
 use crate::abstractions::simd::*;
 use crate::abstractions::utilities::*;
 
-use super::sse::*;
-use super::sse2::*;
 use super::avx::*;
 use super::avx2_handwritten::*;
+use super::sse::*;
+use super::sse2::*;
 use super::types::*;
 
 /// Computes the absolute values of packed 32-bit integers in `a`.
@@ -389,14 +389,26 @@ pub fn _mm256_broadcastq_epi64(a: __m128i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastsd_pd)
 pub fn _mm_broadcastsd_pd(a: __m128d) -> __m128d {
-    { transmute(simd_shuffle(a.as_f64x2(), _mm_setzero_pd().as_f64x2(), [0_u32; 2])) }
+    {
+        transmute(simd_shuffle(
+            a.as_f64x2(),
+            _mm_setzero_pd().as_f64x2(),
+            [0_u32; 2],
+        ))
+    }
 }
 /// Broadcasts the low double-precision (64-bit) floating-point element
 /// from `a` to all elements of the 256-bit returned value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastsd_pd)
 pub fn _mm256_broadcastsd_pd(a: __m128d) -> __m256d {
-    { transmute(simd_shuffle(a.as_f64x2(), _mm_setzero_pd().as_f64x2(), [0_u32; 4])) }
+    {
+        transmute(simd_shuffle(
+            a.as_f64x2(),
+            _mm_setzero_pd().as_f64x2(),
+            [0_u32; 4],
+        ))
+    }
 }
 /// Broadcasts 128 bits of integer data from a to all 128-bit lanes in
 /// the 256-bit returned value.
@@ -423,14 +435,26 @@ pub fn _mm256_broadcastsi128_si256(a: __m128i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastss_ps)
 pub fn _mm_broadcastss_ps(a: __m128) -> __m128 {
-    { transmute(simd_shuffle(a.as_f32x4(), _mm_setzero_ps().as_f32x4(), [0_u32; 4])) }
+    {
+        transmute(simd_shuffle(
+            a.as_f32x4(),
+            _mm_setzero_ps().as_f32x4(),
+            [0_u32; 4],
+        ))
+    }
 }
 /// Broadcasts the low single-precision (32-bit) floating-point element
 /// from `a` to all elements of the 256-bit returned value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastss_ps)
 pub fn _mm256_broadcastss_ps(a: __m128) -> __m256 {
-    { transmute(simd_shuffle(a.as_f32x4(), _mm_setzero_ps().as_f32x4(), [0_u32; 8])) }
+    {
+        transmute(simd_shuffle(
+            a.as_f32x4(),
+            _mm_setzero_ps().as_f32x4(),
+            [0_u32; 8],
+        ))
+    }
 }
 /// Broadcasts the low packed 16-bit integer from a to all elements of
 /// the 128-bit returned value
