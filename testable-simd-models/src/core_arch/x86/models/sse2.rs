@@ -607,6 +607,7 @@ pub fn _mm_cvtepi32_ps(a: __m128i) -> __m128 {
 /// to packed 32-bit integers.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtps_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm_cvtps_epi32(a: __m128) -> __m128i {
 //     { transmute(cvtps2dq(a)) }
 // }
@@ -955,6 +956,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// low elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_add_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { transmute(simd_insert(a.as_f64x2(), 0, _mm_cvtsd_f64(a) + _mm_cvtsd_f64(b))) }
 // }
@@ -962,6 +964,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_add_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_add_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { simd_add(a, b) }
 // }
@@ -969,6 +972,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// diving the lower element of `a` by the lower element of `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_div_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_div_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { transmute(simd_insert(a.as_f64x2(), 0, _mm_cvtsd_f64(a) / _mm_cvtsd_f64(b))) }
 // }
@@ -976,6 +980,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// packed elements in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_div_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_div_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { simd_div(a, b) }
 // }
@@ -983,6 +988,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_max_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_max_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { maxsd(a, b) }
 // }
@@ -990,6 +996,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_max_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_max_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { maxpd(a, b) }
 // }
@@ -997,6 +1004,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_min_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_min_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { minsd(a, b) }
 // }
@@ -1004,6 +1012,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_min_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_min_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { minpd(a, b) }
 // }
@@ -1011,6 +1020,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// low elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mul_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_mul_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { transmute(simd_insert(a.as_f64x2(), 0, _mm_cvtsd_f64(a) * _mm_cvtsd_f64(b))) }
 // }
@@ -1018,6 +1028,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_mul_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_mul_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { transmute(simd_mul(a.as_f64x2(), b.as_f64x2())) }
 // }
@@ -1025,12 +1036,14 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// root of the lower element `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sqrt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_sqrt_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { simd_insert(a, 0, sqrtf64(_mm_cvtsd_f64(b))) }
 // }
 /// Returns a new vector with the square root of each of the values in `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sqrt_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_sqrt_pd(a: __m128d) -> __m128d {
 //     { simd_fsqrt(a) }
 // }
@@ -1038,6 +1051,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// low element by `b` from the low element of `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_sub_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { transmute(simd_insert(a.as_f64x2(), 0, _mm_cvtsd_f64(a) - _mm_cvtsd_f64(b))) }
 // }
@@ -1045,6 +1059,7 @@ pub fn _mm_unpacklo_epi64(a: __m128i, b: __m128i) -> __m128i {
 /// from `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sub_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_sub_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { simd_sub(a, b) }
 // }
@@ -1093,6 +1108,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpeq_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpeq_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 0) }
 // }
@@ -1100,6 +1116,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmplt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmplt_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 1) }
 // }
@@ -1107,6 +1124,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// less-than-or-equal comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmple_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmple_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 2) }
 // }
@@ -1114,6 +1132,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// greater-than comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpgt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpgt_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { transmute(simd_insert(_mm_cmplt_sd(b, a), 1, simd_extract(a, 1))) }
 // }
@@ -1121,6 +1140,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// greater-than-or-equal comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpge_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpge_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { simd_insert(_mm_cmple_sd(b, a), 1, simd_extract(a, 1)) }
 // }
@@ -1130,6 +1150,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// otherwise.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpord_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpord_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 7) }
 // }
@@ -1138,6 +1159,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// equal to `NaN` then `0xFFFFFFFFFFFFFFFF` is used and `0` otherwise.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpunord_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpunord_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 3) }
 // }
@@ -1145,6 +1167,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpneq_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpneq_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 4) }
 // }
@@ -1152,6 +1175,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// not-less-than comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpnlt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpnlt_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 5) }
 // }
@@ -1159,6 +1183,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// not-less-than-or-equal comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpnle_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpnle_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmpsd(a, b, 6) }
 // }
@@ -1166,6 +1191,7 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// not-greater-than comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpngt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpngt_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { simd_insert(_mm_cmpnlt_sd(b, a), 1, simd_extract(a, 1)) }
 // }
@@ -1173,72 +1199,84 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// not-greater-than-or-equal comparison of the lower elements of `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpnge_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpnge_sd(a: __m128d, b: __m128d) -> __m128d {
 //     { simd_insert(_mm_cmpnle_sd(b, a), 1, simd_extract(a, 1)) }
 // }
 /// Compares corresponding elements in `a` and `b` for equality.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpeq_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpeq_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 0) }
 // }
 /// Compares corresponding elements in `a` and `b` for less-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmplt_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmplt_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 1) }
 // }
 /// Compares corresponding elements in `a` and `b` for less-than-or-equal
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmple_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmple_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 2) }
 // }
 /// Compares corresponding elements in `a` and `b` for greater-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpgt_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpgt_pd(a: __m128d, b: __m128d) -> __m128d {
 //     _mm_cmplt_pd(b, a)
 // }
 /// Compares corresponding elements in `a` and `b` for greater-than-or-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpge_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpge_pd(a: __m128d, b: __m128d) -> __m128d {
 //     _mm_cmple_pd(b, a)
 // }
 /// Compares corresponding elements in `a` and `b` to see if neither is `NaN`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpord_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpord_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 7) }
 // }
 /// Compares corresponding elements in `a` and `b` to see if either is `NaN`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpunord_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpunord_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 3) }
 // }
 /// Compares corresponding elements in `a` and `b` for not-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpneq_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpneq_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 4) }
 // }
 /// Compares corresponding elements in `a` and `b` for not-less-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpnlt_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpnlt_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 5) }
 // }
 /// Compares corresponding elements in `a` and `b` for not-less-than-or-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpnle_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpnle_pd(a: __m128d, b: __m128d) -> __m128d {
 //     { cmppd(a, b, 6) }
 // }
 /// Compares corresponding elements in `a` and `b` for not-greater-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpngt_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpngt_pd(a: __m128d, b: __m128d) -> __m128d {
 //     _mm_cmpnlt_pd(b, a)
 // }
@@ -1246,78 +1284,91 @@ pub fn _mm_xor_pd(a: __m128d, b: __m128d) -> __m128d {
 /// not-greater-than-or-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpnge_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmpnge_pd(a: __m128d, b: __m128d) -> __m128d {
 //     _mm_cmpnle_pd(b, a)
 // }
 /// Compares the lower element of `a` and `b` for equality.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_comieq_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_comieq_sd(a: __m128d, b: __m128d) -> i32 {
 //     { comieqsd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for less-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_comilt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_comilt_sd(a: __m128d, b: __m128d) -> i32 {
 //     { comiltsd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for less-than-or-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_comile_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_comile_sd(a: __m128d, b: __m128d) -> i32 {
 //     { comilesd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for greater-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_comigt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_comigt_sd(a: __m128d, b: __m128d) -> i32 {
 //     { comigtsd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for greater-than-or-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_comige_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_comige_sd(a: __m128d, b: __m128d) -> i32 {
 //     { comigesd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for not-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_comineq_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_comineq_sd(a: __m128d, b: __m128d) -> i32 {
 //     { comineqsd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for equality.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_ucomieq_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_ucomieq_sd(a: __m128d, b: __m128d) -> i32 {
 //     { ucomieqsd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for less-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_ucomilt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_ucomilt_sd(a: __m128d, b: __m128d) -> i32 {
 //     { ucomiltsd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for less-than-or-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_ucomile_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_ucomile_sd(a: __m128d, b: __m128d) -> i32 {
 //     { ucomilesd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for greater-than.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_ucomigt_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_ucomigt_sd(a: __m128d, b: __m128d) -> i32 {
 //     { ucomigtsd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for greater-than-or-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_ucomige_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_ucomige_sd(a: __m128d, b: __m128d) -> i32 {
 //     { ucomigesd(a, b) }
 // }
 /// Compares the lower element of `a` and `b` for not-equal.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_ucomineq_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_ucomineq_sd(a: __m128d, b: __m128d) -> i32 {
 //     { ucomineqsd(a, b) }
 // }
@@ -1347,6 +1398,7 @@ pub fn _mm_cvtps_pd(a: __m128) -> __m128d {
 /// packed 32-bit integers.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtpd_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm_cvtpd_epi32(a: __m128d) -> __m128i {
 //     { transmute(cvtpd2dq(a)) }
 // }
@@ -1354,6 +1406,7 @@ pub fn _mm_cvtps_pd(a: __m128) -> __m128d {
 /// a 32-bit integer.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtsd_si32)
+// NOTE: Not modeled yet
 // pub fn _mm_cvtsd_si32(a: __m128d) -> i32 {
 //     { cvtsd2si(a) }
 // }
@@ -1363,12 +1416,14 @@ pub fn _mm_cvtps_pd(a: __m128) -> __m128d {
 /// to the upper element the return value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtsd_ss)
+// NOTE: Not modeled yet
 // pub fn _mm_cvtsd_ss(a: __m128, b: __m128d) -> __m128 {
 //     { cvtsd2ss(a, b) }
 // }
 /// Returns the lower double-precision (64-bit) floating-point element of `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtsd_f64)
+// NOTE: Not modeled yet
 // pub fn _mm_cvtsd_f64(a: __m128d) -> f64 {
 //     { simd_extract(a, 0) }
 // }
@@ -1378,6 +1433,7 @@ pub fn _mm_cvtps_pd(a: __m128) -> __m128d {
 /// to the upper element the return value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtss_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cvtss_sd(a: __m128d, b: __m128) -> __m128d {
 //     { cvtss2sd(a, b) }
 // }
@@ -1385,6 +1441,7 @@ pub fn _mm_cvtps_pd(a: __m128) -> __m128d {
 /// packed 32-bit integers with truncation.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvttpd_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm_cvttpd_epi32(a: __m128d) -> __m128i {
 //     { transmute(cvttpd2dq(a)) }
 // }
@@ -1392,6 +1449,7 @@ pub fn _mm_cvtps_pd(a: __m128) -> __m128d {
 /// to a 32-bit integer with truncation.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvttsd_si32)
+// NOTE: Not modeled yet
 // pub fn _mm_cvttsd_si32(a: __m128d) -> i32 {
 //     { cvttsd2si(a) }
 // }
@@ -1399,6 +1457,7 @@ pub fn _mm_cvtps_pd(a: __m128) -> __m128d {
 /// packed 32-bit integers with truncation.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvttps_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm_cvttps_epi32(a: __m128) -> __m128i {
 //     { transmute(cvttps2dq(a)) }
 // }

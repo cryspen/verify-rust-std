@@ -23,6 +23,7 @@ use crate::abstractions::utilities::*;
 /// in `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_add_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_add_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { transmute(simd_add(a.as_f64x4(), b.as_f64x4())) }
 // }
@@ -30,6 +31,7 @@ use crate::abstractions::utilities::*;
 /// `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_add_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_add_ps(a: __m256, b: __m256) -> __m256 {
 //     { transmute(simd_add(a.as_f32x8(), b.as_f32x8())) }
 // }
@@ -146,6 +148,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// in `a` and `b`, and returns packed maximum values
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_max_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_max_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vmaxpd(a, b) }
 // }
@@ -153,6 +156,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// and `b`, and returns packed maximum values
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_max_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_max_ps(a: __m256, b: __m256) -> __m256 {
 //     { vmaxps(a, b) }
 // }
@@ -160,6 +164,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// in `a` and `b`, and returns packed minimum values
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_min_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_min_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vminpd(a, b) }
 // }
@@ -167,6 +172,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// and `b`, and returns packed minimum values
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_min_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_min_ps(a: __m256, b: __m256) -> __m256 {
 //     { vminps(a, b) }
 // }
@@ -174,6 +180,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// in `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_mul_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_mul_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { transmute(simd_mul(a.as_f64x4(), b.as_f64x4())) }
 // }
@@ -181,6 +188,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_mul_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_mul_ps(a: __m256, b: __m256) -> __m256 {
 //     { transmute(simd_mul(a.as_f32x8(), b.as_f32x8())) }
 // }
@@ -188,6 +196,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// floating-point elements in `a` to/from packed elements in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_addsub_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_addsub_pd(a: __m256d, b: __m256d) -> __m256d {
 //     {
 //         let a = a.as_f64x4();
@@ -201,6 +210,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// floating-point elements in `a` to/from packed elements in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_addsub_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_addsub_ps(a: __m256, b: __m256) -> __m256 {
 //     {
 //         let a = a.as_f32x8();
@@ -214,6 +224,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// from packed elements in `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_sub_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_sub_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { simd_sub(a, b) }
 // }
@@ -221,6 +232,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// from packed elements in `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_sub_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_sub_ps(a: __m256, b: __m256) -> __m256 {
 //     { simd_sub(a, b) }
 // }
@@ -228,6 +240,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// in `a` by the corresponding packed elements in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_div_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_div_ps(a: __m256, b: __m256) -> __m256 {
 //     { simd_div(a, b) }
 // }
@@ -235,6 +248,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// in `a` by the corresponding packed elements in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_div_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_div_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { simd_div(a, b) }
 // }
@@ -251,6 +265,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// [llvm_docs]: https://github.com/llvm-mirror/clang/blob/dcd8d797b20291f1a6b3e0ddda085aa2bbb382a8/lib/Headers/avxintrin.h#L382
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_round_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_round_pd<const ROUNDING: i32>(a: __m256d) -> __m256d {
 //     static_assert_uimm_bits!(ROUNDING, 4);
 //     { roundpd256(a, ROUNDING) }
@@ -259,6 +274,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// toward positive infinity.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_ceil_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_ceil_pd(a: __m256d) -> __m256d {
 //     { simd_ceil(a) }
 // }
@@ -266,6 +282,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// toward negative infinity.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_floor_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_floor_pd(a: __m256d) -> __m256d {
 //     { simd_floor(a) }
 // }
@@ -282,6 +299,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// [llvm_docs]: https://github.com/llvm-mirror/clang/blob/dcd8d797b20291f1a6b3e0ddda085aa2bbb382a8/lib/Headers/avxintrin.h#L382
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_round_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_round_ps<const ROUNDING: i32>(a: __m256) -> __m256 {
 //     static_assert_uimm_bits!(ROUNDING, 4);
 //     { roundps256(a, ROUNDING) }
@@ -290,6 +308,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// toward positive infinity.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_ceil_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_ceil_ps(a: __m256) -> __m256 {
 //     { simd_ceil(a) }
 // }
@@ -297,6 +316,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// toward negative infinity.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_floor_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_floor_ps(a: __m256) -> __m256 {
 //     { simd_floor(a) }
 // }
@@ -304,6 +324,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// elements in `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_sqrt_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_sqrt_ps(a: __m256) -> __m256 {
 //     { simd_fsqrt(a) }
 // }
@@ -311,6 +332,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 /// elements in `a`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_sqrt_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_sqrt_pd(a: __m256d) -> __m256d {
 //     { simd_fsqrt(a) }
 // }
@@ -382,6 +404,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 ///  using the low 4 bits of `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_dp_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_dp_ps<const IMM8: i32>(a: __m256, b: __m256) -> __m256 {
 //     static_assert_uimm_bits!(IMM8, 8);
 //     { vdpps(a, b, IMM8 as i8) }
@@ -392,6 +415,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 /// while sums of elements from `b` are returned in odd locations.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_hadd_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_hadd_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vhaddpd(a, b) }
 // }
@@ -402,6 +426,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 /// 2, 3, 6, 7.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_hadd_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_hadd_ps(a: __m256, b: __m256) -> __m256 {
 //     { vhaddps(a, b) }
 // }
@@ -411,6 +436,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 /// while sums of elements from `b` are returned in odd locations.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_hsub_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_hsub_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vhsubpd(a, b) }
 // }
@@ -421,6 +447,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 /// 2, 3, 6, 7.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_hsub_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_hsub_ps(a: __m256, b: __m256) -> __m256 {
 //     { vhsubps(a, b) }
 // }
@@ -515,6 +542,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 /// specified by `IMM5`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_cmp_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmp_pd<const IMM5: i32>(a: __m128d, b: __m128d) -> __m128d {
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmppd(a, b, const { IMM5 as i8 }) }
@@ -524,6 +552,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 /// specified by `IMM5`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cmp_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_cmp_pd<const IMM5: i32>(a: __m256d, b: __m256d) -> __m256d {
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmppd256(a, b, IMM5 as u8) }
@@ -533,6 +562,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 /// specified by `IMM5`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_cmp_ps)
+// NOTE: Not modeled yet
 // pub fn _mm_cmp_ps<const IMM5: i32>(a: __m128, b: __m128) -> __m128 {
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpps(a, b, const { IMM5 as i8 }) }
@@ -542,6 +572,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 /// specified by `IMM5`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cmp_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_cmp_ps<const IMM5: i32>(a: __m256, b: __m256) -> __m256 {
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpps256(a, b, const { IMM5 as u8 }) }
@@ -553,6 +584,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 /// vector.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_cmp_sd)
+// NOTE: Not modeled yet
 // pub fn _mm_cmp_sd<const IMM5: i32>(a: __m128d, b: __m128d) -> __m128d {
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpsd(a, b, IMM5 as i8) }
@@ -564,6 +596,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 /// returned vector.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_cmp_ss)
+// NOTE: Not modeled yet
 // pub fn _mm_cmp_ss<const IMM5: i32>(a: __m128, b: __m128) -> __m128 {
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpss(a, b, IMM5 as i8) }
@@ -593,6 +626,7 @@ pub fn _mm256_cvtpd_ps(a: __m256d) -> __m128 {
 /// to packed 32-bit integers.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtps_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm256_cvtps_epi32(a: __m256) -> __m256i {
 //     { transmute(vcvtps2dq(a)) }
 // }
@@ -613,6 +647,7 @@ pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
 /// to packed 32-bit integers with truncation.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvttpd_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm256_cvttpd_epi32(a: __m256d) -> __m128i {
 //     { transmute(vcvttpd2dq(a)) }
 // }
@@ -620,6 +655,7 @@ pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
 /// to packed 32-bit integers.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtpd_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm256_cvtpd_epi32(a: __m256d) -> __m128i {
 //     { transmute(vcvtpd2dq(a)) }
 // }
@@ -627,6 +663,7 @@ pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
 /// to packed 32-bit integers with truncation.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvttps_epi32)
+// NOTE: Not modeled yet
 // pub fn _mm256_cvttps_epi32(a: __m256) -> __m256i {
 //     { transmute(vcvttps2dq(a)) }
 // }
@@ -682,6 +719,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 /// Zeroes the contents of all XMM or YMM registers.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_zeroall)
+// NOTE: Not modeled yet
 // pub fn _mm256_zeroall() {
 //     { vzeroall() }
 // }
@@ -689,6 +727,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 /// the lower 128-bits of the registers are unmodified.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_zeroupper)
+// NOTE: Not modeled yet
 // pub fn _mm256_zeroupper() {
 //     { vzeroupper() }
 // }
@@ -696,6 +735,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 /// within 128-bit lanes using the control in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_permutevar_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_permutevar_ps(a: __m256, b: __m256i) -> __m256 {
 //     { vpermilps256(a, b.as_i32x8()) }
 // }
@@ -703,6 +743,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 /// using the control in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_permutevar_ps)
+// NOTE: Not modeled yet
 // pub fn _mm_permutevar_ps(a: __m128, b: __m128i) -> __m128 {
 //     { vpermilps(a, b.as_i32x4()) }
 // }
@@ -733,6 +774,7 @@ pub fn _mm256_permute_ps<const IMM8: i32>(a: __m256) -> __m256 {
 /// using the control in `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_permute_ps)
+// NOTE: Not modeled yet
 // pub fn _mm_permute_ps<const IMM8: i32>(a: __m128) -> __m128 {
 //     static_assert_uimm_bits!(IMM8, 8);
 //     {
@@ -746,6 +788,7 @@ pub fn _mm256_permute_ps<const IMM8: i32>(a: __m256) -> __m256 {
 /// within 256-bit lanes using the control in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_permutevar_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_permutevar_pd(a: __m256d, b: __m256i) -> __m256d {
 //     { vpermilpd256(a, b.as_i64x4()) }
 // }
@@ -753,6 +796,7 @@ pub fn _mm256_permute_ps<const IMM8: i32>(a: __m256) -> __m256 {
 /// using the control in `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_permutevar_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_permutevar_pd(a: __m128d, b: __m128i) -> __m128d {
 //     { vpermilpd(a, b.as_i64x2()) }
 // }
@@ -793,6 +837,7 @@ pub fn _mm_permute_pd<const IMM2: i32>(a: __m128d) -> __m128d {
 /// floating-point elements) selected by `imm8` from `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_permute2f128_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_permute2f128_ps<const IMM8: i32>(a: __m256, b: __m256) -> __m256 {
 //     static_assert_uimm_bits!(IMM8, 8);
 //     { vperm2f128ps256(a, b, IMM8 as i8) }
@@ -801,6 +846,7 @@ pub fn _mm_permute_pd<const IMM2: i32>(a: __m128d) -> __m128d {
 /// floating-point elements) selected by `imm8` from `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_permute2f128_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_permute2f128_pd<const IMM8: i32>(a: __m256d, b: __m256d) -> __m256d {
 //     static_assert_uimm_bits!(IMM8, 8);
 //     { vperm2f128pd256(a, b, IMM8 as i8) }
@@ -824,6 +870,7 @@ pub fn _mm256_broadcast_ss(f: &f32) -> __m256 {
 /// to all elements of the returned vector.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_broadcast_ss)
+// NOTE: Not modeled yet
 // pub fn _mm_broadcast_ss(f: &f32) -> __m128 {
 //     _mm_set1_ps(*f)
 // }
@@ -831,6 +878,7 @@ pub fn _mm256_broadcast_ss(f: &f32) -> __m256 {
 /// to all elements of the returned vector.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_broadcast_sd)
+// NOTE: Not modeled yet
 // pub fn _mm256_broadcast_sd(f: &f64) -> __m256d {
 //     _mm256_set1_pd(*f)
 // }
@@ -838,6 +886,7 @@ pub fn _mm256_broadcast_ss(f: &f32) -> __m256 {
 /// (32-bit) floating-point elements) to all elements of the returned vector.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_broadcast_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_broadcast_ps(a: &__m128) -> __m256 {
 //     { transmute(simd_shuffle((*a).as_f32x4(), _mm_setzero_ps(), [0, 1, 2, 3, 0, 1, 2, 3])) }
 // }
@@ -857,6 +906,7 @@ pub fn _mm256_broadcast_pd(a: &__m128d) -> __m256d {
 /// at the location specified by `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_insertf128_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_insertf128_ps<const IMM1: i32>(a: __m256, b: __m128) -> __m256 {
 //     static_assert_uimm_bits!(IMM1, 1);
 //     {
@@ -871,6 +921,7 @@ pub fn _mm256_broadcast_pd(a: &__m128d) -> __m256d {
 /// at the location specified by `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_insertf128_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_insertf128_pd<const IMM1: i32>(a: __m256d, b: __m128d) -> __m256d {
 //     static_assert_uimm_bits!(IMM1, 1);
 //     {
@@ -952,6 +1003,7 @@ pub fn _mm256_movedup_pd(a: __m256d) -> __m256d {
 /// relative error for this approximation is less than 1.5*2^-12.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_rcp_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_rcp_ps(a: __m256) -> __m256 {
 //     { vrcpps(a) }
 // }
@@ -960,6 +1012,7 @@ pub fn _mm256_movedup_pd(a: __m256d) -> __m256d {
 /// The maximum relative error for this approximation is less than 1.5*2^-12.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_rsqrt_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_rsqrt_ps(a: __m256) -> __m256 {
 //     { vrsqrtps(a) }
 // }
@@ -1024,6 +1077,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// `CF` values are zero, otherwise return 0.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testnzc_si256)
+// NOTE: Not modeled yet
 // pub fn _mm256_testnzc_si256(a: __m256i, b: __m256i) -> i32 {
 //     { ptestnzc256(a.as_i64x4(), b.as_i64x4()) }
 // }
@@ -1036,6 +1090,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `ZF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testz_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_testz_pd(a: __m256d, b: __m256d) -> i32 {
 //     { vtestzpd256(a, b) }
 // }
@@ -1048,6 +1103,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `CF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testc_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_testc_pd(a: __m256d, b: __m256d) -> i32 {
 //     { vtestcpd256(a, b) }
 // }
@@ -1061,6 +1117,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// are zero, otherwise return 0.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testnzc_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_testnzc_pd(a: __m256d, b: __m256d) -> i32 {
 //     { vtestnzcpd256(a, b) }
 // }
@@ -1073,6 +1130,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `ZF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_testz_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_testz_pd(a: __m128d, b: __m128d) -> i32 {
 //     { vtestzpd(a, b) }
 // }
@@ -1085,6 +1143,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `CF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_testc_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_testc_pd(a: __m128d, b: __m128d) -> i32 {
 //     { vtestcpd(a, b) }
 // }
@@ -1098,6 +1157,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// are zero, otherwise return 0.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_testnzc_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_testnzc_pd(a: __m128d, b: __m128d) -> i32 {
 //     { vtestnzcpd(a, b) }
 // }
@@ -1110,6 +1170,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `ZF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testz_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_testz_ps(a: __m256, b: __m256) -> i32 {
 //     { vtestzps256(a, b) }
 // }
@@ -1122,6 +1183,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `CF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testc_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_testc_ps(a: __m256, b: __m256) -> i32 {
 //     { vtestcps256(a, b) }
 // }
@@ -1135,6 +1197,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// are zero, otherwise return 0.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testnzc_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_testnzc_ps(a: __m256, b: __m256) -> i32 {
 //     { vtestnzcps256(a, b) }
 // }
@@ -1147,6 +1210,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `ZF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_testz_ps)
+// NOTE: Not modeled yet
 // pub fn _mm_testz_ps(a: __m128, b: __m128) -> i32 {
 //     { vtestzps(a, b) }
 // }
@@ -1159,6 +1223,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// is zero, otherwise set `CF` to 0. Return the `CF` value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_testc_ps)
+// NOTE: Not modeled yet
 // pub fn _mm_testc_ps(a: __m128, b: __m128) -> i32 {
 //     { vtestcps(a, b) }
 // }
@@ -1172,6 +1237,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 /// are zero, otherwise return 0.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_testnzc_ps)
+// NOTE: Not modeled yet
 // pub fn _mm_testnzc_ps(a: __m128, b: __m128) -> i32 {
 //     { vtestnzcps(a, b) }
 // }
@@ -1534,6 +1600,7 @@ pub fn _mm256_castsi256_si128(a: __m256i) -> __m128i {
 /// the upper 128 bits of the result are undefined.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castps128_ps256)
+// NOTE: Not modeled yet
 // pub fn _mm256_castps128_ps256(a: __m128) -> __m256 {
 //     { simd_shuffle(a, _mm_undefined_ps(), [0, 1, 2, 3, 4, 4, 4, 4]) }
 // }
@@ -1565,6 +1632,7 @@ pub fn _mm256_castsi128_si256(a: __m128i) -> __m256i {
 /// the value of the source vector. The upper 128 bits are set to zero.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_zextps128_ps256)
+// NOTE: Not modeled yet
 // pub fn _mm256_zextps128_ps256(a: __m128) -> __m256 {
 //     { simd_shuffle(a, _mm_setzero_ps(), [0, 1, 2, 3, 4, 5, 6, 7]) }
 // }
@@ -1586,6 +1654,7 @@ pub fn _mm256_zextsi128_si256(a: __m128i) -> __m256i {
 /// to zero.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_zextpd128_pd256)
+// NOTE: Not modeled yet
 // pub fn _mm256_zextpd128_pd256(a: __m128d) -> __m256d {
 //     { simd_shuffle(a, _mm_setzero_pd(), [0, 1, 2, 3]) }
 // }

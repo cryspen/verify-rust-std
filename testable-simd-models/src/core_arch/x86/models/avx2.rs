@@ -386,6 +386,7 @@ pub fn _mm256_broadcastq_epi64(a: __m128i) -> __m256i {
 /// from `a` to all elements of the 128-bit returned value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastsd_pd)
+// NOTE: Not modeled yet
 // pub fn _mm_broadcastsd_pd(a: __m128d) -> __m128d {
 //     { simd_shuffle(a, _mm_setzero_pd(), [0_u32; 2]) }
 // }
@@ -393,6 +394,7 @@ pub fn _mm256_broadcastq_epi64(a: __m128i) -> __m256i {
 /// from `a` to all elements of the 256-bit returned value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastsd_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_broadcastsd_pd(a: __m128d) -> __m256d {
 //     { simd_shuffle(a, _mm_setzero_pd(), [0_u32; 4]) }
 // }
@@ -420,6 +422,7 @@ pub fn _mm256_broadcastsi128_si256(a: __m128i) -> __m256i {
 /// from `a` to all elements of the 128-bit returned value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_broadcastss_ps)
+// NOTE: Not modeled yet
 // pub fn _mm_broadcastss_ps(a: __m128) -> __m128 {
 //     { simd_shuffle(a, _mm_setzero_ps(), [0_u32; 4]) }
 // }
@@ -427,6 +430,7 @@ pub fn _mm256_broadcastsi128_si256(a: __m128i) -> __m256i {
 /// from `a` to all elements of the 256-bit returned value.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_broadcastss_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_broadcastss_ps(a: __m128) -> __m256 {
 //     { simd_shuffle(a, _mm_setzero_ps(), [0_u32; 8]) }
 // }
@@ -1053,6 +1057,7 @@ pub fn _mm256_permute2x128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m
 /// control in `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permute4x64_pd)
+// NOTE: Not modeled yet
 // pub fn _mm256_permute4x64_pd<const IMM8: i32>(a: __m256d) -> __m256d {
 //     static_assert_uimm_bits!(IMM8, 8);
 //     {
@@ -1066,6 +1071,7 @@ pub fn _mm256_permute2x128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m
 /// the corresponding 32-bit integer index in `idx`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_permutevar8x32_ps)
+// NOTE: Not modeled yet
 // pub fn _mm256_permutevar8x32_ps(a: __m256, idx: __m256i) -> __m256 {
 //     { permps(a, idx.as_i32x8()) }
 // }
