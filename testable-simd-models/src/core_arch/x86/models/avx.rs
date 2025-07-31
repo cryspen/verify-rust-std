@@ -14,6 +14,7 @@
 //! [wiki]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 
 use super::avx_handwritten::*;
+use super::sse::*;
 use super::sse2::*;
 use super::types::*;
 use crate::abstractions::simd::*;
@@ -774,16 +775,15 @@ pub fn _mm256_permute_ps<const IMM8: i32>(a: __m256) -> __m256 {
 /// using the control in `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm_permute_ps)
-// NOTE: Not modeled yet
-// pub fn _mm_permute_ps<const IMM8: i32>(a: __m128) -> __m128 {
-//     static_assert_uimm_bits!(IMM8, 8);
-//     {
-//         transmute(simd_shuffle(
-//             a.as_f32x4(), _mm_undefined_ps(), [(IMM8 as u32 >> 0) & 0b11, (IMM8 as u32 >> 2) & 0b11,
-//             (IMM8 as u32 >> 4) & 0b11, (IMM8 as u32 >> 6) & 0b11,],
-//         ))
-//     }
-// }
+pub fn _mm_permute_ps<const IMM8: i32>(a: __m128) -> __m128 {
+    static_assert_uimm_bits!(IMM8, 8);
+    {
+        transmute(simd_shuffle(
+            a.as_f32x4(), _mm_undefined_ps().as_f32x4(), [(IMM8 as u32 >> 0) & 0b11, (IMM8 as u32 >> 2) & 0b11,
+            (IMM8 as u32 >> 4) & 0b11, (IMM8 as u32 >> 6) & 0b11,],
+        ))
+    }
+}
 /// Shuffles double-precision (64-bit) floating-point elements in `a`
 /// within 256-bit lanes using the control in `b`.
 ///
@@ -886,10 +886,9 @@ pub fn _mm256_broadcast_ss(f: &f32) -> __m256 {
 /// (32-bit) floating-point elements) to all elements of the returned vector.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_broadcast_ps)
-// NOTE: Not modeled yet
-// pub fn _mm256_broadcast_ps(a: &__m128) -> __m256 {
-//     { transmute(simd_shuffle((*a).as_f32x4(), _mm_setzero_ps(), [0, 1, 2, 3, 0, 1, 2, 3])) }
-// }
+pub fn _mm256_broadcast_ps(a: &__m128) -> __m256 {
+    { transmute(simd_shuffle((*a).as_f32x4(), _mm_setzero_ps().as_f32x4(), [0, 1, 2, 3, 0, 1, 2, 3])) }
+}
 /// Broadcasts 128 bits from memory (composed of 2 packed double-precision
 /// (64-bit) floating-point elements) to all elements of the returned vector.
 ///
@@ -906,30 +905,29 @@ pub fn _mm256_broadcast_pd(a: &__m128d) -> __m256d {
 /// at the location specified by `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_insertf128_ps)
-// NOTE: Not modeled yet
-// pub fn _mm256_insertf128_ps<const IMM1: i32>(a: __m256, b: __m128) -> __m256 {
-//     static_assert_uimm_bits!(IMM1, 1);
-//     {
-//         transmute(simd_shuffle(
-//             a.as_f32x8(), _mm256_castps128_ps256(b), [[8, 9, 10, 11, 4, 5, 6, 7], [0, 1, 2, 3, 8, 9,
-//             10, 11]] [IMM1 as usize],
-//         ))
-//     }
-// }
+pub fn _mm256_insertf128_ps<const IMM1: i32>(a: __m256, b: __m128) -> __m256 {
+    static_assert_uimm_bits!(IMM1, 1);
+    {
+        transmute(simd_shuffle(
+            a.as_f32x8(), _mm256_castps128_ps256(b).as_f32x8(), [[8, 9, 10, 11, 4, 5, 6, 7], [0, 1, 2, 3, 8, 9,
+            10, 11]] [IMM1 as usize],
+        ))
+    }
+}
 /// Copies `a` to result, then inserts 128 bits (composed of 2 packed
 /// double-precision (64-bit) floating-point elements) from `b` into result
 /// at the location specified by `imm8`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_insertf128_pd)
-// NOTE: Not modeled yet
-// pub fn _mm256_insertf128_pd<const IMM1: i32>(a: __m256d, b: __m128d) -> __m256d {
-//     static_assert_uimm_bits!(IMM1, 1);
-//     {
-//         simd_shuffle(
-//             a, _mm256_castpd128_pd256(b), [[4, 5, 2, 3], [0, 1, 4, 5]] [IMM1 as usize],
-//         )
-//     }
-// }
+pub fn _mm256_insertf128_pd<const IMM1: i32>(a: __m256d, b: __m128d) -> __m256d {
+    static_assert_uimm_bits!(IMM1, 1);
+    {
+        transmute(simd_shuffle(
+            a.as_f64x4(), _mm256_castpd128_pd256(b).as_f64x4(), 
+            [[4, 5, 2, 3], [0, 1, 4, 5]] [IMM1 as usize],
+        ))
+    }
+}
 /// Copies `a` to result, then inserts 128 bits from `b` into result
 /// at the location specified by `imm8`.
 ///
@@ -1600,10 +1598,9 @@ pub fn _mm256_castsi256_si128(a: __m256i) -> __m128i {
 /// the upper 128 bits of the result are undefined.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castps128_ps256)
-// NOTE: Not modeled yet
-// pub fn _mm256_castps128_ps256(a: __m128) -> __m256 {
-//     { simd_shuffle(a, _mm_undefined_ps(), [0, 1, 2, 3, 4, 4, 4, 4]) }
-// }
+pub fn _mm256_castps128_ps256(a: __m128) -> __m256 {
+    { transmute(simd_shuffle(a.as_f32x4(), _mm_undefined_ps().as_f32x4(), [0, 1, 2, 3, 4, 4, 4, 4])) }
+}
 /// Casts vector of type __m128d to type __m256d;
 /// the upper 128 bits of the result are undefined.
 ///
@@ -1632,10 +1629,9 @@ pub fn _mm256_castsi128_si256(a: __m128i) -> __m256i {
 /// the value of the source vector. The upper 128 bits are set to zero.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_zextps128_ps256)
-// NOTE: Not modeled yet
-// pub fn _mm256_zextps128_ps256(a: __m128) -> __m256 {
-//     { simd_shuffle(a, _mm_setzero_ps(), [0, 1, 2, 3, 4, 5, 6, 7]) }
-// }
+pub fn _mm256_zextps128_ps256(a: __m128) -> __m256 {
+    { transmute(simd_shuffle(a.as_f32x4(), _mm_setzero_ps().as_f32x4(), [0, 1, 2, 3, 4, 5, 6, 7])) }
+}
 /// Constructs a 256-bit integer vector from a 128-bit integer vector.
 /// The lower 128 bits contain the value of the source vector. The upper
 /// 128 bits are set to zero.
@@ -1655,9 +1651,9 @@ pub fn _mm256_zextsi128_si256(a: __m128i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_zextpd128_pd256)
 // NOTE: Not modeled yet
-// pub fn _mm256_zextpd128_pd256(a: __m128d) -> __m256d {
-//     { simd_shuffle(a, _mm_setzero_pd(), [0, 1, 2, 3]) }
-// }
+pub fn _mm256_zextpd128_pd256(a: __m128d) -> __m256d {
+    { transmute(simd_shuffle(a.as_f64x2(), _mm_setzero_pd().as_f64x2(), [0, 1, 2, 3])) }
+}
 /// Returns vector of type `__m256` with indeterminate elements.
 /// Despite using the word "undefined" (following Intel's naming scheme), this non-deterministically
 /// picks some valid value and is not equivalent to [`mem::MaybeUninit`].
