@@ -1,7 +1,7 @@
 /// Converts one type to another
 pub fn transmute<T, U: From<T>>(a: T) -> U {
     a.into()
-}      
+}
 
 #[allow(unused)]
 #[macro_export]
@@ -55,5 +55,5 @@ macro_rules! static_assert_simm_bits {
 }
 
 pub use static_assert;
-pub use static_assert_uimm_bits;
 pub use static_assert_simm_bits;
+pub use static_assert_uimm_bits;

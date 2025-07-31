@@ -1,8 +1,8 @@
 //! Streaming SIMD Extensions 2 (SSE2)
-use super::types::*;
-use crate::abstractions::utilities::*;
-use crate::abstractions::simd::*;
 use super::sse2_handwritten::*;
+use super::types::*;
+use crate::abstractions::simd::*;
+use crate::abstractions::utilities::*;
 
 /// Adds packed 8-bit integers in `a` and `b`.
 ///

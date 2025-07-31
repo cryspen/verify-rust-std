@@ -1,10 +1,10 @@
 //! Supplemental Streaming SIMD Extensions 3 (SSSE3)
-use crate::abstractions::utilities::*;
 use crate::abstractions::simd::*;
+use crate::abstractions::utilities::*;
 
-use super::types::*;
-use super::ssse3_handwritten::*;
 use super::sse2::*;
+use super::ssse3_handwritten::*;
+use super::types::*;
 
 /// Computes the absolute value of packed 8-bit signed integers in `a` and
 /// return the unsigned results.

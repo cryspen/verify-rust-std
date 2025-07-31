@@ -13,10 +13,10 @@
 //! [amd64_ref]: http://support.amd.com/TechDocs/24594.pdf
 //! [wiki]: https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 
-use super::types::*;
-use crate::abstractions::utilities::*;
-use crate::abstractions::simd::*;
 use super::avx_handwritten::*;
+use super::types::*;
+use crate::abstractions::simd::*;
+use crate::abstractions::utilities::*;
 
 /// Blends packed single-precision (32-bit) floating-point elements from
 /// `a` and `b` using `c` as a mask.
@@ -117,8 +117,9 @@ pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m
 pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m256i {
     static_assert_uimm_bits!(IMM1, 1);
     let dst: i64x4 = simd_shuffle(
-        a.as_i64x4(), _mm256_castsi128_si256(b).as_i64x4(), [[4, 5, 2, 3], [0, 1, 4,
-        5]] [IMM1 as usize],
+        a.as_i64x4(),
+        _mm256_castsi128_si256(b).as_i64x4(),
+        [[4, 5, 2, 3], [0, 1, 4, 5]][IMM1 as usize],
     );
     transmute(dst)
 }
@@ -224,42 +225,10 @@ pub fn _mm256_setr_epi8(
     e30: i8,
     e31: i8,
 ) -> __m256i {
-        transmute(
-            i8x32::new(
-                e00,
-                e01,
-                e02,
-                e03,
-                e04,
-                e05,
-                e06,
-                e07,
-                e08,
-                e09,
-                e10,
-                e11,
-                e12,
-                e13,
-                e14,
-                e15,
-                e16,
-                e17,
-                e18,
-                e19,
-                e20,
-                e21,
-                e22,
-                e23,
-                e24,
-                e25,
-                e26,
-                e27,
-                e28,
-                e29,
-                e30,
-                e31,
-            ),
-        )
+    transmute(i8x32::new(
+        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17,
+        e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,
+    ))
 }
 /// Sets packed 16-bit integers in returned vector with the supplied values in
 /// reverse order.
@@ -283,27 +252,9 @@ pub fn _mm256_setr_epi16(
     e14: i16,
     e15: i16,
 ) -> __m256i {
-    
-        transmute(
-            i16x16::new(
-                e00,
-                e01,
-                e02,
-                e03,
-                e04,
-                e05,
-                e06,
-                e07,
-                e08,
-                e09,
-                e10,
-                e11,
-                e12,
-                e13,
-                e14,
-                e15,
-            ),
-        )
+    transmute(i16x16::new(
+        e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
+    ))
 }
 /// Sets packed 32-bit integers in returned vector with the supplied values in
 /// reverse order.
@@ -319,14 +270,14 @@ pub fn _mm256_setr_epi32(
     e6: i32,
     e7: i32,
 ) -> __m256i {
-    transmute(i32x8::new(e0, e1, e2, e3, e4, e5, e6, e7)) 
+    transmute(i32x8::new(e0, e1, e2, e3, e4, e5, e6, e7))
 }
 /// Sets packed 64-bit integers in returned vector with the supplied values in
 /// reverse order.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_setr_epi64x)
 pub fn _mm256_setr_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
-    transmute(i64x4::new(a, b, c, d)) 
+    transmute(i64x4::new(a, b, c, d))
 }
 
 /// Sets packed 8-bit integers in returned vector with the supplied values.
@@ -370,41 +321,10 @@ pub fn _mm256_set_epi8(
     e31: i8,
 ) -> __m256i {
     _mm256_setr_epi8(
-        e31,
-        e30,
-        e29,
-        e28,
-        e27,
-        e26,
-        e25,
-        e24,
-        e23,
-        e22,
-        e21,
-        e20,
-        e19,
-        e18,
-        e17,
-        e16,
-        e15,
-        e14,
-        e13,
-        e12,
-        e11,
-        e10,
-        e09,
-        e08,
-        e07,
-        e06,
-        e05,
-        e04,
-        e03,
-        e02,
-        e01,
-        e00,
+        e31, e30, e29, e28, e27, e26, e25, e24, e23, e22, e21, e20, e19, e18, e17, e16, e15, e14,
+        e13, e12, e11, e10, e09, e08, e07, e06, e05, e04, e03, e02, e01, e00,
     )
 }
-
 
 /// Sets packed 16-bit integers in returned vector with the supplied values.
 ///
@@ -431,22 +351,7 @@ pub fn _mm256_set_epi16(
     e15: i16,
 ) -> __m256i {
     _mm256_setr_epi16(
-        e15,
-        e14,
-        e13,
-        e12,
-        e11,
-        e10,
-        e09,
-        e08,
-        e07,
-        e06,
-        e05,
-        e04,
-        e03,
-        e02,
-        e01,
-        e00,
+        e15, e14, e13, e12, e11, e10, e09, e08, e07, e06, e05, e04, e03, e02, e01, e00,
     )
 }
 

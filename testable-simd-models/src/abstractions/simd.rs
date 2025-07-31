@@ -939,4 +939,3 @@ pub fn simd_select<const N: u32, T1: Eq + MachineInteger, T2: Copy>(
         }
     })
 }
-

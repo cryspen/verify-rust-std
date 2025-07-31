@@ -20,14 +20,14 @@
 //! In general, it is best to gain an idea of how an implementation should be written by looking
 //! at how other functions are implemented. Also see `core::arch::x86` for [reference](https://github.com/rust-lang/stdarch/tree/master/crates/core_arch).
 
-pub mod avx_handwritten;
 pub mod avx;
-pub mod avx2_handwritten;
 pub mod avx2;
-pub mod sse2_handwritten;
+pub mod avx2_handwritten;
+pub mod avx_handwritten;
 pub mod sse2;
-pub mod ssse3_handwritten;
+pub mod sse2_handwritten;
 pub mod ssse3;
+pub mod ssse3_handwritten;
 
 pub(crate) mod types {
     use crate::abstractions::bitvec::*;

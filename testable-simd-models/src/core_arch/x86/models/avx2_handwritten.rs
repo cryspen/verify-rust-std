@@ -538,7 +538,7 @@ pub fn permd(a: u32x8, b: u32x8) -> u32x8 {
     })
 }
 
-pub fn mpsadbw(a: u8x32, b: u8x32, imm8: i32) -> u16x16 {
+pub fn mpsadbw(a: u8x32, b: u8x32, imm8: i8) -> u16x16 {
     u16x16::from_fn(|i| {
         if i < 8 {
             let a_offset = (((imm8 & 4) >> 2) * 4) as u32;
