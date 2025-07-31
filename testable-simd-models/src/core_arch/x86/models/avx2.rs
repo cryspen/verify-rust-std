@@ -1089,6 +1089,7 @@ pub fn _mm256_permute2x128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m
 //         ))
 //     }
 // }
+
 /// Shuffles eight 32-bit floating-point elements in `a` across lanes using
 /// the corresponding 32-bit integer index in `idx`.
 ///
@@ -1097,6 +1098,7 @@ pub fn _mm256_permute2x128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m
 // pub fn _mm256_permutevar8x32_ps(a: __m256, idx: __m256i) -> __m256 {
 //     { permps(a, idx.as_i32x8()) }
 // }
+
 /// Computes the absolute differences of packed unsigned 8-bit integers in `a`
 /// and `b`, then horizontally sum each consecutive 8 differences to
 /// produce four unsigned 16-bit integers, and pack these unsigned 16-bit
@@ -1342,6 +1344,7 @@ pub fn _mm256_slli_si256<const IMM8: i32>(a: __m256i) -> __m256i {
     static_assert_uimm_bits!(IMM8, 8);
     _mm256_bslli_epi128::<IMM8>(a)
 }
+
 /// Shifts 128-bit lanes in `a` left by `imm8` bytes while shifting in zeros.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_bslli_epi128)

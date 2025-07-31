@@ -8,13 +8,14 @@ The structure of this crate is based on [rust-lang/stdarch/crates/core_arch](htt
 Within the `core_arch` folder in this crate, there is a different
 folder for each architecture for which we have wrtten models. 
 In particular, it contains folders for `x86` and `arm_shared`.
-Each such folder has 3 sub-folders, `models`, `tests`, and `specs`. 
+Each such folder has 2 sub-folders: `models` and `tests`. 
 
-The `models` folder contains the models of the intrinsics, with a file
-corresponding to different target features, and are written using the
-various abstractions implemented in `crate::abstractions`, especially
-those in `crate::abstractions::simd`. These models are meant to
-closely resemble their implementations within the Rust core itself.
+The `models` folder contains the models of the intrinsics, with
+different files for different target features (e.g. `sse2`, `avx2`
+etc.). The code in this folder is written using the various
+abstractions implemented in `abstractions`, especially those in
+`abstractions::simd`. These models are meant to closely
+resemble their implementations within the Rust core itself.
 
 The `tests` folder contains the tests of these models, and is
 structured the same way as `models`. Each file additionally contains
@@ -23,7 +24,8 @@ tests work by testing the models against the intrinsics in the Rust
 core, trying out random inputs (generally 1000), and comparing their
 outputs.
 
-The tests can run by executing `cargo test`.
+All tests can run by executing `cargo test` and we expect this to be
+run as part of CI.
 
 ## Modeling a SIMD Intrinsic
 

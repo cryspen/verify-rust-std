@@ -28,6 +28,7 @@ use crate::abstractions::utilities::*;
 // pub fn _mm256_add_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { transmute(simd_add(a.as_f64x4(), b.as_f64x4())) }
 // }
+
 /// Adds packed single-precision (32-bit) floating-point elements in `a` and
 /// `b`.
 ///
@@ -36,6 +37,7 @@ use crate::abstractions::utilities::*;
 // pub fn _mm256_add_ps(a: __m256, b: __m256) -> __m256 {
 //     { transmute(simd_add(a.as_f32x8(), b.as_f32x8())) }
 // }
+
 /// Computes the bitwise AND of a packed double-precision (64-bit)
 /// floating-point elements in `a` and `b`.
 ///
@@ -153,6 +155,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_max_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vmaxpd(a, b) }
 // }
+
 /// Compares packed single-precision (32-bit) floating-point elements in `a`
 /// and `b`, and returns packed maximum values
 ///
@@ -161,6 +164,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_max_ps(a: __m256, b: __m256) -> __m256 {
 //     { vmaxps(a, b) }
 // }
+
 /// Compares packed double-precision (64-bit) floating-point elements
 /// in `a` and `b`, and returns packed minimum values
 ///
@@ -169,6 +173,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_min_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vminpd(a, b) }
 // }
+
 /// Compares packed single-precision (32-bit) floating-point elements in `a`
 /// and `b`, and returns packed minimum values
 ///
@@ -177,6 +182,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_min_ps(a: __m256, b: __m256) -> __m256 {
 //     { vminps(a, b) }
 // }
+
 /// Multiplies packed double-precision (64-bit) floating-point elements
 /// in `a` and `b`.
 ///
@@ -185,6 +191,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_mul_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { transmute(simd_mul(a.as_f64x4(), b.as_f64x4())) }
 // }
+
 /// Multiplies packed single-precision (32-bit) floating-point elements in `a` and
 /// `b`.
 ///
@@ -193,6 +200,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_mul_ps(a: __m256, b: __m256) -> __m256 {
 //     { transmute(simd_mul(a.as_f32x8(), b.as_f32x8())) }
 // }
+
 /// Alternatively adds and subtracts packed double-precision (64-bit)
 /// floating-point elements in `a` to/from packed elements in `b`.
 ///
@@ -207,6 +215,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 //         simd_shuffle(add, sub, [4, 1, 6, 3])
 //     }
 // }
+
 /// Alternatively adds and subtracts packed single-precision (32-bit)
 /// floating-point elements in `a` to/from packed elements in `b`.
 ///
@@ -221,6 +230,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 //         simd_shuffle(add, sub, [8, 1, 10, 3, 12, 5, 14, 7])
 //     }
 // }
+
 /// Subtracts packed double-precision (64-bit) floating-point elements in `b`
 /// from packed elements in `a`.
 ///
@@ -229,6 +239,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_sub_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { simd_sub(a, b) }
 // }
+
 /// Subtracts packed single-precision (32-bit) floating-point elements in `b`
 /// from packed elements in `a`.
 ///
@@ -237,6 +248,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_sub_ps(a: __m256, b: __m256) -> __m256 {
 //     { simd_sub(a, b) }
 // }
+
 /// Computes the division of each of the 8 packed 32-bit floating-point elements
 /// in `a` by the corresponding packed elements in `b`.
 ///
@@ -245,6 +257,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_div_ps(a: __m256, b: __m256) -> __m256 {
 //     { simd_div(a, b) }
 // }
+
 /// Computes the division of each of the 4 packed 64-bit floating-point elements
 /// in `a` by the corresponding packed elements in `b`.
 ///
@@ -253,6 +266,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_div_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { simd_div(a, b) }
 // }
+
 /// Rounds packed double-precision (64-bit) floating point elements in `a`
 /// according to the flag `ROUNDING`. The value of `ROUNDING` may be as follows:
 ///
@@ -271,6 +285,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 //     static_assert_uimm_bits!(ROUNDING, 4);
 //     { roundpd256(a, ROUNDING) }
 // }
+
 /// Rounds packed double-precision (64-bit) floating point elements in `a`
 /// toward positive infinity.
 ///
@@ -279,6 +294,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_ceil_pd(a: __m256d) -> __m256d {
 //     { simd_ceil(a) }
 // }
+
 /// Rounds packed double-precision (64-bit) floating point elements in `a`
 /// toward negative infinity.
 ///
@@ -287,6 +303,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_floor_pd(a: __m256d) -> __m256d {
 //     { simd_floor(a) }
 // }
+
 /// Rounds packed single-precision (32-bit) floating point elements in `a`
 /// according to the flag `ROUNDING`. The value of `ROUNDING` may be as follows:
 ///
@@ -305,6 +322,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 //     static_assert_uimm_bits!(ROUNDING, 4);
 //     { roundps256(a, ROUNDING) }
 // }
+
 /// Rounds packed single-precision (32-bit) floating point elements in `a`
 /// toward positive infinity.
 ///
@@ -313,6 +331,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_ceil_ps(a: __m256) -> __m256 {
 //     { simd_ceil(a) }
 // }
+
 /// Rounds packed single-precision (32-bit) floating point elements in `a`
 /// toward negative infinity.
 ///
@@ -321,6 +340,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_floor_ps(a: __m256) -> __m256 {
 //     { simd_floor(a) }
 // }
+
 /// Returns the square root of packed single-precision (32-bit) floating point
 /// elements in `a`.
 ///
@@ -329,6 +349,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_sqrt_ps(a: __m256) -> __m256 {
 //     { simd_fsqrt(a) }
 // }
+
 /// Returns the square root of packed double-precision (64-bit) floating point
 /// elements in `a`.
 ///
@@ -337,6 +358,7 @@ pub fn _mm256_andnot_ps(a: __m256, b: __m256) -> __m256 {
 // pub fn _mm256_sqrt_pd(a: __m256d) -> __m256d {
 //     { simd_fsqrt(a) }
 // }
+
 /// Blends packed double-precision (64-bit) floating-point elements from
 /// `a` and `b` using control mask `imm8`.
 ///
@@ -410,6 +432,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 //     static_assert_uimm_bits!(IMM8, 8);
 //     { vdpps(a, b, IMM8 as i8) }
 // }
+
 /// Horizontal addition of adjacent pairs in the two packed vectors
 /// of 4 64-bit floating points `a` and `b`.
 /// In the result, sums of elements from `a` are returned in even locations,
@@ -420,6 +443,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 // pub fn _mm256_hadd_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vhaddpd(a, b) }
 // }
+
 /// Horizontal addition of adjacent pairs in the two packed vectors
 /// of 8 32-bit floating points `a` and `b`.
 /// In the result, sums of elements from `a` are returned in locations of
@@ -431,6 +455,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 // pub fn _mm256_hadd_ps(a: __m256, b: __m256) -> __m256 {
 //     { vhaddps(a, b) }
 // }
+
 /// Horizontal subtraction of adjacent pairs in the two packed vectors
 /// of 4 64-bit floating points `a` and `b`.
 /// In the result, sums of elements from `a` are returned in even locations,
@@ -441,6 +466,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 // pub fn _mm256_hsub_pd(a: __m256d, b: __m256d) -> __m256d {
 //     { vhsubpd(a, b) }
 // }
+
 /// Horizontal subtraction of adjacent pairs in the two packed vectors
 /// of 8 32-bit floating points `a` and `b`.
 /// In the result, sums of elements from `a` are returned in locations of
@@ -452,6 +478,7 @@ pub fn _mm256_blendv_ps(a: __m256, b: __m256, c: __m256) -> __m256 {
 // pub fn _mm256_hsub_ps(a: __m256, b: __m256) -> __m256 {
 //     { vhsubps(a, b) }
 // }
+
 /// Computes the bitwise XOR of packed double-precision (64-bit) floating-point
 /// elements in `a` and `b`.
 ///
@@ -548,6 +575,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmppd(a, b, const { IMM5 as i8 }) }
 // }
+
 /// Compares packed double-precision (64-bit) floating-point
 /// elements in `a` and `b` based on the comparison operand
 /// specified by `IMM5`.
@@ -558,6 +586,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmppd256(a, b, IMM5 as u8) }
 // }
+
 /// Compares packed single-precision (32-bit) floating-point
 /// elements in `a` and `b` based on the comparison operand
 /// specified by `IMM5`.
@@ -568,6 +597,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpps(a, b, const { IMM5 as i8 }) }
 // }
+
 /// Compares packed single-precision (32-bit) floating-point
 /// elements in `a` and `b` based on the comparison operand
 /// specified by `IMM5`.
@@ -578,6 +608,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpps256(a, b, const { IMM5 as u8 }) }
 // }
+
 /// Compares the lower double-precision (64-bit) floating-point element in
 /// `a` and `b` based on the comparison operand specified by `IMM5`,
 /// store the result in the lower element of returned vector,
@@ -590,6 +621,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpsd(a, b, IMM5 as i8) }
 // }
+
 /// Compares the lower single-precision (32-bit) floating-point element in
 /// `a` and `b` based on the comparison operand specified by `IMM5`,
 /// store the result in the lower element of returned vector,
@@ -602,6 +634,7 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 //     static_assert_uimm_bits!(IMM5, 5);
 //     { vcmpss(a, b, IMM5 as i8) }
 // }
+
 /// Converts packed 32-bit integers in `a` to packed double-precision (64-bit)
 /// floating-point elements.
 ///
@@ -631,6 +664,7 @@ pub fn _mm256_cvtpd_ps(a: __m256d) -> __m128 {
 // pub fn _mm256_cvtps_epi32(a: __m256) -> __m256i {
 //     { transmute(vcvtps2dq(a)) }
 // }
+
 /// Converts packed single-precision (32-bit) floating-point elements in `a`
 /// to packed double-precision (64-bit) floating-point elements.
 ///
@@ -644,6 +678,7 @@ pub fn _mm256_cvtps_pd(a: __m128) -> __m256d {
 pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
     simd_extract(a.as_f64x4(), 0)
 }
+
 /// Converts packed double-precision (64-bit) floating-point elements in `a`
 /// to packed 32-bit integers with truncation.
 ///
@@ -652,6 +687,7 @@ pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
 // pub fn _mm256_cvttpd_epi32(a: __m256d) -> __m128i {
 //     { transmute(vcvttpd2dq(a)) }
 // }
+
 /// Converts packed double-precision (64-bit) floating-point elements in `a`
 /// to packed 32-bit integers.
 ///
@@ -660,6 +696,7 @@ pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
 // pub fn _mm256_cvtpd_epi32(a: __m256d) -> __m128i {
 //     { transmute(vcvtpd2dq(a)) }
 // }
+
 /// Converts packed single-precision (32-bit) floating-point elements in `a`
 /// to packed 32-bit integers with truncation.
 ///
@@ -668,6 +705,7 @@ pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
 // pub fn _mm256_cvttps_epi32(a: __m256) -> __m256i {
 //     { transmute(vcvttps2dq(a)) }
 // }
+
 /// Extracts 128 bits (composed of 4 packed single-precision (32-bit)
 /// floating-point elements) from `a`, selected with `imm8`.
 ///
@@ -724,6 +762,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 // pub fn _mm256_zeroall() {
 //     { vzeroall() }
 // }
+
 /// Zeroes the upper 128 bits of all YMM registers;
 /// the lower 128-bits of the registers are unmodified.
 ///
@@ -732,6 +771,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 // pub fn _mm256_zeroupper() {
 //     { vzeroupper() }
 // }
+
 /// Shuffles single-precision (32-bit) floating-point elements in `a`
 /// within 128-bit lanes using the control in `b`.
 ///
@@ -740,6 +780,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 // pub fn _mm256_permutevar_ps(a: __m256, b: __m256i) -> __m256 {
 //     { vpermilps256(a, b.as_i32x8()) }
 // }
+
 /// Shuffles single-precision (32-bit) floating-point elements in `a`
 /// using the control in `b`.
 ///
@@ -748,6 +789,7 @@ pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
 // pub fn _mm_permutevar_ps(a: __m128, b: __m128i) -> __m128 {
 //     { vpermilps(a, b.as_i32x4()) }
 // }
+
 /// Shuffles single-precision (32-bit) floating-point elements in `a`
 /// within 128-bit lanes using the control in `imm8`.
 ///
@@ -790,6 +832,7 @@ pub fn _mm_permute_ps<const IMM8: i32>(a: __m128) -> __m128 {
         ))
     }
 }
+
 /// Shuffles double-precision (64-bit) floating-point elements in `a`
 /// within 256-bit lanes using the control in `b`.
 ///
@@ -798,6 +841,7 @@ pub fn _mm_permute_ps<const IMM8: i32>(a: __m128) -> __m128 {
 // pub fn _mm256_permutevar_pd(a: __m256d, b: __m256i) -> __m256d {
 //     { vpermilpd256(a, b.as_i64x4()) }
 // }
+
 /// Shuffles double-precision (64-bit) floating-point elements in `a`
 /// using the control in `b`.
 ///
@@ -806,6 +850,7 @@ pub fn _mm_permute_ps<const IMM8: i32>(a: __m128) -> __m128 {
 // pub fn _mm_permutevar_pd(a: __m128d, b: __m128i) -> __m128d {
 //     { vpermilpd(a, b.as_i64x2()) }
 // }
+
 /// Shuffles double-precision (64-bit) floating-point elements in `a`
 /// within 128-bit lanes using the control in `imm8`.
 ///
@@ -1082,6 +1127,7 @@ pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
 pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
     ptestc256(a.as_i64x4(), b.as_i64x4())
 }
+
 /// Computes the bitwise AND of 256 bits (representing integer data) in `a` and
 /// `b`, and set `ZF` to 1 if the result is zero, otherwise set `ZF` to 0.
 /// Computes the bitwise NOT of `a` and then AND with `b`, and set `CF` to 1 if
@@ -1093,6 +1139,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm256_testnzc_si256(a: __m256i, b: __m256i) -> i32 {
 //     { ptestnzc256(a.as_i64x4(), b.as_i64x4()) }
 // }
+
 /// Computes the bitwise AND of 256 bits (representing double-precision (64-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 256-bit
 /// value, and set `ZF` to 1 if the sign bit of each 64-bit element in the
@@ -1106,6 +1153,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm256_testz_pd(a: __m256d, b: __m256d) -> i32 {
 //     { vtestzpd256(a, b) }
 // }
+
 /// Computes the bitwise AND of 256 bits (representing double-precision (64-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 256-bit
 /// value, and set `ZF` to 1 if the sign bit of each 64-bit element in the
@@ -1119,6 +1167,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm256_testc_pd(a: __m256d, b: __m256d) -> i32 {
 //     { vtestcpd256(a, b) }
 // }
+
 /// Computes the bitwise AND of 256 bits (representing double-precision (64-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 256-bit
 /// value, and set `ZF` to 1 if the sign bit of each 64-bit element in the
@@ -1133,6 +1182,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm256_testnzc_pd(a: __m256d, b: __m256d) -> i32 {
 //     { vtestnzcpd256(a, b) }
 // }
+
 /// Computes the bitwise AND of 128 bits (representing double-precision (64-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 128-bit
 /// value, and set `ZF` to 1 if the sign bit of each 64-bit element in the
@@ -1146,6 +1196,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm_testz_pd(a: __m128d, b: __m128d) -> i32 {
 //     { vtestzpd(a, b) }
 // }
+
 /// Computes the bitwise AND of 128 bits (representing double-precision (64-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 128-bit
 /// value, and set `ZF` to 1 if the sign bit of each 64-bit element in the
@@ -1159,6 +1210,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm_testc_pd(a: __m128d, b: __m128d) -> i32 {
 //     { vtestcpd(a, b) }
 // }
+
 /// Computes the bitwise AND of 128 bits (representing double-precision (64-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 128-bit
 /// value, and set `ZF` to 1 if the sign bit of each 64-bit element in the
@@ -1173,6 +1225,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm_testnzc_pd(a: __m128d, b: __m128d) -> i32 {
 //     { vtestnzcpd(a, b) }
 // }
+
 /// Computes the bitwise AND of 256 bits (representing single-precision (32-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 256-bit
 /// value, and set `ZF` to 1 if the sign bit of each 32-bit element in the
@@ -1186,6 +1239,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm256_testz_ps(a: __m256, b: __m256) -> i32 {
 //     { vtestzps256(a, b) }
 // }
+
 /// Computes the bitwise AND of 256 bits (representing single-precision (32-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 256-bit
 /// value, and set `ZF` to 1 if the sign bit of each 32-bit element in the
@@ -1199,6 +1253,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm256_testc_ps(a: __m256, b: __m256) -> i32 {
 //     { vtestcps256(a, b) }
 // }
+
 /// Computes the bitwise AND of 256 bits (representing single-precision (32-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 256-bit
 /// value, and set `ZF` to 1 if the sign bit of each 32-bit element in the
@@ -1213,6 +1268,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm256_testnzc_ps(a: __m256, b: __m256) -> i32 {
 //     { vtestnzcps256(a, b) }
 // }
+
 /// Computes the bitwise AND of 128 bits (representing single-precision (32-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 128-bit
 /// value, and set `ZF` to 1 if the sign bit of each 32-bit element in the
@@ -1226,6 +1282,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm_testz_ps(a: __m128, b: __m128) -> i32 {
 //     { vtestzps(a, b) }
 // }
+
 /// Computes the bitwise AND of 128 bits (representing single-precision (32-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 128-bit
 /// value, and set `ZF` to 1 if the sign bit of each 32-bit element in the
@@ -1239,6 +1296,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm_testc_ps(a: __m128, b: __m128) -> i32 {
 //     { vtestcps(a, b) }
 // }
+
 /// Computes the bitwise AND of 128 bits (representing single-precision (32-bit)
 /// floating-point elements) in `a` and `b`, producing an intermediate 128-bit
 /// value, and set `ZF` to 1 if the sign bit of each 32-bit element in the
@@ -1253,6 +1311,7 @@ pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
 // pub fn _mm_testnzc_ps(a: __m128, b: __m128) -> i32 {
 //     { vtestnzcps(a, b) }
 // }
+
 /// Sets each bit of the returned mask based on the most significant bit of the
 /// corresponding packed double-precision (64-bit) floating-point element in
 /// `a`.
