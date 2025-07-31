@@ -1,4 +1,4 @@
-use syn::{parse_file, Item, File};
+use syn::{parse_file, Item, File, Stmt, Expr, ExprBlock};
 use std::fs;
 use std::env;
 
@@ -9,6 +9,7 @@ fn remove_all_attributes(input_file_path: &str, handwritten_module: &str, output
     syntax_tree.items.retain(|item|
         match item {
             Item::Use(_) => false,
+            Item::Fn(item_fn) => item_fn.sig.unsafety.is_none(),
             _ => true
         }
     );
@@ -34,6 +35,13 @@ fn remove_all_attributes(input_file_path: &str, handwritten_module: &str, output
         match item {
             Item::Fn(item_fn) => {
                 item_fn.attrs.retain(|attr| attr.path().is_ident("doc"));
+                for stmt in &mut item_fn.block.stmts {
+                    match stmt {
+                        Stmt::Expr(Expr::Unsafe(u), tok) => *stmt = Stmt::Expr(Expr::Block(
+                                ExprBlock {attrs : Vec::new(), label : None, block : u.block.clone()}), *tok),
+                        _ => ()
+                    }
+                }
             },
             Item::Struct(item_struct) => {
                 item_struct.attrs.clear();
