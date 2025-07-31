@@ -14,21 +14,21 @@ fn remove_all_attributes(input_file_path: &str, handwritten_module: &str, output
         }
     );
 
-    let use_abstractions: Item = syn::parse_quote! {
-        use crate::abstractions::simd::*;
-    };
+    // let use_abstractions: Item = syn::parse_quote! {
+    //     use crate::abstractions::simd::*;
+    // };
 
-    let use_types: Item = syn::parse_quote! {
-        use super::types::*;
-    };
+    // let use_types: Item = syn::parse_quote! {
+    //     use super::types::*;
+    // };
 
-    let use_handwritten: Item = syn::parse_quote! {
-        use super::avx_handwritten::*;
-    };
+    // let use_handwritten: Item = syn::parse_quote! {
+    //     use super::avx_handwritten::*;
+    // };
 
-    syntax_tree.items.insert(0, use_handwritten);
-    syntax_tree.items.insert(0, use_types);
-    syntax_tree.items.insert(0, use_abstractions);
+    // syntax_tree.items.insert(0, use_handwritten);
+    // syntax_tree.items.insert(0, use_types);
+    // syntax_tree.items.insert(0, use_abstractions);
 
     // Clear attributes from the file's top-level items
     for item in &mut syntax_tree.items {
