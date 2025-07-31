@@ -85,8 +85,14 @@ pub fn _mm256_shuffle_pd<const MASK: i32>(a: __m256d, b: __m256d) -> __m256d {
     static_assert_uimm_bits!(MASK, 8);
     {
         transmute(simd_shuffle(
-            a.as_f64x4(), b.as_f64x4(), [MASK as u32 & 0b1, ((MASK as u32 >> 1) & 0b1) + 4, ((MASK as u32 >> 2)
-            & 0b1) + 2, ((MASK as u32 >> 3) & 0b1) + 6,],
+            a.as_f64x4(),
+            b.as_f64x4(),
+            [
+                MASK as u32 & 0b1,
+                ((MASK as u32 >> 1) & 0b1) + 4,
+                ((MASK as u32 >> 2) & 0b1) + 2,
+                ((MASK as u32 >> 3) & 0b1) + 6,
+            ],
         ))
     }
 }
@@ -98,10 +104,18 @@ pub fn _mm256_shuffle_ps<const MASK: i32>(a: __m256, b: __m256) -> __m256 {
     static_assert_uimm_bits!(MASK, 8);
     {
         transmute(simd_shuffle(
-            a.as_f32x8(), b.as_f32x8(), [MASK as u32 & 0b11, (MASK as u32 >> 2) & 0b11, ((MASK as u32 >> 4) &
-            0b11) + 8, ((MASK as u32 >> 6) & 0b11) + 8, (MASK as u32 & 0b11) + 4, ((MASK
-            as u32 >> 2) & 0b11) + 4, ((MASK as u32 >> 4) & 0b11) + 12, ((MASK as u32 >>
-            6) & 0b11) + 12,],
+            a.as_f32x8(),
+            b.as_f32x8(),
+            [
+                MASK as u32 & 0b11,
+                (MASK as u32 >> 2) & 0b11,
+                ((MASK as u32 >> 4) & 0b11) + 8,
+                ((MASK as u32 >> 6) & 0b11) + 8,
+                (MASK as u32 & 0b11) + 4,
+                ((MASK as u32 >> 2) & 0b11) + 4,
+                ((MASK as u32 >> 4) & 0b11) + 12,
+                ((MASK as u32 >> 6) & 0b11) + 12,
+            ],
         ))
     }
 }
@@ -308,8 +322,14 @@ pub fn _mm256_blend_pd<const IMM4: i32>(a: __m256d, b: __m256d) -> __m256d {
     static_assert_uimm_bits!(IMM4, 4);
     {
         transmute(simd_shuffle(
-            a.as_f64x4(), b.as_f64x4(), [((IMM4 as u32 >> 0) & 1) * 4 + 0, ((IMM4 as u32 >> 1) & 1) * 4 + 1,
-            ((IMM4 as u32 >> 2) & 1) * 4 + 2, ((IMM4 as u32 >> 3) & 1) * 4 + 3,],
+            a.as_f64x4(),
+            b.as_f64x4(),
+            [
+                ((IMM4 as u32 >> 0) & 1) * 4 + 0,
+                ((IMM4 as u32 >> 1) & 1) * 4 + 1,
+                ((IMM4 as u32 >> 2) & 1) * 4 + 2,
+                ((IMM4 as u32 >> 3) & 1) * 4 + 3,
+            ],
         ))
     }
 }
@@ -321,10 +341,18 @@ pub fn _mm256_blend_ps<const IMM8: i32>(a: __m256, b: __m256) -> __m256 {
     static_assert_uimm_bits!(IMM8, 8);
     {
         transmute(simd_shuffle(
-            a.as_f32x8(), b.as_f32x8(), [((IMM8 as u32 >> 0) & 1) * 8 + 0, ((IMM8 as u32 >> 1) & 1) * 8 + 1,
-            ((IMM8 as u32 >> 2) & 1) * 8 + 2, ((IMM8 as u32 >> 3) & 1) * 8 + 3, ((IMM8 as
-            u32 >> 4) & 1) * 8 + 4, ((IMM8 as u32 >> 5) & 1) * 8 + 5, ((IMM8 as u32 >> 6)
-            & 1) * 8 + 6, ((IMM8 as u32 >> 7) & 1) * 8 + 7,],
+            a.as_f32x8(),
+            b.as_f32x8(),
+            [
+                ((IMM8 as u32 >> 0) & 1) * 8 + 0,
+                ((IMM8 as u32 >> 1) & 1) * 8 + 1,
+                ((IMM8 as u32 >> 2) & 1) * 8 + 2,
+                ((IMM8 as u32 >> 3) & 1) * 8 + 3,
+                ((IMM8 as u32 >> 4) & 1) * 8 + 4,
+                ((IMM8 as u32 >> 5) & 1) * 8 + 5,
+                ((IMM8 as u32 >> 6) & 1) * 8 + 6,
+                ((IMM8 as u32 >> 7) & 1) * 8 + 7,
+            ],
         ))
     }
 }
@@ -545,21 +573,21 @@ pub const _CMP_TRUE_US: i32 = 0x1f;
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtepi32_pd)
 pub fn _mm256_cvtepi32_pd(a: __m128i) -> __m256d {
-    { transmute(simd_cast::<4,i32,f64>(a.as_i32x4())) }
+    transmute(simd_cast::<4, i32, f64>(a.as_i32x4()))
 }
 /// Converts packed 32-bit integers in `a` to packed single-precision (32-bit)
 /// floating-point elements.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtepi32_ps)
 pub fn _mm256_cvtepi32_ps(a: __m256i) -> __m256 {
-    { transmute(simd_cast::<8,_,f32>(a.as_i32x8())) }
+    transmute(simd_cast::<8, _, f32>(a.as_i32x8()))
 }
 /// Converts packed double-precision (64-bit) floating-point elements in `a`
 /// to packed single-precision (32-bit) floating-point elements.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtpd_ps)
 pub fn _mm256_cvtpd_ps(a: __m256d) -> __m128 {
-    { transmute(simd_cast::<4,_,f32>(a.as_f64x4())) }
+    transmute(simd_cast::<4, _, f32>(a.as_f64x4()))
 }
 /// Converts packed single-precision (32-bit) floating-point elements in `a`
 /// to packed 32-bit integers.
@@ -573,13 +601,13 @@ pub fn _mm256_cvtpd_ps(a: __m256d) -> __m128 {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtps_pd)
 pub fn _mm256_cvtps_pd(a: __m128) -> __m256d {
-    { transmute(simd_cast::<4,_,f64>(a.as_f32x4())) }
+    transmute(simd_cast::<4, _, f64>(a.as_f32x4()))
 }
 /// Returns the first element of the input vector of `[4 x double]`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtsd_f64)
 pub fn _mm256_cvtsd_f64(a: __m256d) -> f64 {
-    { simd_extract(a.as_f64x4(), 0) }
+    simd_extract(a.as_f64x4(), 0)
 }
 /// Converts packed double-precision (64-bit) floating-point elements in `a`
 /// to packed 32-bit integers with truncation.
@@ -610,7 +638,9 @@ pub fn _mm256_extractf128_ps<const IMM1: i32>(a: __m256) -> __m128 {
     static_assert_uimm_bits!(IMM1, 1);
     {
         transmute(simd_shuffle(
-            a.as_f32x8(), _mm256_undefined_ps().as_f32x8(), [[0, 1, 2, 3], [4, 5, 6, 7]] [IMM1 as usize],
+            a.as_f32x8(),
+            _mm256_undefined_ps().as_f32x8(),
+            [[0, 1, 2, 3], [4, 5, 6, 7]][IMM1 as usize],
         ))
     }
 }
@@ -620,7 +650,11 @@ pub fn _mm256_extractf128_ps<const IMM1: i32>(a: __m256) -> __m128 {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_extractf128_pd)
 pub fn _mm256_extractf128_pd<const IMM1: i32>(a: __m256d) -> __m128d {
     static_assert_uimm_bits!(IMM1, 1);
-    { transmute(simd_shuffle(a.as_f64x4(), _mm256_undefined_pd().as_f64x4(), [[0, 1], [2, 3]] [IMM1 as usize])) }
+    transmute(simd_shuffle(
+        a.as_f64x4(),
+        _mm256_undefined_pd().as_f64x4(),
+        [[0, 1], [2, 3]][IMM1 as usize],
+    ))
 }
 /// Extracts 128 bits (composed of integer data) from `a`, selected with `imm8`.
 ///
@@ -628,9 +662,7 @@ pub fn _mm256_extractf128_pd<const IMM1: i32>(a: __m256d) -> __m128d {
 pub fn _mm256_extractf128_si256<const IMM1: i32>(a: __m256i) -> __m128i {
     static_assert_uimm_bits!(IMM1, 1);
     {
-        let dst: i64x2 = simd_shuffle(
-            a.as_i64x4(), i64x4::ZERO(), [[0, 1], [2, 3]] [IMM1 as usize],
-        );
+        let dst: i64x2 = simd_shuffle(a.as_i64x4(), i64x4::ZERO(), [[0, 1], [2, 3]][IMM1 as usize]);
         transmute(dst)
     }
 }
@@ -639,13 +671,13 @@ pub fn _mm256_extractf128_si256<const IMM1: i32>(a: __m256i) -> __m128i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_extract_epi32)
 pub fn _mm256_extract_epi32<const INDEX: i32>(a: __m256i) -> i32 {
     static_assert_uimm_bits!(INDEX, 3);
-    { simd_extract(a.as_i32x8(), INDEX as u32) }
+    simd_extract(a.as_i32x8(), INDEX as u32)
 }
 /// Returns the first element of the input vector of `[8 x i32]`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtsi256_si32)
 pub fn _mm256_cvtsi256_si32(a: __m256i) -> i32 {
-    { simd_extract(a.as_i32x8(), 0) }
+    simd_extract(a.as_i32x8(), 0)
 }
 /// Zeroes the contents of all XMM or YMM registers.
 ///
@@ -682,10 +714,18 @@ pub fn _mm256_permute_ps<const IMM8: i32>(a: __m256) -> __m256 {
     static_assert_uimm_bits!(IMM8, 8);
     {
         transmute(simd_shuffle(
-            a.as_f32x8(), _mm256_undefined_ps().as_f32x8(), [(IMM8 as u32 >> 0) & 0b11, (IMM8 as u32 >> 2) &
-            0b11, (IMM8 as u32 >> 4) & 0b11, (IMM8 as u32 >> 6) & 0b11, ((IMM8 as u32 >>
-            0) & 0b11) + 4, ((IMM8 as u32 >> 2) & 0b11) + 4, ((IMM8 as u32 >> 4) & 0b11)
-            + 4, ((IMM8 as u32 >> 6) & 0b11) + 4,],
+            a.as_f32x8(),
+            _mm256_undefined_ps().as_f32x8(),
+            [
+                (IMM8 as u32 >> 0) & 0b11,
+                (IMM8 as u32 >> 2) & 0b11,
+                (IMM8 as u32 >> 4) & 0b11,
+                (IMM8 as u32 >> 6) & 0b11,
+                ((IMM8 as u32 >> 0) & 0b11) + 4,
+                ((IMM8 as u32 >> 2) & 0b11) + 4,
+                ((IMM8 as u32 >> 4) & 0b11) + 4,
+                ((IMM8 as u32 >> 6) & 0b11) + 4,
+            ],
         ))
     }
 }
@@ -724,8 +764,14 @@ pub fn _mm256_permute_pd<const IMM4: i32>(a: __m256d) -> __m256d {
     static_assert_uimm_bits!(IMM4, 4);
     {
         transmute(simd_shuffle(
-            a.as_f64x4(), _mm256_undefined_pd().as_f64x4(), [((IMM4 as u32 >> 0) & 1), ((IMM4 as u32 >> 1) &
-            1), ((IMM4 as u32 >> 2) & 1) + 2, ((IMM4 as u32 >> 3) & 1) + 2,],
+            a.as_f64x4(),
+            _mm256_undefined_pd().as_f64x4(),
+            [
+                ((IMM4 as u32 >> 0) & 1),
+                ((IMM4 as u32 >> 1) & 1),
+                ((IMM4 as u32 >> 2) & 1) + 2,
+                ((IMM4 as u32 >> 3) & 1) + 2,
+            ],
         ))
     }
 }
@@ -736,8 +782,10 @@ pub fn _mm256_permute_pd<const IMM4: i32>(a: __m256d) -> __m256d {
 pub fn _mm_permute_pd<const IMM2: i32>(a: __m128d) -> __m128d {
     static_assert_uimm_bits!(IMM2, 2);
     {
-       transmute(simd_shuffle(
-            a.as_f64x2(), _mm_undefined_pd().as_f64x2(), [(IMM2 as u32) & 1, (IMM2 as u32 >> 1) & 1],
+        transmute(simd_shuffle(
+            a.as_f64x2(),
+            _mm_undefined_pd().as_f64x2(),
+            [(IMM2 as u32) & 1, (IMM2 as u32 >> 1) & 1],
         ))
     }
 }
@@ -763,7 +811,7 @@ pub fn _mm_permute_pd<const IMM2: i32>(a: __m128d) -> __m128d {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_permute2f128_si256)
 pub fn _mm256_permute2f128_si256<const IMM8: i32>(a: __m256i, b: __m256i) -> __m256i {
     static_assert_uimm_bits!(IMM8, 8);
-    { transmute(vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8)) }
+    transmute(vperm2f128si256(a.as_i32x8(), b.as_i32x8(), IMM8 as i8))
 }
 /// Broadcasts a single-precision (32-bit) floating-point element from memory
 /// to all elements of the returned vector.
@@ -798,7 +846,11 @@ pub fn _mm256_broadcast_ss(f: &f32) -> __m256 {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_broadcast_pd)
 pub fn _mm256_broadcast_pd(a: &__m128d) -> __m256d {
-    { transmute(simd_shuffle((*a).as_f64x2(), _mm_setzero_pd().as_f64x2(), [0, 1, 0, 1])) }
+    transmute(simd_shuffle(
+        (*a).as_f64x2(),
+        _mm_setzero_pd().as_f64x2(),
+        [0, 1, 0, 1],
+    ))
 }
 /// Copies `a` to result, then inserts 128 bits (composed of 4 packed
 /// single-precision (32-bit) floating-point elements) from `b` into result
@@ -835,8 +887,9 @@ pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m25
     static_assert_uimm_bits!(IMM1, 1);
     {
         let dst: i64x4 = simd_shuffle(
-            a.as_i64x4(), _mm256_castsi128_si256(b).as_i64x4(), [[4, 5, 2, 3], [0, 1, 4,
-            5]] [IMM1 as usize],
+            a.as_i64x4(),
+            _mm256_castsi128_si256(b).as_i64x4(),
+            [[4, 5, 2, 3], [0, 1, 4, 5]][IMM1 as usize],
         );
         transmute(dst)
     }
@@ -847,7 +900,7 @@ pub fn _mm256_insertf128_si256<const IMM1: i32>(a: __m256i, b: __m128i) -> __m25
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_insert_epi8)
 pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
     static_assert_uimm_bits!(INDEX, 5);
-    { transmute(simd_insert(a.as_i8x32(), INDEX as u32, i)) }
+    transmute(simd_insert(a.as_i8x32(), INDEX as u32, i))
 }
 /// Copies `a` to result, and inserts the 16-bit integer `i` into result
 /// at the location specified by `index`.
@@ -855,7 +908,7 @@ pub fn _mm256_insert_epi8<const INDEX: i32>(a: __m256i, i: i8) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_insert_epi16)
 pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
     static_assert_uimm_bits!(INDEX, 4);
-    { transmute(simd_insert(a.as_i16x16(), INDEX as u32, i)) }
+    transmute(simd_insert(a.as_i16x16(), INDEX as u32, i))
 }
 /// Copies `a` to result, and inserts the 32-bit integer `i` into result
 /// at the location specified by `index`.
@@ -863,28 +916,36 @@ pub fn _mm256_insert_epi16<const INDEX: i32>(a: __m256i, i: i16) -> __m256i {
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_insert_epi32)
 pub fn _mm256_insert_epi32<const INDEX: i32>(a: __m256i, i: i32) -> __m256i {
     static_assert_uimm_bits!(INDEX, 3);
-    { transmute(simd_insert(a.as_i32x8(), INDEX as u32, i)) }
+    transmute(simd_insert(a.as_i32x8(), INDEX as u32, i))
 }
 /// Duplicate odd-indexed single-precision (32-bit) floating-point elements
 /// from `a`, and returns the results.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_movehdup_ps)
 pub fn _mm256_movehdup_ps(a: __m256) -> __m256 {
-    { transmute(simd_shuffle(a.as_f32x8(), a.as_f32x8(), [1, 1, 3, 3, 5, 5, 7, 7])) }
+    transmute(simd_shuffle(
+        a.as_f32x8(),
+        a.as_f32x8(),
+        [1, 1, 3, 3, 5, 5, 7, 7],
+    ))
 }
 /// Duplicate even-indexed single-precision (32-bit) floating-point elements
 /// from `a`, and returns the results.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_moveldup_ps)
 pub fn _mm256_moveldup_ps(a: __m256) -> __m256 {
-    { transmute(simd_shuffle(a.as_f32x8(), a.as_f32x8(), [0, 0, 2, 2, 4, 4, 6, 6])) }
+    transmute(simd_shuffle(
+        a.as_f32x8(),
+        a.as_f32x8(),
+        [0, 0, 2, 2, 4, 4, 6, 6],
+    ))
 }
 /// Duplicate even-indexed double-precision (64-bit) floating-point elements
 /// from `a`, and returns the results.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_movedup_pd)
 pub fn _mm256_movedup_pd(a: __m256d) -> __m256d {
-    { transmute(simd_shuffle(a.as_f64x4(), a.as_f64x4(), [0, 0, 2, 2])) }
+    transmute(simd_shuffle(a.as_f64x4(), a.as_f64x4(), [0, 0, 2, 2]))
 }
 /// Computes the approximate reciprocal of packed single-precision (32-bit)
 /// floating-point elements in `a`, and returns the results. The maximum
@@ -907,28 +968,36 @@ pub fn _mm256_movedup_pd(a: __m256d) -> __m256d {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_unpackhi_pd)
 pub fn _mm256_unpackhi_pd(a: __m256d, b: __m256d) -> __m256d {
-    { transmute(simd_shuffle(a.as_f64x4(), b.as_f64x4(), [1, 5, 3, 7])) }
+    transmute(simd_shuffle(a.as_f64x4(), b.as_f64x4(), [1, 5, 3, 7]))
 }
 /// Unpacks and interleave single-precision (32-bit) floating-point elements
 /// from the high half of each 128-bit lane in `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_unpackhi_ps)
 pub fn _mm256_unpackhi_ps(a: __m256, b: __m256) -> __m256 {
-    { transmute(simd_shuffle(a.as_f32x8(), b.as_f32x8(), [2, 10, 3, 11, 6, 14, 7, 15])) }
+    transmute(simd_shuffle(
+        a.as_f32x8(),
+        b.as_f32x8(),
+        [2, 10, 3, 11, 6, 14, 7, 15],
+    ))
 }
 /// Unpacks and interleave double-precision (64-bit) floating-point elements
 /// from the low half of each 128-bit lane in `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_unpacklo_pd)
 pub fn _mm256_unpacklo_pd(a: __m256d, b: __m256d) -> __m256d {
-    { transmute(simd_shuffle(a.as_f64x4(), b.as_f64x4(), [0, 4, 2, 6])) }
+    transmute(simd_shuffle(a.as_f64x4(), b.as_f64x4(), [0, 4, 2, 6]))
 }
 /// Unpacks and interleave single-precision (32-bit) floating-point elements
 /// from the low half of each 128-bit lane in `a` and `b`.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_unpacklo_ps)
 pub fn _mm256_unpacklo_ps(a: __m256, b: __m256) -> __m256 {
-    { transmute(simd_shuffle(a.as_f32x8(), b.as_f32x8(), [0, 8, 1, 9, 4, 12, 5, 13])) }
+    transmute(simd_shuffle(
+        a.as_f32x8(),
+        b.as_f32x8(),
+        [0, 8, 1, 9, 4, 12, 5, 13],
+    ))
 }
 /// Computes the bitwise AND of 256 bits (representing integer data) in `a` and
 /// `b`, and set `ZF` to 1 if the result is zero, otherwise set `ZF` to 0.
@@ -937,7 +1006,7 @@ pub fn _mm256_unpacklo_ps(a: __m256, b: __m256) -> __m256 {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testz_si256)
 pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
-    { ptestz256(a.as_i64x4(), b.as_i64x4()) }
+    ptestz256(a.as_i64x4(), b.as_i64x4())
 }
 /// Computes the bitwise AND of 256 bits (representing integer data) in `a` and
 /// `b`, and set `ZF` to 1 if the result is zero, otherwise set `ZF` to 0.
@@ -946,7 +1015,7 @@ pub fn _mm256_testz_si256(a: __m256i, b: __m256i) -> i32 {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_testc_si256)
 pub fn _mm256_testc_si256(a: __m256i, b: __m256i) -> i32 {
-    { ptestc256(a.as_i64x4(), b.as_i64x4()) }
+    ptestc256(a.as_i64x4(), b.as_i64x4())
 }
 /// Computes the bitwise AND of 256 bits (representing integer data) in `a` and
 /// `b`, and set `ZF` to 1 if the result is zero, otherwise set `ZF` to 0.
@@ -1157,16 +1226,7 @@ pub fn _mm256_set_pd(a: f64, b: f64, c: f64, d: f64) -> __m256d {
 /// vector with the supplied values.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_set_ps)
-pub fn _mm256_set_ps(
-    a: f32,
-    b: f32,
-    c: f32,
-    d: f32,
-    e: f32,
-    f: f32,
-    g: f32,
-    h: f32,
-) -> __m256 {
+pub fn _mm256_set_ps(a: f32, b: f32, c: f32, d: f32, e: f32, f: f32, g: f32, h: f32) -> __m256 {
     _mm256_setr_ps(h, g, f, e, d, c, b, a)
 }
 /// Sets packed 8-bit integers in returned vector with the supplied values.
@@ -1207,38 +1267,8 @@ pub fn _mm256_set_epi8(
     e31: i8,
 ) -> __m256i {
     _mm256_setr_epi8(
-        e31,
-        e30,
-        e29,
-        e28,
-        e27,
-        e26,
-        e25,
-        e24,
-        e23,
-        e22,
-        e21,
-        e20,
-        e19,
-        e18,
-        e17,
-        e16,
-        e15,
-        e14,
-        e13,
-        e12,
-        e11,
-        e10,
-        e09,
-        e08,
-        e07,
-        e06,
-        e05,
-        e04,
-        e03,
-        e02,
-        e01,
-        e00,
+        e31, e30, e29, e28, e27, e26, e25, e24, e23, e22, e21, e20, e19, e18, e17, e16, e15, e14,
+        e13, e12, e11, e10, e09, e08, e07, e06, e05, e04, e03, e02, e01, e00,
     )
 }
 /// Sets packed 16-bit integers in returned vector with the supplied values.
@@ -1263,22 +1293,7 @@ pub fn _mm256_set_epi16(
     e15: i16,
 ) -> __m256i {
     _mm256_setr_epi16(
-        e15,
-        e14,
-        e13,
-        e12,
-        e11,
-        e10,
-        e09,
-        e08,
-        e07,
-        e06,
-        e05,
-        e04,
-        e03,
-        e02,
-        e01,
-        e00,
+        e15, e14, e13, e12, e11, e10, e09, e08, e07, e06, e05, e04, e03, e02, e01, e00,
     )
 }
 /// Sets packed 32-bit integers in returned vector with the supplied values.
@@ -1313,16 +1328,7 @@ pub fn _mm256_setr_pd(a: f64, b: f64, c: f64, d: f64) -> __m256d {
 /// vector with the supplied values in reverse order.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_setr_ps)
-pub fn _mm256_setr_ps(
-    a: f32,
-    b: f32,
-    c: f32,
-    d: f32,
-    e: f32,
-    f: f32,
-    g: f32,
-    h: f32,
-) -> __m256 {
+pub fn _mm256_setr_ps(a: f32, b: f32, c: f32, d: f32, e: f32, f: f32, g: f32, h: f32) -> __m256 {
     transmute(f32x8::new(a, b, c, d, e, f, g, h))
 }
 /// Sets packed 8-bit integers in returned vector with the supplied values in
@@ -1364,42 +1370,10 @@ pub fn _mm256_setr_epi8(
     e31: i8,
 ) -> __m256i {
     {
-        transmute(
-            i8x32::new(
-                e00,
-                e01,
-                e02,
-                e03,
-                e04,
-                e05,
-                e06,
-                e07,
-                e08,
-                e09,
-                e10,
-                e11,
-                e12,
-                e13,
-                e14,
-                e15,
-                e16,
-                e17,
-                e18,
-                e19,
-                e20,
-                e21,
-                e22,
-                e23,
-                e24,
-                e25,
-                e26,
-                e27,
-                e28,
-                e29,
-                e30,
-                e31,
-            ),
-        )
+        transmute(i8x32::new(
+            e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16,
+            e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31,
+        ))
     }
 }
 /// Sets packed 16-bit integers in returned vector with the supplied values in
@@ -1425,26 +1399,9 @@ pub fn _mm256_setr_epi16(
     e15: i16,
 ) -> __m256i {
     {
-        transmute(
-            i16x16::new(
-                e00,
-                e01,
-                e02,
-                e03,
-                e04,
-                e05,
-                e06,
-                e07,
-                e08,
-                e09,
-                e10,
-                e11,
-                e12,
-                e13,
-                e14,
-                e15,
-            ),
-        )
+        transmute(i16x16::new(
+            e00, e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
+        ))
     }
 }
 /// Sets packed 32-bit integers in returned vector with the supplied values in
@@ -1461,14 +1418,14 @@ pub fn _mm256_setr_epi32(
     e6: i32,
     e7: i32,
 ) -> __m256i {
-    { transmute(i32x8::new(e0, e1, e2, e3, e4, e5, e6, e7)) }
+    transmute(i32x8::new(e0, e1, e2, e3, e4, e5, e6, e7))
 }
 /// Sets packed 64-bit integers in returned vector with the supplied values in
 /// reverse order.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_setr_epi64x)
 pub fn _mm256_setr_epi64x(a: i64, b: i64, c: i64, d: i64) -> __m256i {
-    { transmute(i64x4::new(a, b, c, d)) }
+    transmute(i64x4::new(a, b, c, d))
 }
 /// Broadcasts double-precision (64-bit) floating-point value `a` to all
 /// elements of returned vector.
@@ -1489,40 +1446,9 @@ pub fn _mm256_set1_ps(a: f32) -> __m256 {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_set1_epi8)
 pub fn _mm256_set1_epi8(a: i8) -> __m256i {
-
     _mm256_setr_epi8(
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
-        a,
+        a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a,
+        a, a,
     )
 }
 /// Broadcasts 16-bit integer `a` to all elements of returned vector.
@@ -1550,49 +1476,49 @@ pub fn _mm256_set1_epi64x(a: i64) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castpd_ps)
 pub fn _mm256_castpd_ps(a: __m256d) -> __m256 {
-    { transmute(a) }
+    transmute(a)
 }
 /// Cast vector of type __m256 to type __m256d.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castps_pd)
 pub fn _mm256_castps_pd(a: __m256) -> __m256d {
-    { transmute(a) }
+    transmute(a)
 }
 /// Casts vector of type __m256 to type __m256i.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castps_si256)
 pub fn _mm256_castps_si256(a: __m256) -> __m256i {
-    { transmute(a) }
+    transmute(a)
 }
 /// Casts vector of type __m256i to type __m256.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castsi256_ps)
 pub fn _mm256_castsi256_ps(a: __m256i) -> __m256 {
-    { transmute(a) }
+    transmute(a)
 }
 /// Casts vector of type __m256d to type __m256i.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castpd_si256)
 pub fn _mm256_castpd_si256(a: __m256d) -> __m256i {
-    { transmute(a) }
+    transmute(a)
 }
 /// Casts vector of type __m256i to type __m256d.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castsi256_pd)
 pub fn _mm256_castsi256_pd(a: __m256i) -> __m256d {
-    { transmute(a) }
+    transmute(a)
 }
 /// Casts vector of type __m256 to type __m128.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castps256_ps128)
 pub fn _mm256_castps256_ps128(a: __m256) -> __m128 {
-    { transmute(simd_shuffle(a.as_f32x8(), a.as_f32x8(), [0, 1, 2, 3])) }
+    transmute(simd_shuffle(a.as_f32x8(), a.as_f32x8(), [0, 1, 2, 3]))
 }
 /// Casts vector of type __m256d to type __m128d.
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castpd256_pd128)
 pub fn _mm256_castpd256_pd128(a: __m256d) -> __m128d {
-    { transmute(simd_shuffle(a.as_f64x4(), a.as_f64x4(), [0, 1])) }
+    transmute(simd_shuffle(a.as_f64x4(), a.as_f64x4(), [0, 1]))
 }
 /// Casts vector of type __m256i to type __m128i.
 ///
@@ -1616,7 +1542,11 @@ pub fn _mm256_castsi256_si128(a: __m256i) -> __m128i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_castpd128_pd256)
 pub fn _mm256_castpd128_pd256(a: __m128d) -> __m256d {
-    { transmute(simd_shuffle(a.as_f64x2(), _mm_undefined_pd().as_f64x2(), [0, 1, 2, 2])) }
+    transmute(simd_shuffle(
+        a.as_f64x2(),
+        _mm_undefined_pd().as_f64x2(),
+        [0, 1, 2, 2],
+    ))
 }
 /// Casts vector of type __m128i to type __m256i;
 /// the upper 128 bits of the result are undefined.
@@ -1690,7 +1620,11 @@ pub fn _mm256_undefined_si256() -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_set_m128)
 pub fn _mm256_set_m128(hi: __m128, lo: __m128) -> __m256 {
-    { transmute(simd_shuffle(lo.as_i32x4(), hi.as_i32x4(), [0, 1, 2, 3, 4, 5, 6, 7])) }
+    transmute(simd_shuffle(
+        lo.as_i32x4(),
+        hi.as_i32x4(),
+        [0, 1, 2, 3, 4, 5, 6, 7],
+    ))
 }
 /// Sets packed __m256d returned vector with the supplied values.
 ///
@@ -1734,5 +1668,5 @@ pub fn _mm256_setr_m128i(lo: __m128i, hi: __m128i) -> __m256i {
 ///
 /// [Intel's documentation](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htmlext=_mm256_cvtss_f32)
 pub fn _mm256_cvtss_f32(a: __m256) -> f32 {
-    { simd_extract(a.as_f32x8(), 0) }
+    simd_extract(a.as_f32x8(), 0)
 }
