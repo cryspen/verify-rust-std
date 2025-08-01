@@ -33,6 +33,18 @@ pub mod test {
         }
     }
 
+    impl HasRandom for f32 {
+        fn random() -> Self {
+            u32::random() as f32
+        }
+    }
+
+    impl HasRandom for f64 {
+        fn random() -> Self {
+            u64::random() as f64
+        }
+    }
+
     impl HasRandom for Bit {
         fn random() -> Self {
             crate::abstractions::bit::Bit::from(bool::random())
