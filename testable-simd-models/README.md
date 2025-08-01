@@ -6,7 +6,7 @@ The structure of this crate is based on [rust-lang/stdarch/crates/core_arch](htt
 
 ## Code Structure
 Within the `core_arch` folder in this crate, there is a different
-folder for each architecture for which we have wrtten models. 
+folder for each architecture for which we have written models. 
 In particular, it contains folders for `x86` and `arm_shared`.
 Each such folder has 2 sub-folders: `models` and `tests`. 
 
@@ -18,18 +18,18 @@ abstractions implemented in `abstractions`, especially those in
 resemble their implementations within the Rust core itself.
 
 The `tests` folder contains the tests of these models, and is
-structured the same way as `models`. Each file additionally contains
+structured the same way as `models`. Each file additionally includes
 the definition of a macro that makes writing these tests easier. The
 tests work by testing the models against the intrinsics in the Rust
 core, trying out random inputs (generally 1000), and comparing their
 outputs.
 
-All tests can run by executing `cargo test` and we expect this to be
+All tests can be run by executing `cargo test`, and we expect this to be
 run as part of CI.
 
 ## Modeling a SIMD Intrinsic
 
-There are three kinds of SIMD intrinsics we find in `core::arch`.
+There are three kinds of SIMD intrinsics in `core::arch`.
 
 The first kind are builtin Rust compiler intrinsics, some of which are 
 in the [`intrinsics/simd.rs` file](https://github.com/model-checking/verify-rust-std/blob/main/library/core/src/intrinsics/simd.rs)
@@ -42,7 +42,7 @@ of `extern` intrinsics used in the Intel x86 AVX2 library.
 These extern intrinsics are typically platform-specific functions that map to low-level instructions.
 
 The third kind are `defined` intrinsics that are given proper definitions in Rust, and their code may
-depend on the builtin intrinsics or the extern intrinsics. There defined intrinsics represent higher-level
+depend on the builtin intrinsics or the extern intrinsics. These defined intrinsics represent higher-level
 operations that are wrappers around one or more assembly instructions.
 
 ### Modeling builtin intrinsics manually
@@ -70,7 +70,7 @@ pub fn simd_add<const N: u64, T: MachineInteger + Copy>(
 ```
 
 Notably, we model a strongly typed version of `simd_add`, in contrast to the compiler
-intrinsic which is too generic and unimplementable in safe Rust:
+intrinsic, which is too generic and unimplementable in safe Rust:
 
 ```rust
 /// Adds two simd vectors elementwise.
@@ -81,8 +81,8 @@ intrinsic which is too generic and unimplementable in safe Rust:
 pub unsafe fn simd_add<T>(x: T, y: T) -> T;
 ```
 
-The main rules for writing these models is that they should be simple and self-contained,
-relying only on the libraries in `abstractions` or on builtin Rust language features or on
+The main rules for writing these models are that they should be simple and self-contained,
+relying only on the libraries in `abstractions`, on builtin Rust language features, or 
 other testable models. In particular, they should not themselves directly call Rust libraries
 or external crates, without going through the abstractions API.
 
@@ -98,7 +98,7 @@ the extern intrinsics used in `avx2.rs` can be found in `avx2_handwritten.rs`.
 Modeling extern intrinsics is similar to modeling the builtin ones,
 in that the models are written by hand and treat the SIMD vectors
 as arrays of machine integers. The main difference is that these intrinsics
-are platform specific and so their modeling requires looking at the Intel or ARM
+are platform-specific and so their modeling requires looking at the Intel or ARM
 documentation for the underlying operation.
 
 For example, the extern intrinsic `phaddw` used in `avx2` corresponds to an
@@ -125,8 +125,8 @@ pub fn phaddw(a: i16x16, b: i16x16) -> i16x16 {
 
 ### Modeling defined intrinsics semi-automatically
 
-To model the third category of intrinsics, we copy the Rust code of
-the intrinsic and adapt it to use our underlying abstractions.  The
+To model a defined intrinsic, we essentially copy the Rust code of
+the intrinsic from `core::arch` and adapt it to use our underlying abstractions.  The
 changes needed to the code are sometimes scriptable, and indeed most
 of our models were generated from a script, but some changes are still
 needed by hand.
@@ -175,12 +175,12 @@ pub fn _mm256_bsrli_epi128<const IMM8: i32>(a: __m256i) -> __m256i {
 }
 ```
 
-Thus, we then go to to `core_arch/x86/models/avx2.rs`, and add this implementation.
+Thus, we then go to `core_arch/x86/models/avx2.rs`, and add this implementation.
 The only change it requires here is that the `simd_shuffle` macro is a function in our model,
 and we discard all the function attributes.
 
-For other intrinsics, sometimes we need to make more changes. Since our model of the builtin intrinsics
-are more precise with respect to the type of their arguments compared to their Rust counterparts, we
+For other intrinsics, we sometimes need to make more changes. Since our model of the builtin intrinsics
+is more precise concerning the type of their arguments compared to their Rust counterparts, we
 sometimes need to add more type annotations in our defined models. We also remove all `unsafe` guards,
 since our models are always in safe Rust. Otherwise, our code for the defined intrinsics looks very
 similar to the upstream code in `core::arch`.
@@ -192,18 +192,18 @@ similar to the upstream code in `core::arch`.
 	   mk!([100]_mm256_bsrli_epi128{<0>,<1>,<2>,<3>,...,<255>}(a: BitVec));
    ```
    The macro invocation has four parts. 
-   1. `mk!([100]...`: By default the macro tests for a thousand randomly generated inputs. If needed, this can be modified, such as here, where the `[100]` is used so that
+   1. `mk!([100]...`: By default, the macro tests for a thousand randomly generated inputs. If needed, this can be modified, such as here, where the `[100]` is used so that
       only 100 inputs are generated. 
    2. `_mm256_bsrli_epi128`: This is the name of the intrinsic being tested, and is necessary in all cases.
    3. `{<0>,<1>,<2>,<3>,...,<255>}`: This part only appears when the intrinsic has a const generic argument, like the `IMM8` in this intrinsic.
       As the name indicates, this constant argument is supposed to be at most 8 bits wide.
-      We can confirm this by looking at the implementation, and spotting the `static_assert_uimm_bits!(IMM8, 8);`
+      We can confirm this by looking at the implementation and spotting the `static_assert_uimm_bits!(IMM8, 8);`
       line, which asserts that constant argument is positive and fits in 8 bits. Thus, we add `{<0>,<1>,<2>,<3>,...,<255>}` to test for each possible constant
       value of the constant argument. 
    4. `(a: BitVec)`: This part contains all the arguments of the intrinsic and their types.
    
-   This surmises the steps needed to use the `mk!` macro to generate a test. There is a caveat however. In the case that the output of an intrinsic is _not_
-   a bit-vector (and is instead say, an integer like `i32`), then the macro will not work, and a manual test has to be written. You can see examples in the test files.
+   This summarizes the steps needed to use the `mk!` macro to generate a test. There is a caveat: in the case that the output of an intrinsic is _not_
+   a bit-vector (and is instead, say, an integer like `i32`), then the macro will not work, and a manual test has to be written. You can see examples in the test files.
   
 
 
@@ -211,7 +211,7 @@ similar to the upstream code in `core::arch`.
 
 To contribute new models of intrinsics, we expect the author to follow
 the above steps and provide comprehensive tests.  It is important that
-the model author look carefully at both the Intel/ARM specification
+the model author looks carefully at both the Intel/ARM specifications
 and the Rust `stdarch` implementation, because they may look quite different
 from each other. 
 
