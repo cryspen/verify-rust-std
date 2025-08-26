@@ -26,5 +26,6 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Run tests
+        working-directory: testable-simd-models
         run: cargo test -- --test-threads=1 --nocapture
         
